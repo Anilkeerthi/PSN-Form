@@ -1,0 +1,690 @@
+<mvc:View
+    controllerName="com.taqa.psnform.taqapsnform.controller.PSNForm"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:uxap="sap.uxap"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:m="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:u="sap.ui.unified"
+>
+    <Page
+        id="page"
+        title="{i18n>title}"
+    >
+        <f:FlexibleColumnLayout id="flexibleColumnLayout">
+            <f:beginColumnPages>
+                <Page
+                    id="page2"
+                    title="PSN Request"
+                >
+                    <subHeader>
+                        <Toolbar>
+                            <Button
+                                id="idSearchButton"
+                                icon="sap-icon://search"
+                                press=".onSearchIconPress"
+                                visible="{buttonModel>/showSearchSort}"
+                            />
+                            <Button
+                                id="idSortButton"
+                                icon="sap-icon://sort"
+                                press=".onSortIconPress"
+                                visible="{buttonModel>/showSearchSort}"
+                            />
+                            <SearchField
+                                id="idSearchField"
+                                width="20%"
+                                search=".onSearch"
+                                visible="false"
+                            />
+
+                            <ToolbarSpacer />
+
+                            <m:Button
+                                text="Raise a Request"
+                                type="Emphasized"
+                                press="onOpenRequestDialog"
+                                visible="{buttonModel>/showRaiseRequest}"
+                            />
+                        </Toolbar>
+                    </subHeader>
+                    <content>
+                        <List items="{DataModel>/EmployeeInformation}">
+                            <ObjectListItem
+                                title="{DataModel>Employee Name}"
+                                type="Active"
+                                press="onListItemPress"
+                            >
+                                <firstStatus>
+                                    <ObjectStatus
+                                        text="{DataModel>Employee #}"
+                                    />
+                                </firstStatus>
+
+                                <ObjectAttribute
+                                    text="{DataModel>Nationality}"
+                                />
+                                <ObjectAttribute
+                                    text="{DataModel>Employment Type}"
+                                />
+                            </ObjectListItem>
+                        </List>
+                    </content>
+                </Page>
+            </f:beginColumnPages>
+
+            <f:midColumnPages>
+                <Page id="ObjectPage">
+                    <uxap:ObjectPageLayout
+                        id="ObjectPageLayout"
+                        showTitleInHeaderContent="true"
+                    >
+                        <uxap:headerTitle>
+                            <uxap:ObjectPageDynamicHeaderTitle>
+                                <uxap:expandedHeading>
+                                    <Title
+                                        text=""
+                                        wrapping="true"
+                                    />
+                                </uxap:expandedHeading>
+                                <uxap:navigationActions>
+                                    <m:Button
+                                        text="Submit"
+                                        type="Emphasized"
+                                        visible="true"
+                                        press="onSubmitTypeOfChange"
+                                    />
+
+                                    <m:Button
+                                        text="Approve"
+                                        type="Accept"
+                                        visible="false"
+                                    />
+                                    <m:Button
+                                        text="Reject"
+                                        type="Reject"
+                                        visible="false"
+                                    />
+                                    <m:Button
+                                        text="Delegate"
+                                        type="Transparent"
+                                        press="onToggleFooter"
+                                        visible="false"
+                                    />
+                                    <OverflowToolbarButton
+                                        type="Transparent"
+                                        icon="sap-icon://full-screen"
+                                        press="handleFullScreen"
+                                        visible="{= ${buttonModel>/showFullScreen} ? true : false }"
+                                    />
+
+                                    <OverflowToolbarButton
+                                        type="Transparent"
+                                        icon="sap-icon://exit-full-screen"
+                                        press="handleExitFullScreen"
+                                        visible="{= ${buttonModel>/showExitFullScreen} ? true : false }"
+                                    />
+
+                                    <OverflowToolbarButton
+                                        type="Transparent"
+                                        icon="sap-icon://decline"
+                                        press="handleClose"
+                                        visible="{buttonModel>showClose}"
+                                    />
+                                </uxap:navigationActions>
+                            </uxap:ObjectPageDynamicHeaderTitle>
+                        </uxap:headerTitle>
+
+                        <uxap:headerContent>
+                            <FlexBox
+                                wrap="Wrap"
+                                fitContainer="true"
+                                justifyContent="Start"
+                                alignItems="Center"
+                            >
+                                <!-- First Column -->
+                                <VBox class="sapUiSmallMarginEnd">
+                                    <HBox alignItems="Start">
+                                        <m:Label
+                                            text="Employee Name :"
+                                            width="120px"
+                                        />
+                                        <m:Text
+                                            text="{DataModel>Employee Name}"
+                                        />
+                                    </HBox>
+
+                                    <HBox alignItems="Start">
+                                        <m:Label
+                                            text="Employee # :"
+                                            width="120px"
+                                        />
+                                        <m:Text text="{DataModel>Employee #}" />
+                                    </HBox>
+
+                                    <HBox alignItems="Start">
+                                        <m:Label
+                                            text="Nationality :"
+                                            width="120px"
+                                        />
+                                        <m:Text
+                                            text="{DataModel>Nationality}"
+                                        />
+                                    </HBox>
+
+                                    <HBox alignItems="Start">
+                                        <m:Label
+                                            text="tenure :"
+                                            width="120px"
+                                        />
+                                        <m:Text text="{DataModel>tenure}" />
+                                    </HBox>
+                                </VBox>
+
+                                <!-- Second Column -->
+                                <VBox>
+                                    <HBox>
+                                        <m:Label
+                                            text="Last Salary Adjustment Date :"
+                                            width="190px"
+                                        />
+                                        <m:Text
+                                            text="{DataModel>Last Salary Adjustment Date}"
+                                        />
+                                    </HBox>
+
+                                    <HBox>
+                                        <m:Label
+                                            text="Last Promotion Date :"
+                                            width="190px"
+                                        />
+                                        <m:Text
+                                            text="{DataModel>Last Promotion Date}"
+                                        />
+                                    </HBox>
+
+                                    <HBox>
+                                        <m:Label
+                                            text="Employment Type :"
+                                            width="190px"
+                                        />
+                                        <m:Text
+                                            text="{DataModel>Employment Type}"
+                                        />
+                                    </HBox>
+
+                                    <HBox>
+                                        <m:Label
+                                            text="Marital Status :"
+                                            width="190px"
+                                        />
+                                        <m:Text
+                                            text="{DataModel>Marital Status}"
+                                        />
+                                    </HBox>
+                                </VBox>
+                            </FlexBox>
+                        </uxap:headerContent>
+
+                        <uxap:sections>
+                            <!-- Type of Change Section -->
+                            <uxap:ObjectPageSection title="Type of Change">
+                                <uxap:subSections>
+                                    <uxap:ObjectPageSubSection>
+                                        <uxap:blocks>
+                                            <form:SimpleForm
+                                                id="idChangeForm"
+                                                editable="true"
+                                                layout="ResponsiveGridLayout"
+                                                labelSpanL="3"
+                                                labelSpanM="3"
+                                                labelSpanS="12"
+                                                adjustLabelSpan="false"
+                                                emptySpanL="0"
+                                                emptySpanM="0"
+                                                emptySpanS="0"
+                                                columnsL="2"
+                                                columnsM="2"
+                                            >
+                                                <form:content>
+                                                    <Label
+                                                        text="Required Action :"
+                                                    />
+                                                    <Select
+                                                        id="idRequestType"
+                                                        width="60%"
+                                                        items="{
+        path: 'eventReasons>/eventReasons',
+        sorter: { path: 'label' }
+    }"
+                                                    >
+                                                        <core:Item
+                                                            key="{eventReasons>externalCode}"
+                                                            text="{eventReasons>label}"
+                                                        />
+                                                    </Select>
+
+                                                    <Label
+                                                        text="Change Effective :"
+                                                    />
+                                                    <DatePicker
+                                                        id="idRequestDate"
+                                                        width="60%"
+                                                    />
+
+                                                    <Label
+                                                        text="Upload Document :"
+                                                    />
+                                                    <u:FileUploader
+                                                        id="idFileUploader"
+                                                        width="60%"
+                                                        tooltip="Upload supporting document"
+                                                        value=""
+                                                        placeholder="Choose File"
+                                                    />
+
+                                                    <Label
+                                                        text="Justification :"
+                                                    />
+                                                    <TextArea
+                                                        id="idComments"
+                                                        width="60%"
+                                                        rows="3"
+                                                        placeholder="Add your comments here..."
+                                                    />
+                                                </form:content>
+                                            </form:SimpleForm>
+                                        </uxap:blocks>
+                                    </uxap:ObjectPageSubSection>
+                                </uxap:subSections>
+                            </uxap:ObjectPageSection>
+
+                            <!-- Employee Education & Certifications Section -->
+                            <uxap:ObjectPageSection
+                                title="EMPLOYEE  EDUCATION / PROFESSIONAL CERTIFICATIONS "
+                            >
+                                <uxap:subSections>
+                                    <uxap:ObjectPageSubSection>
+                                        <uxap:blocks>
+                                            <form:SimpleForm
+                                                layout="ResponsiveGridLayout"
+                                            >
+                                                <!-- Education Details -->
+                                                <Label
+                                                    text="Highest Education Level"
+                                                />
+                                                <Text
+                                                    text="{DataModel>EducationProfessionalCertifications/HighestEducationLevel}"
+                                                />
+
+                                                <Label text="Major" />
+                                                <Text
+                                                    text="{DataModel>EducationProfessionalCertifications/Major}"
+                                                />
+
+                                                <!-- Professional Certifications -->
+                                                <Label
+                                                    text="Certificate Name"
+                                                />
+                                                <Text
+                                                    text="{DataModel>EducationProfessionalCertifications/Certificates/0/CertificateName}"
+                                                />
+
+                                                <Label text="Institute" />
+                                                <Text
+                                                    text="{DataModel>EducationProfessionalCertifications/Certificates/0/Institute}"
+                                                />
+                                            </form:SimpleForm>
+                                        </uxap:blocks>
+                                    </uxap:ObjectPageSubSection>
+                                </uxap:subSections>
+                            </uxap:ObjectPageSection>
+
+                            <!-- Last Professional Experience Section -->
+                            <uxap:ObjectPageSection
+                                title="Last Professional Experience"
+                                binding="{DataModel>LastProfessionalExperience/0}"
+                            >
+                                <uxap:subSections>
+                                    <uxap:ObjectPageSubSection>
+                                        <uxap:blocks>
+                                            <form:SimpleForm editable="true">
+                                                <Label text="Job Title" />
+                                                <Text
+                                                    text="{DataModel>Position}"
+                                                />
+
+                                                <Label text="Company" />
+                                                <Text
+                                                    text="{DataModel>Company}"
+                                                />
+
+                                                <Label text="Tenure" />
+                                                <Text
+                                                    text="{DataModel>Tenure}"
+                                                />
+
+                                                <Label
+                                                    text="Total Years of Experience"
+                                                />
+                                                <Text
+                                                    text="{DataModel>Total Years of Experience}"
+                                                />
+                                            </form:SimpleForm>
+                                        </uxap:blocks>
+                                    </uxap:ObjectPageSubSection>
+                                </uxap:subSections>
+                            </uxap:ObjectPageSection>
+
+                            <!-- Promotion / Salary Adjustment Justification -->
+                            <uxap:ObjectPageSection
+                                title="PROMOTION / SALARY ADJUSTMENT JUSTIFICATION"
+                            >
+                                <uxap:subSections>
+                                    <uxap:ObjectPageSubSection>
+                                        <uxap:blocks>
+                                            <VBox>
+                                                <m:Title
+                                                    text="Performance Rating"
+                                                    level="H3"
+                                                />
+
+                                                <HBox>
+                                                    <m:Label
+                                                        text="2022: "
+                                                        class="sapUiSmallMarginEnd"
+                                                    />
+                                                    <m:Text
+                                                        text="{DataModel>performanceRatings/2022}"
+                                                    />
+                                                </HBox>
+
+                                                <HBox>
+                                                    <m:Label
+                                                        text="2021: "
+                                                        class="sapUiSmallMarginEnd"
+                                                    />
+                                                    <m:Text
+                                                        text="{DataModel>performanceRatings/2021}"
+                                                    />
+                                                </HBox>
+
+                                                <HBox>
+                                                    <m:Label
+                                                        text="2020: "
+                                                        class="sapUiSmallMarginEnd"
+                                                    />
+                                                    <m:Text
+                                                        text="{DataModel>performanceRatings/2020}"
+                                                    />
+                                                </HBox>
+                                            </VBox>
+                                        </uxap:blocks>
+                                    </uxap:ObjectPageSubSection>
+                                </uxap:subSections>
+                            </uxap:ObjectPageSection>
+
+                            <!-- Change of Status -->
+                            <uxap:ObjectPageSection title="CHANGE OF STATUS">
+                                <uxap:subSections>
+                                    <uxap:ObjectPageSubSection>
+                                        <uxap:blocks>
+                                            <Table
+                                                items="{DataModel>ChangeOfStatus}"
+                                            >
+                                                <columns>
+                                                    <Column>
+                                                        <Text text="SNo" />
+                                                    </Column>
+                                                    <Column>
+                                                        <Text text="Item" />
+                                                    </Column>
+                                                    <Column>
+                                                        <Text
+                                                            text="Current Status"
+                                                        />
+                                                    </Column>
+                                                    <Column>
+                                                        <Text
+                                                            text="New Status"
+                                                        />
+                                                    </Column>
+                                                </columns>
+                                                <items>
+                                                    <ColumnListItem>
+                                                        <cells>
+                                                            <Text
+                                                                text="{DataModel>SNo}"
+                                                            />
+                                                            <Text
+                                                                text="{DataModel>Item}"
+                                                            />
+                                                            <Text
+                                                                text="{DataModel>CurrentStatus}"
+                                                            />
+                                                            <Text
+                                                                text="{DataModel>NewStatus}"
+                                                            />
+                                                        </cells>
+                                                    </ColumnListItem>
+                                                </items>
+                                            </Table>
+                                        </uxap:blocks>
+                                    </uxap:ObjectPageSubSection>
+                                </uxap:subSections>
+                            </uxap:ObjectPageSection>
+
+                            <!-- OD Recommendation -->
+                            <uxap:ObjectPageSection title="OD Recommendation">
+                                <uxap:subSections>
+                                    <uxap:ObjectPageSubSection>
+                                        <uxap:blocks>
+                                            <ObjectAttribute
+                                                title="VacancyAvailable"
+                                                text="{DataModel>ODRecommendation/VacancyAvailable}"
+                                            />
+                                            <ObjectAttribute
+                                                title="PositionBudgeted"
+                                                text="{DataModel>ODRecommendation/PositionBudgeted}"
+                                            />
+                                            <ObjectAttribute
+                                                title="OrgDesignReflected"
+                                                text="{DataModel>ODRecommendation/OrgDesignReflected}"
+                                            />
+                                            <ObjectAttribute
+                                                title="JDAvailable"
+                                                text="{DataModel>ODRecommendation/JDAvailable}"
+                                            />
+                                        </uxap:blocks>
+                                    </uxap:ObjectPageSubSection>
+                                </uxap:subSections>
+                            </uxap:ObjectPageSection>
+
+                            <!-- CHANGE OD COMPENSATION -->
+                            <uxap:ObjectPageSection
+                                title="Change of Compensation"
+                            >
+                                <uxap:subSections>
+                                    <uxap:ObjectPageSubSection>
+                                        <uxap:blocks>
+                                            <Table
+                                                id="compensationTable"
+                                                items="{DataModel>CHANGEOFCOMPENSATION}"
+                                            >
+                                                <headerToolbar>
+                                                    <OverflowToolbar>
+                                                        <!--  <Title text=" CHANGE OF COMPENSATION (If Applicable)." level="H2"/> -->
+                                                        <content>
+                                                            <Label
+                                                                text="In case of Salary Increment"
+                                                            />
+                                                            <ToolbarSpacer />
+                                                            <Label
+                                                                text="Increase Basic Pay (%)"
+                                                            />
+                                                            <ToolbarSeparator />
+                                                            <Label
+                                                                text="#DIV/0!"
+                                                            />
+                                                            <ToolbarSpacer />
+                                                            <Label
+                                                                text="Increase Total Pay (%)"
+                                                            />
+                                                            <ToolbarSeparator />
+                                                            <Label
+                                                                text="#DIV/0!"
+                                                            />
+                                                        </content>
+                                                    </OverflowToolbar>
+                                                </headerToolbar>
+                                                <columns>
+                                                    <Column>
+                                                        <Text text="S.No" />
+                                                    </Column>
+                                                    <Column>
+                                                        <Text text="Items" />
+                                                    </Column>
+                                                    <Column>
+                                                        <Text
+                                                            text="Current Status"
+                                                        />
+                                                    </Column>
+                                                    <Column>
+                                                        <Text
+                                                            text="New Status"
+                                                        />
+                                                    </Column>
+                                                </columns>
+                                                <items>
+                                                    <ColumnListItem>
+                                                        <cells>
+                                                            <Text
+                                                                text="{DataModel>SNo}"
+                                                            />
+                                                            <Text
+                                                                text="{DataModel>Items}"
+                                                            />
+                                                            <Text
+                                                                text="{DataModel>Current Status}"
+                                                            />
+                                                            <Text
+                                                                text="{DataModel>New Status}"
+                                                            />
+                                                        </cells>
+                                                    </ColumnListItem>
+                                                </items>
+                                            </Table>
+                                        </uxap:blocks>
+                                    </uxap:ObjectPageSubSection>
+                                </uxap:subSections>
+                            </uxap:ObjectPageSection>
+
+                            <!-- Remarks & Review -->
+                            <uxap:ObjectPageSection title="Remarks and Review">
+                                <uxap:subSections>
+                                    <uxap:ObjectPageSubSection>
+                                        <uxap:blocks>
+                                            <VBox>
+                                                <Text
+                                                    text="Remarks and Reviews"
+                                                    class="sapUiSmallMargin"
+                                                />
+                                                <TextArea
+                                                    id="remarksTextArea"
+                                                    width="100%"
+                                                    rows="4"
+                                                    placeholder="Enter your remarks or reviews here..."
+                                                />
+                                            </VBox>
+                                        </uxap:blocks>
+                                    </uxap:ObjectPageSubSection>
+                                </uxap:subSections>
+                            </uxap:ObjectPageSection>
+
+                            <!-- APPROVALS SECTION -->
+
+                            <uxap:ObjectPageSection title="APPROVALS">
+                                <uxap:subSections>
+                                    <uxap:ObjectPageSubSection>
+                                        <uxap:blocks>
+                                            <Table
+                                                id="compensationTable1"
+                                                items="{DataModel>Approvals}"
+                                            >
+                                                <columns>
+                                                    <Column>
+                                                        <Text
+                                                            text="PreparedBy"
+                                                        />
+                                                    </Column>
+                                                    <Column>
+                                                        <Text
+                                                            text="RecommendedBy"
+                                                        />
+                                                    </Column>
+                                                    <Column>
+                                                        <Text
+                                                            text="ReviewedBy"
+                                                        />
+                                                    </Column>
+                                                    <Column>
+                                                        <Text
+                                                            text="EndorsedBy"
+                                                        />
+                                                    </Column>
+                                                    <Column>
+                                                        <Text
+                                                            text="ApprovedBy"
+                                                        />
+                                                    </Column>
+                                                </columns>
+                                                <items>
+                                                    <ColumnListItem>
+                                                        <cells>
+                                                            <Text
+                                                                text="{DataModel>preparedBy}"
+                                                            />
+                                                            <Text
+                                                                text="{DataModel>recommendedBy}"
+                                                            />
+                                                            <Text
+                                                                text="{DataModel>reviewedBy}"
+                                                            />
+                                                            <Text
+                                                                text="{DataModel>endorsedBy}"
+                                                            />
+                                                            <Text
+                                                                text="{DataModel>approvedBy}"
+                                                            />
+                                                        </cells>
+                                                    </ColumnListItem>
+                                                </items>
+                                            </Table>
+
+                                            <!-- <form:SimpleForm id="ApprovalForm" editable="true" layout="ResponsiveGridLayout" title="" labelSpanXL="4" labelSpanL="4" labelSpanM="12" labelSpanS="12" adjustLabelSpan="false" emptySpanXL="0" emptySpanL="0" emptySpanM="0" emptySpanS="0" columnsXL="2" columnsL="2" columnsM="1" singleContainerFullSize="false">
+		<form:content>
+			<Title text="INTEMATIONS" />
+			<Label text="HR Operations"/>
+			<CheckBox selected="true" />
+
+			<Label text="Corporate Finance and Planning"/>
+			<CheckBox selected="true" />
+			<Title text="RECORDS KEEPING" />
+			<Label text="Original to Employee File"/>
+			<CheckBox selected="true" />
+
+		</form:content>
+	</form:SimpleForm> -->
+                                        </uxap:blocks>
+                                    </uxap:ObjectPageSubSection>
+                                </uxap:subSections>
+                            </uxap:ObjectPageSection>
+                        </uxap:sections>
+                    </uxap:ObjectPageLayout>
+                </Page>
+            </f:midColumnPages>
+        </f:FlexibleColumnLayout>
+    </Page>
+</mvc:View>

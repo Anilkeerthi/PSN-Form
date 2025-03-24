@@ -1,0 +1,24 @@
+.customHBox {
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0; /* Adds spacing between rows */
+}
+
+.customInput {
+    margin-left: auto; /* Pushes input fields to the right */
+}
+
+.label-spacing {
+    min-width: 80px;
+    margin-right: 10px;
+  }
+  
+  .date-label-spacing {
+    min-width: 150px;
+    margin-right: 10px;
+  }
+  
+  .input-spacing {
+    margin-right: 30px;
+  }
+  
