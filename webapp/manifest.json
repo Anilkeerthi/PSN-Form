@@ -100,12 +100,23 @@
           "target": [
             "TargetPSNForm"
           ]
+        },
+        {
+          "name": "RouteNewForm",
+          "pattern": "NewForm/{action}",
+          "target": [
+            "TargetNewForm"
+          ]
         }
       ],
       "targets": {
         "TargetPSNForm": {
           "id": "PSNForm",
           "name": "PSNForm"
+        },
+        "TargetNewForm": {
+          "id": "NewForm",
+          "name": "NewForm"
         }
       }
     },

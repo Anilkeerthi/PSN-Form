@@ -1,0 +1,15 @@
+<core:FragmentDefinition xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:layout="sap.ui.layout.form">
+    <Dialog id="idRejectDialog" title="Reason for Rejection" afterClose=".onCloseRejectDialog" contentWidth="30rem">
+        <content>
+            <layout:SimpleForm id="idRejectForm" layout="ResponsiveGridLayout" labelSpanXL="3" labelSpanL="3" labelSpanM="4" labelSpanS="12" adjustLabelSpan="false" emptySpanXL="0" emptySpanL="0" emptySpanM="0" emptySpanS="0" columnsXL="1" columnsL="1" columnsM="1" singleContainerFullSize="true">
+                <TextArea id="idRejectReason" width="100%" rows="5" placeholder="Enter rejection reason..." change=".onRejectReasonChange" />
+            </layout:SimpleForm>
+        </content>
+        <buttons>
+            <Button text="Reject" type="Reject" press=".onRejectRequest" />
+            <Button text="Cancel" press=".onCloseRejectDialog" />
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

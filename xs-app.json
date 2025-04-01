@@ -1,13 +1,18 @@
 {
   "welcomeFile": "/index.html",
-  "authenticationMethod": "none",
+  "authenticationMethod": "route",
   "routes": [
     {
-      "source": "^/odata/.*/(.*)$",
+      "source": "^/odata/v2/(.*)$",
       "target": "/$1",
-      "destination": "SF",
+      "destination": "SF_1",
       "authenticationType": "xsuaa",
       "csrfProtection": false
+    },
+    {
+      "source": "/services/userapi",
+      "target": "/$1",
+      "service": "userapi"
     },
     {
       "source": "^/resources/(.*)$",
@@ -21,6 +26,7 @@
       "authenticationType": "none",
       "destination": "ui5"
     },
+
     {
       "source": "^(.*)$",
       "target": "$1",

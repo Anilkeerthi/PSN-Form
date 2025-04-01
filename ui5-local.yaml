@@ -32,7 +32,7 @@ server:
         backend:
           - path: /odata
             url: https://api2preview.sapsf.eu
-            destination: SF
+            destination: SF_1
     - name: sap-fe-mockserver
       beforeMiddleware: csp
       configuration:

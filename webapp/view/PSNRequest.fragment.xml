@@ -1,100 +1,24 @@
-<core:FragmentDefinition
-    xmlns="sap.m"
+<core:FragmentDefinition xmlns="sap.m"
     xmlns:core="sap.ui.core"
-    xmlns:layout="sap.ui.layout.form"
->
-    <Dialog
-        id="idRequestDialog"
-        title="Raise a Request"
-        afterClose=".onCloseDialog"
-        contentWidth="30rem"
-    >
+    xmlns:layout="sap.ui.layout.form">
+    <Dialog id="idRequestDialog" title="Change The Approver" afterClose=".onCloseDialog" contentWidth="30rem">
         <content>
-            <layout:SimpleForm
-                id="idRequestForm"
-                layout="ResponsiveGridLayout"
-                labelSpanXL="3"
-                labelSpanL="3"
-                labelSpanM="4"
-                labelSpanS="12"
-                adjustLabelSpan="false"
-                emptySpanXL="0"
-                emptySpanL="0"
-                emptySpanM="0"
-                emptySpanS="0"
-                columnsXL="1"
-                columnsL="1"
-                columnsM="1"
-                singleContainerFullSize="true"
-            >
-                <!-- Employee Search -->
+            <layout:SimpleForm id="idRequestForm" layout="ResponsiveGridLayout" labelSpanXL="3" labelSpanL="3" labelSpanM="4" labelSpanS="12" adjustLabelSpan="false" emptySpanXL="0" emptySpanL="0" emptySpanM="0" emptySpanS="0" columnsXL="1" columnsL="1" columnsM="1" singleContainerFullSize="true">
                 <Label text="Employee" />
-                <SearchField
-                    id="idEmployeeSearch"
-                    placeholder="Search Employee"
-                    search=".onEmployeeSearch"
-                    suggest=".onEmployeeSearch"
-                    enableSuggestions="true"
-                    width="100%"
-                />
+                <SearchField id="idEmployeeSearch" placeholder="Search Employee" search=".onEmployeeSearch" suggest=".onEmployeeSearch" enableSuggestions="true" width="100%" />
 
-                <List
-                    id="idEmployeeList"
-                    items="{employeeSearch>/employees}"
-                    visible="{= ${employeeSearch>/employees}.length > 0}"
-                    mode="SingleSelectMaster"
-                    selectionChange=".onSuggestionItemSelected"
-                >
-                    <StandardListItem
-                        title="{= ${employeeSearch>firstName} + ' ' + ${employeeSearch>lastName} + ' (' + ${employeeSearch>userId} + ')'}"
-                        type="Active"
-                    >
+                <List id="idEmployeeList" items="{employeeSearch>/employees}" visible="{= ${employeeSearch>/employees}.length > 0}" mode="MultiSelect" selectionChange=".onSuggestionItemSelected">
+                    <StandardListItem title="{= ${employeeSearch>firstName} + ' ' + ${employeeSearch>lastName} + ' (' + ${employeeSearch>userId} + ')'}" type="Active">
                         <customData>
-                            <core:CustomData
-                                key="userId"
-                                value="{employeeSearch>userId}"
-                            />
+                            <core:CustomData key="userId" value="{employeeSearch>userId}" />
                         </customData>
                     </StandardListItem>
                 </List>
-
-                <!-- Required Action -->
-                <!-- <Label text="Required Action" />
-                <Select
-                    id="idRequestType"
-                    width="100%"
-                >
-                    <items>
-                        <core:Item
-                            key="1"
-                            text="Promotion"
-                        />
-                        <core:Item
-                            key="2"
-                            text="Salary Change"
-                        />
-                    </items>
-                </Select> -->
-
-                <!-- Change Effective Date -->
-                <!-- <Label text="Change Effective" />
-                <DatePicker
-                    id="idRequestDate"
-                    width="100%"
-                /> -->
             </layout:SimpleForm>
         </content>
-
         <buttons>
-            <Button
-                text="Select"
-                type="Emphasized"
-                press=".onSelectRequest"
-            />
-            <Button
-                text="Cancel"
-                press="onCloseDialog"
-            />
+            <Button text="Select" type="Emphasized" press=".onChangeApprover" />
+            <Button text="Cancel" press="onCloseDialog" />
         </buttons>
     </Dialog>
 </core:FragmentDefinition>

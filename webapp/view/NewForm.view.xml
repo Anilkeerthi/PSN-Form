@@ -1,4 +1,4 @@
-<mvc:View controllerName="com.taqa.psnform.taqapsnform.controller.PSNForm"
+<mvc:View controllerName="com.taqa.psnform.taqapsnform.controller.NewForm"
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
     xmlns:f="sap.f"
@@ -7,67 +7,71 @@
     xmlns:m="sap.m"
     xmlns:core="sap.ui.core"
     xmlns:u="sap.ui.unified">
-    <Page id="page" title="{i18n>title}">
-        <f:FlexibleColumnLayout id="flexibleColumnLayout">
+
+    <Page id="pageNew" showNavButton="true" navButtonPress="onNavBackHome" navButtonTooltip="Home" title="{i18n>title}">
+        <f:FlexibleColumnLayout id="flexibleColumnLayoutNew">
             <f:beginColumnPages>
-                <Page id="page2" title="PSN Request">
+                <Page id="page2New" title="New Request">
                     <subHeader>
                         <Toolbar>
-                            <Button id="idSearchButton" icon="sap-icon://search" press=".onSearchIconPress" visible="{buttonModel>/showSearchSort}" />
-                            <Button id="idSortButton" icon="sap-icon://sort" press=".onSortIconPress" visible="{buttonModel>/showSearchSort}" />
-                            <SearchField id="idSearchField" width="20%" liveChange =".onSearch" visible="false" />
+                            <Button id="idSearchButtonNew" icon="sap-icon://search" press=".onSearchIconPress" visible="{buttonModel>/showSearchSort}" />
+                            <Button id="idSortButtonNew" icon="sap-icon://sort" press=".onSortIconPress" visible="{buttonModel>/showSearchSort}" />
+                            <SearchField id="idSearchFieldNew" width="20%" search=".onSearch" visible="false" />
 
                             <ToolbarSpacer />
 
-                            <m:Button text="Raise a Request" type="Emphasized" press="onNewRequestDialog"/>
+                            <m:Button text="Raise a Request" type="Emphasized" press="onOpenRequestDialog" visible="{buttonModel>/showRaiseRequest}" />
                         </Toolbar>
                     </subHeader>
                     <content>
-                        <List id="idList" items="{ListData>/cust_PositionStatusChange}">
+                        <!-- <List items="{ListData>/cust_PositionStatusChange}">
                             <ObjectListItem title="{ListData>externalCode}" type="Active" press="onListItemPress" number="{path: 'ListData>effectiveStartDate', formatter: '.formatDate'}">
                                 <firstStatus>
-                                    <ObjectStatus text="{path: 'ListData>wfRequestNav/results/0/status', formatter: '.formatRecordStatus'}" state="{path: 'ListData>wfRequestNav/results/0/status',formatter: '.formatRecordStatusState'}" />
+                                    <ObjectStatus text="{path: 'ListData>mdfSystemRecordStatus', formatter: '.formatRecordStatus'}" state="{
+        path: 'ListData>mdfSystemRecordStatus',
+        formatter: '.formatRecordStatusState'
+    }" />
                                 </firstStatus>
                                 <ObjectAttribute text="{ListData>cust_TypeOfChange}" />
+ 
+                            </ObjectListItem>
+                        </List> -->
+
+                        <List id="idSelectedEmployeeList" items="{selectedEmployeeModel>/selectedEmployee}">
+                            <ObjectListItem title="{selectedEmployeeModel>displayName}" type="Active" press="onNewListItemPress">
+                                <firstStatus>
+                                    <ObjectStatus text="{selectedEmployeeModel>userId}" />
+                                </firstStatus>
+                                <ObjectAttribute text="{selectedEmployeeModel>username}" />
                             </ObjectListItem>
                         </List>
                     </content>
+
                 </Page>
             </f:beginColumnPages>
 
             <f:midColumnPages>
-                <Page id="ObjectPage">
-                    <uxap:ObjectPageLayout id="ObjectPageLayout" showTitleInHeaderContent="true">
+                <Page id="ObjectPageNew">
+                    <uxap:ObjectPageLayout id="ObjectPageLayoutNew" showTitleInHeaderContent="true">
                         <uxap:headerTitle>
                             <uxap:ObjectPageDynamicHeaderTitle>
                                 <uxap:expandedHeading>
                                     <Title text="" wrapping="true" />
                                 </uxap:expandedHeading>
                                 <uxap:navigationActions>
-                                    <m:Button text="Submit Changes" type="Emphasized" visible="false" press="onSubmit" />
-                                    <m:Button text="Approve" type="Accept" visible="true"
-                                        press = "onAccept" />
-                                    <m:Button text="Reject" type="Reject" visible="true"
-                                        press = "_showRejectDialog" />
+                                    <m:Button text="Submit" type="Emphasized" visible="true" press="onSubmit" />
 
-                                    <m:Button text="More Actions" type="Emphasized" icon="sap-icon://menu2" press="onOpenMoreActionsMenu" />
-                                    <!-- <m:Button text="Return" type="Emphasized" visible="true"
-                                        press = "onReturn" />
-                                    <m:Button text="Withdraw" type="Emphasized" visible="true"
-                                        press = "onWithdraw" />
-                                    <m:Button text="Delegate" type="Transparent" press="onToggleFooter" visible="true" /> -->
-
+                                    <!-- <m:Button text="Approve" type="Accept" visible="true" />
+                                    <m:Button text="Reject" type="Reject" visible="true" /> -->
+                                    <!--  
+                                    <m:Button text="Delegate" type="Transparent" press="onToggleFooter" visible="false" /> -->
                                     <OverflowToolbarButton type="Transparent" icon="sap-icon://full-screen" press="handleFullScreen" visible="{= ${buttonModel>/showFullScreen} ? true : false }" />
 
                                     <OverflowToolbarButton type="Transparent" icon="sap-icon://exit-full-screen" press="handleExitFullScreen" visible="{= ${buttonModel>/showExitFullScreen} ? true : false }" />
 
                                     <OverflowToolbarButton type="Transparent" icon="sap-icon://decline" press="handleClose" visible="{buttonModel>showClose}" />
-
-
-
                                 </uxap:navigationActions>
                             </uxap:ObjectPageDynamicHeaderTitle>
-
                         </uxap:headerTitle>
 
                         <uxap:headerContent>
@@ -75,46 +79,45 @@
                                 <!-- First Column -->
                                 <VBox class="sapUiSmallMarginEnd">
                                     <HBox alignItems="Start">
-                                        <m:Label text="Employee Name :" width="120px" />
-                                        <m:Text text="{empData>/displayName}" />
+                                        <m:Label text="Employee Name : :" width="120px" />
+                                        <m:Text text="{selectedEmployeeModel>displayName}" />
                                     </HBox>
 
                                     <HBox alignItems="Start">
                                         <m:Label text="Employee ID :" width="120px" />
-                                        <m:Text text="{empData>/empId}" />
+                                        <m:Text text="{selectedEmployeeModel>userId}" />
                                     </HBox>
 
                                     <HBox alignItems="Start">
                                         <m:Label text="Nationality :" width="120px" />
-                                        <m:Text text="{empData>/nationality}" />
+                                        <m:Text text="{selectedEmployeeModel>nationality}" />
                                     </HBox>
 
                                     <HBox alignItems="Start">
                                         <m:Label text="DOJ/Tenure :" width="120px" />
-                                        <m:Text text="{path: 'empData>/hireDate', formatter: '.formatTenureDate'}" />
+                                        <m:Text text="{path: 'selectedEmployeeModel>hireDate', formatter: '.formatTenureDate'}" />
                                     </HBox>
                                 </VBox>
 
-                                <!-- Second Column -->
                                 <VBox>
                                     <HBox>
                                         <m:Label text="Last Salary Adjustment Date :" width="190px" />
-                                        <m:Text text="{DataModel>Last Salary Adjustment Date}" />
+                                        <m:Text text="{selectedItemDetails>/selectedRow/lastSalaryAdjustmentDate}" />
                                     </HBox>
 
                                     <HBox>
                                         <m:Label text="Last Promotion Date :" width="190px" />
-                                        <m:Text text="{DataModel>Last Promotion Date}" />
+                                        <m:Text text="{selectedItemDetails>/selectedRow/lastPromotionDate}" />
                                     </HBox>
 
                                     <HBox>
                                         <m:Label text="Employment Type :" width="190px" />
-                                        <m:Text text="{empData>/empInfo/jobInfoNav/results/0/employmentTypeNav/picklistLabels/results/0/label}" />
+                                        <m:Text text="{selectedEmployeeModel>/empInfo/jobInfoNav/results/0/employmentTypeNav/picklistLabels/results/0/label}" />
                                     </HBox>
 
                                     <HBox>
                                         <m:Label text="Marital Status :" width="190px" />
-                                        <m:Text text="{path: 'empData>/married', formatter: '.formatMaritalStatus'}" />
+                                        <m:Text text="{path: 'selectedEmployeeModel>/married', formatter: '.formatMaritalStatus'}" />
                                     </HBox>
                                 </VBox>
                             </FlexBox>
@@ -126,21 +129,24 @@
                                 <uxap:subSections>
                                     <uxap:ObjectPageSubSection>
                                         <uxap:blocks>
-                                            <form:SimpleForm id="idChangeForm" editable="true" layout="ResponsiveGridLayout" labelSpanL="3" labelSpanM="3" labelSpanS="12" adjustLabelSpan="false" emptySpanL="0" emptySpanM="0" emptySpanS="0" columnsL="2" columnsM="2">
+                                            <form:SimpleForm id="idChangeFormNew" editable="true" layout="ResponsiveGridLayout" labelSpanL="3" labelSpanM="3" labelSpanS="12" adjustLabelSpan="false" emptySpanL="0" emptySpanM="0" emptySpanS="0" columnsL="2" columnsM="2">
                                                 <form:content>
                                                     <Label text="Required Action" />
-                                                    <Text text="{ListData>cust_TypeOfChange}" />
-                                                 
+                                                    <Select id="idRequestTypeNew" width="60%" items="{
+        path: 'eventReasons>/eventReasons',
+        sorter: { path: 'name' }
+    }">
+                                                        <core:Item key="{eventReasons>externalCode}" text="{eventReasons>name}" />
+                                                    </Select>
 
                                                     <Label text="Change Effective" />
-                                                    <Text text="{path: 'ListData>effectiveStartDate', formatter: '.formatDate'}" />
-                                                  
+                                                    <DatePicker id="idRequestDateNew" width="60%" />
 
                                                     <Label text="Upload Document" />
-                                                    <Text text="No Documents" />
+                                                    <u:FileUploader id="idFileUploaderNew" width="60%" tooltip="Upload supporting document" value="" placeholder="Choose File" />
 
-                                                    <Label text="Justification " />
-                                                    <Text text="{ListData>cust_Justification}" />
+                                                    <Label text="Justification" />
+                                                    <TextArea id="idCommentsNew" width="60%" rows="3" placeholder="Add your comments here..." />
                                                 </form:content>
                                             </form:SimpleForm>
                                         </uxap:blocks>
@@ -155,7 +161,7 @@
                                         <uxap:blocks>
                                             <form:SimpleForm layout="ResponsiveGridLayout">
                                                 <!-- Education Details -->
-                                                <Label text="Highest Eduction Level" />
+                                                <Label text="Highest Education Level" />
                                                 <Text text="{educationData>/results/0/sub_majorNav/picklistLabels/results/0/label}" />
 
                                                 <Label text="Major" />
@@ -179,7 +185,7 @@
                                     <uxap:ObjectPageSubSection>
                                         <uxap:blocks>
                                             <form:SimpleForm editable="true">
-                                                <Label text="JobTitle" />
+                                                <Label text="Job Title" />
                                                 <Text text="{lastExpData>/results/0/startTitle}" />
 
                                                 <Label text="Tenure (Years)" />
@@ -228,6 +234,7 @@
                                 </uxap:subSections>
                             </uxap:ObjectPageSection>
 
+                            <!-- Change of Status -->
                             <uxap:ObjectPageSection title="CHANGE OF STATUS" visible="{= false}">
                                 <uxap:subSections>
                                     <uxap:ObjectPageSubSection>
@@ -282,7 +289,7 @@
                                 <uxap:subSections>
                                     <uxap:ObjectPageSubSection>
                                         <uxap:blocks>
-                                            <Table id="compensationTable" items="{DataModel>CHANGEOFCOMPENSATION}">
+                                            <Table id="compensationTableNew" items="{DataModel>CHANGEOFCOMPENSATION}">
                                                 <headerToolbar>
                                                     <OverflowToolbar>
                                                         <!--  <Title text=" CHANGE OF COMPENSATION (If Applicable)." level="H2"/> -->
@@ -336,7 +343,7 @@
                                         <uxap:blocks>
                                             <VBox>
                                                 <Text text="Remarks and Reviews" class="sapUiSmallMargin" />
-                                                <TextArea id="remarksTextArea" width="100%" rows="4" placeholder="Enter your remarks or reviews here..." />
+                                                <TextArea id="remarksTextAreaNew" width="100%" rows="4" placeholder="Enter your remarks or reviews here..." />
                                             </VBox>
                                         </uxap:blocks>
                                     </uxap:ObjectPageSubSection>
@@ -345,17 +352,17 @@
 
                             <!-- APPROVALS SECTION -->
 
-                            <uxap:ObjectPageSection title="APPROVALS">
+                            <uxap:ObjectPageSection title="APPROVALS" visible="{= false}">
                                 <uxap:subSections>
                                     <uxap:ObjectPageSubSection>
                                         <uxap:blocks>
-                                            <ObjectAttribute title="WF Request ID" text="{ListData>wfRequestNav/results/0/wfRequestId}" />
-                                            <ObjectAttribute title="Total Approval Levels" text="{ListData>wfRequestNav/results/0/totalSteps}" />
-                                            <ObjectAttribute title="Overall Workflow status" text="{ListData>wfRequestNav/results/0/status}" />
-                                            <ObjectAttribute title="WorkFlow Current Step" text="{ListData>wfRequestNav/results/0/currentStepNum}" />
+                                            <ObjectAttribute title="WF Request ID" text="{approvalData>/wfRequestNav/wfRequestId}" />
+                                            <ObjectAttribute title="Total Approval Levels" text="{approvalData>/wfRequestNav/totalSteps}" />
+                                            <ObjectAttribute title="Overall Workflow status" text="{approvalData>/wfRequestNav/status}" />
+                                            <ObjectAttribute title="WorkFlow Current Step" text="{approvalData>/wfRequestNav/currentStepNum}" />
                                         </uxap:blocks>
                                         <uxap:blocks>
-                                            <Table id="compensationTable1" items="{ListData>wfRequestNav/results/0/wfRequestStepNav/results}">
+                                            <Table id="compensationTable1New">
                                                 <columns>
                                                     <Column>
                                                         <Text text="Approver Level" />
@@ -369,22 +376,20 @@
                                                     <Column>
                                                         <Text text="Approver Name" />
                                                     </Column>
-                                                    <Column>
-                                                        <Text text="Change Approval" />
-                                                    </Column>
                                                 </columns>
                                                 <items>
                                                     <ColumnListItem>
                                                         <cells>
-                                                            <Text text="{ListData>stepNum}" />
-                                                            <Text text="{ListData>status}" />
-                                                            <Text text="{ListData>positionNav/results/0/externalName_en_US} ({ListData>positionNav/results/0/code})" />
-                                                            <Text text="{path: 'ListData>positionNav/results/0/code', formatter: '.getApproverNames'}" />
-                                                            <Button text="Change Approver" press=".onOpenChangeApprovalDialog" enabled="{= ${ListData>status} === 'PENDING' }" />
+                                                            <Text text="{approvalData>wfRequestNav/wfRequestStepNav/stepNum}" />
+                                                            <Text text="{approvalData>/wfRequestNav/wfRequestStepNav/status}" />
+                                                            <Text text="{approvalData>/wfRequestNav/wfRequestStepNav/positionNav/externalName_en_US(wfRequestNav/wfRequestStepNav/positionNav/code)}" />
+                                                            <Text text="{approvalData>/wfRequestNav/wfRequestStepNav/}" />
                                                         </cells>
                                                     </ColumnListItem>
                                                 </items>
                                             </Table>
+
+
                                         </uxap:blocks>
                                     </uxap:ObjectPageSubSection>
                                 </uxap:subSections>

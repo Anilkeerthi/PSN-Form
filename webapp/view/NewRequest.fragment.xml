@@ -1,0 +1,26 @@
+<core:FragmentDefinition xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:layout="sap.ui.layout.form">
+    <Dialog id="idNewRequestDialog" title="Raise a Request" afterClose=".onCloseDialog" contentWidth="30rem">
+        <content>
+            <layout:SimpleForm id="idNewRequestForm" layout="ResponsiveGridLayout" labelSpanXL="3" labelSpanL="3" labelSpanM="4" labelSpanS="12" adjustLabelSpan="false" emptySpanXL="0" emptySpanL="0" emptySpanM="0" emptySpanS="0" columnsXL="1" columnsL="1" columnsM="1" singleContainerFullSize="true">
+                <!-- Employee Search -->
+                <Label text="Employee" />
+                <SearchField id="idNewEmployeeSearch" placeholder="Search Employee" search=".onNewEmployeeSearch" suggest=".onNewEmployeeSearch" enableSuggestions="true" width="100%" />
+
+                <List id="idNewEmployeeList" items="{employeeSearch>/employees}" visible="{= ${employeeSearch>/employees}.length > 0}" mode="MultiSelect" selectionChange=".onNewSuggestionItemSelected">
+                    <StandardListItem title="{= ${employeeSearch>firstName} + ' ' + ${employeeSearch>lastName} + ' (' + ${employeeSearch>userId} + ')'}" type="Active">
+                        <customData>
+                            <core:CustomData key="userId" value="{employeeSearch>userId}" />
+                        </customData>
+                    </StandardListItem>
+                </List>
+            </layout:SimpleForm>
+        </content>
+
+        <buttons>
+            <Button text="Select" type="Emphasized" press=".onSelectRequest" />
+            <Button text="Cancel" press="onCloseDialog" />
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>
