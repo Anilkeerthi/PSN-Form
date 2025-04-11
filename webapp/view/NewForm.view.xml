@@ -14,9 +14,9 @@
                 <Page id="page2New" title="New Request">
                     <subHeader>
                         <Toolbar>
-                            <Button id="idSearchButtonNew" icon="sap-icon://search" press=".onSearchIconPress" visible="{buttonModel>/showSearchSort}" />
-                            <Button id="idSortButtonNew" icon="sap-icon://sort" press=".onSortIconPress" visible="{buttonModel>/showSearchSort}" />
-                            <SearchField id="idSearchFieldNew" width="20%" search=".onSearch" visible="false" />
+                            <Button id="idNewSearchButton" icon="sap-icon://search" press=".onNewSearchIconPress" visible="{buttonModel>/showSearchSort}" />
+                            <Button id="idNewSortButton" icon="sap-icon://sort" press=".onNewSortIconPress" visible="{buttonModel>/showSearchSort}" />
+                            <SearchField id="idNewSearchField" width="40%" liveChange =".onNewSearch" visible="false" />
 
                             <ToolbarSpacer />
 
@@ -24,19 +24,6 @@
                         </Toolbar>
                     </subHeader>
                     <content>
-                        <!-- <List items="{ListData>/cust_PositionStatusChange}">
-                            <ObjectListItem title="{ListData>externalCode}" type="Active" press="onListItemPress" number="{path: 'ListData>effectiveStartDate', formatter: '.formatDate'}">
-                                <firstStatus>
-                                    <ObjectStatus text="{path: 'ListData>mdfSystemRecordStatus', formatter: '.formatRecordStatus'}" state="{
-        path: 'ListData>mdfSystemRecordStatus',
-        formatter: '.formatRecordStatusState'
-    }" />
-                                </firstStatus>
-                                <ObjectAttribute text="{ListData>cust_TypeOfChange}" />
- 
-                            </ObjectListItem>
-                        </List> -->
-
                         <List id="idSelectedEmployeeList" items="{selectedEmployeeModel>/selectedEmployee}">
                             <ObjectListItem title="{selectedEmployeeModel>displayName}" type="Active" press="onNewListItemPress">
                                 <firstStatus>
@@ -388,8 +375,6 @@
                                                     </ColumnListItem>
                                                 </items>
                                             </Table>
-
-
                                         </uxap:blocks>
                                     </uxap:ObjectPageSubSection>
                                 </uxap:subSections>

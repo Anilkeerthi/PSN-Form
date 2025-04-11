@@ -3,16 +3,23 @@
   "authenticationMethod": "route",
   "routes": [
     {
-      "source": "^/odata/v2/(.*)$",
+      "source": "^/odata/v2/basic/(.*)$",
       "target": "/$1",
       "destination": "SF_1",
       "authenticationType": "xsuaa",
       "csrfProtection": false
     },
     {
-      "source": "/services/userapi",
+      "source": "^/odata/v2/oauth/(.*)$",
       "target": "/$1",
-      "service": "userapi"
+      "destination": "SF_OAUTH",
+      "authenticationType": "xsuaa",
+      "csrfProtection": false
+    },
+    {
+      "source": "^/user-api(.*)",
+      "target": "$1",
+      "service": "sap-approuter-userapi"
     },
     {
       "source": "^/resources/(.*)$",
@@ -26,7 +33,6 @@
       "authenticationType": "none",
       "destination": "ui5"
     },
-
     {
       "source": "^(.*)$",
       "target": "$1",

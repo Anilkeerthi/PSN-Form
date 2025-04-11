@@ -22,7 +22,6 @@ sap.ui.define([
             // enable routing
             this.getRouter().initialize();
 
-            this.setModel(models.createUserModel(), "userModel");
         }
     });
 });

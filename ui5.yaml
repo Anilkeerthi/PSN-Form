@@ -16,9 +16,14 @@ server:
             - /test-resources
           url: https://ui5.sap.com
         backend:
-          - path: /odata
+          - path: /odata/v2/basic
             url: https://api2preview.sapsf.eu
             destination: SF_1
+            scp: true
+          - path: /odata/v2/oauth
+            url: https://api2preview.sapsf.eu
+            destination: SF_OAUTH
+            scp: true
     - name: fiori-tools-appreload
       afterMiddleware: compression
       configuration:

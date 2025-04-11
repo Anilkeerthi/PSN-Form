@@ -8,7 +8,8 @@ sap.ui.define([
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator",
     "sap/m/MessageBox",
-], (Controller, JSONModel, fioriLibrary, HorizontalLayout, VerticalLayout, Fragment, Filter, FilterOperator, MessageBox) => {
+    "sap/m/MessageToast"
+], (Controller, JSONModel, fioriLibrary, HorizontalLayout, VerticalLayout, Fragment, Filter, FilterOperator, MessageBox,MessageToast) => {
     "use strict";
  
     return Controller.extend("com.taqa.psnform.taqapsnform.controller.NewForm", {
@@ -104,97 +105,76 @@ sap.ui.define([
             var route = this.getOwnerComponent().getRouter();
             route.navTo("RoutePSNForm");
         },
+
+        onNewSearchIconPress: function () {
+            var oSearchField = this.getView().byId("idNewSearchField");
+            var bSearchFieldVisible = oSearchField.getVisible();
+        
+            oSearchField.setVisible(!bSearchFieldVisible);
+        
+            if (!bSearchFieldVisible) {
+                oSearchField.focus();
+            }
+        },
+        
+        onNewSearch: function (oEvent) {
+            var sQuery = oEvent.getParameter("query") || oEvent.getParameter("newValue"); 
+            var oList = this.byId("idSelectedEmployeeList");
+        
+            var oBinding = oList.getBinding("items");
+        
+            if (sQuery && sQuery.length > 0) {
+                var oFilter = new sap.ui.model.Filter([
+                    new sap.ui.model.Filter("displayName", sap.ui.model.FilterOperator.Contains, sQuery),
+                    new sap.ui.model.Filter("userId", sap.ui.model.FilterOperator.Contains, sQuery)
+                ], false); 
+        
+                oBinding.filter(oFilter);
+            } else {
+                oBinding.filter([]);
+            }
+        },
+        
+        onNewSortIconPress: function () {
+            var oList = this.getView().byId("idSelectedEmployeeList");
+            var oBinding = oList.getBinding("items");
+            var bSortAscending = this._bSortAscending; // Get the current sort order
+        
+            var oSorter = new sap.ui.model.Sorter("displayName", !bSortAscending); // Sort by displayName, you can change to any property
+        
+            oBinding.sort(oSorter);
+        
+            this._bSortAscending = !bSortAscending; // Toggle sort order
+        },
+        
  
- 
- 
-        // onNewListItemPress: function (oEvent) {
-        //     var oItem = oEvent.getSource();
-        //     var oCtx = oItem.getBindingContext("selectedEmployeeModel");
-        //     var oModel = this.getView().getModel("selectedEmployeeModel"); // Get the correct model
-        //     var sPath = oCtx.getPath(); // Get the path from the binding context
-        //     var oSelectedRowData = oModel.getProperty(sPath); // Get the data using the path
-        
-        //     sap.ui.core.BusyIndicator.show(0);
-        
-        //     try {
-        //         var userId = oSelectedRowData.userId; // Use userId from your model
-        //         console.log(userId, typeof userId);
-        
-        //         // Perform operations using the userId
-        //         this._getDetails(userId);
-        //         this._getEducationDetails(userId);
-        //         this._getLastExpDetails(userId);
-        //         this._getSalaryAdjustDetails(userId);
-        //         this._getApprovalDetails(userId);
-        
-        //         // Update the selected row data in the model (if you have one)
-        //         if (!this.oSelectedRowModel) {
-        //             //Create model if it does not exist.
-        //             this.oSelectedRowModel = new sap.ui.model.json.JSONModel();
-        //             this.getView().setModel(this.oSelectedRowModel, "selectedItemDetails");
-        
-        //         }
-        //         this.oSelectedRowModel.setData({
-        //             selectedRow: oSelectedRowData
-        //         });
-        
-        //         console.log("Entire Model Data:", this.oSelectedRowModel.getData());
-        
-        //         // Set the Flexible Column Layout
-        //         this.oFlexibleColumnLayout.setLayout(sap.f.LayoutType.TwoColumnsMidExpanded); // Corrected fioriLibrary
-        
-        //         this.oViewModel.setProperty("/showSearchSort", true);
-        //         this.oViewModel.setProperty("/showRaiseRequest", false);
-        
-        //         // Bind the selected item to the ObjectPageLayout in the mid column
-        //         var oMidColumnPage = this.byId("ObjectPageLayoutNew");
-        //         oMidColumnPage.bindElement({
-        //             path: sPath,
-        //             model: "selectedEmployeeModel" // Ensure correct model name
-        //         });
-        
-        //     } catch (error) {
-        //         console.error("Error during processing: ", error);
-        //     } finally {
-        //         this.getView().setBusy(false);
-        //     }
-        
-        //     this._selectedItemContext = oCtx; // Store the binding context
-        // },
 
         onNewListItemPress: function (oEvent) {
             var oItem = oEvent.getSource();
             var oCtx = oItem.getBindingContext("selectedEmployeeModel");
-            var oModel = this.getView().getModel("selectedEmployeeModel"); // Get the correct model
-            var sPath = oCtx.getPath(); // Get the path from the binding context
-            var oSelectedRowData = oModel.getProperty(sPath); // Get the data using the path
+            var oModel = this.getView().getModel("selectedEmployeeModel"); 
+            var sPath = oCtx.getPath(); 
+            var oSelectedRowData = oModel.getProperty(sPath); 
         
-            // Show busy indicator
             sap.ui.core.BusyIndicator.show(0);
         
             try {
-                // Create a promise that resolves after 2 seconds
                 var busyPromise = new Promise(function(resolve) {
                     setTimeout(function() {
                         resolve();
                     }, 100); 
                 });
-        
-                // Chain the promise with the operations
                 busyPromise.then(function() {
-                    var userId = oSelectedRowData.userId; // Use userId from your model
+                    var userId = oSelectedRowData.userId;
                     console.log(userId, typeof userId);
         
-                    // Perform operations using the userId
                     this._getDetails(userId);
                     this._getEducationDetails(userId);
                     this._getLastExpDetails(userId);
                     this._getSalaryAdjustDetails(userId);
                     this._getApprovalDetails(userId);
         
-                    // Update the selected row data in the model (if you have one)
                     if (!this.oSelectedRowModel) {
-                        //Create model if it does not exist.
                         this.oSelectedRowModel = new sap.ui.model.json.JSONModel();
                         this.getView().setModel(this.oSelectedRowModel, "selectedItemDetails");
                     }
@@ -204,46 +184,45 @@ sap.ui.define([
         
                     console.log("Entire Model Data:", this.oSelectedRowModel.getData());
         
-                    // Set the Flexible Column Layout
-                    this.oFlexibleColumnLayout.setLayout(sap.f.LayoutType.TwoColumnsMidExpanded); // Corrected fioriLibrary
+                    this.oFlexibleColumnLayout.setLayout(sap.f.LayoutType.TwoColumnsMidExpanded);
         
                     this.oViewModel.setProperty("/showSearchSort", true);
                     this.oViewModel.setProperty("/showRaiseRequest", false);
         
-                    // Bind the selected item to the ObjectPageLayout in the mid column
                     var oMidColumnPage = this.byId("ObjectPageLayoutNew");
                     oMidColumnPage.bindElement({
                         path: sPath,
-                        model: "selectedEmployeeModel" // Ensure correct model name
+                        model: "selectedEmployeeModel"
                     });
                 }.bind(this)).catch(function(error) {
                     console.error("Error during processing: ", error);
                 }).finally(function() {
-                    // Hide busy indicator when all operations are complete
                     sap.ui.core.BusyIndicator.hide();
                 }.bind(this));
             } catch (error) {
                 console.error("Error during processing: ", error);
-                // Hide busy indicator in case of error
                 sap.ui.core.BusyIndicator.hide();
             }
         
-            this._selectedItemContext = oCtx; // Store the binding context
+            this._selectedItemContext = oCtx; 
         },
  
 
+        getPath: function (destinationType) {
+            let appId = this.getOwnerComponent().getManifestEntry("/sap.app/id");
+            let appPath = appId.replaceAll(".", "/");
+            let appModulePath = jQuery.sap.getModulePath(appPath);
 
-       
- 
-        getPath: function () {
-            var appId = this.getOwnerComponent().getManifestEntry("/sap.app/id");
-            var appPath = appId.replaceAll(".", "/");
-            var appModulePath = jQuery.sap.getModulePath(appPath);
+            if (destinationType === "SF_1") {
+                return appModulePath + "/odata/v2/basic";
+            } else if (destinationType === "SF_OAUTH") {
+                return appModulePath + "/odata/v2/oauth";
+            }
             return appModulePath;
         },
  
         _getPendingListDetails: function (userId) {
-            var sServiceUrl = this.getPath() + "/odata/v2/cust_PositionStatusChange?recordStatus=pending&$format=JSON&$select=externalCode,effectiveStartDate,cust_TypeOfChange,cust_Justification,mdfSystemRecordStatus";
+            var sServiceUrl = this.getPath("SF_1") + "/cust_PositionStatusChange?recordStatus=pending&$format=JSON&$select=externalCode,effectiveStartDate,cust_TypeOfChange,cust_Justification,mdfSystemRecordStatus";
  
             var that = this;
             $.ajax({
@@ -256,7 +235,6 @@ sap.ui.define([
                     let ListDataModel = that.getView().getModel("ListData");
                     ListDataModel.setData({ cust_PositionStatusChange: data.d.results });
  
-                    // Log the data for verification
                     console.log("Fetched Data: ", ListDataModel.getData());
                 },
                 error: function (e) {
@@ -269,7 +247,7 @@ sap.ui.define([
  
         _getDetails: function (userId) {
             var that = this;
-               let sServiceUrl = this.getPath() + "/odata/v2/User(" + userId + ")?$select=firstName,lastName,nationality,empId,userId,username,displayName,hireDate,defaultFullName,married,empInfo/jobInfoNav/employeeTypeNav/picklistLabels/optionId,empInfo/jobInfoNav/employeeTypeNav/picklistLabels/label,empInfo/jobInfoNav/employeeTypeNav/picklistLabels/locale&$format=JSON&$expand=empInfo/jobInfoNav/employeeTypeNav/picklistLabels"
+               let sServiceUrl = this.getPath("SF_OAUTH") + "/User(" + userId + ")?$select=firstName,lastName,nationality,empId,userId,username,displayName,hireDate,defaultFullName,married,empInfo/jobInfoNav/employeeTypeNav/picklistLabels/optionId,empInfo/jobInfoNav/employeeTypeNav/picklistLabels/label,empInfo/jobInfoNav/employeeTypeNav/picklistLabels/locale&$format=JSON&$expand=empInfo/jobInfoNav/employeeTypeNav/picklistLabels"
             $.ajax({
                 url: sServiceUrl,
                 type: "GET",
@@ -292,7 +270,7 @@ sap.ui.define([
         _getEducationDetails: function (userId) {
             // userId = "31120";
             var that = this;
-            let sServiceUrl = this.getPath() + "/odata/v2/Background_Education?$format=json&$select=userId,majorNav/picklistLabels/label,majorNav/picklistLabels/locale,majorNav/picklistLabels/optionId,sub_majorNav/picklistLabels/label,sub_majorNav/picklistLabels/locale,sub_majorNav/picklistLabels/optionId,degreeNav/picklistLabels/label,degreeNav/picklistLabels/locale,degreeNav/picklistLabels/optionId,schoolNav/picklistLabels/label,schoolNav/picklistLabels/locale,schoolNav/picklistLabels/optionId&$expand=majorNav/picklistLabels,degreeNav/picklistLabels,sub_majorNav/picklistLabels,schoolNav/picklistLabels&$filter=userId eq '"+userId+"'";
+            let sServiceUrl = this.getPath("SF_OAUTH") + "/Background_Education?$format=json&$select=userId,majorNav/picklistLabels/label,majorNav/picklistLabels/locale,majorNav/picklistLabels/optionId,sub_majorNav/picklistLabels/label,sub_majorNav/picklistLabels/locale,sub_majorNav/picklistLabels/optionId,degreeNav/picklistLabels/label,degreeNav/picklistLabels/locale,degreeNav/picklistLabels/optionId,schoolNav/picklistLabels/label,schoolNav/picklistLabels/locale,schoolNav/picklistLabels/optionId&$expand=majorNav/picklistLabels,degreeNav/picklistLabels,sub_majorNav/picklistLabels,schoolNav/picklistLabels&$filter=userId eq '"+userId+"'";
  
  
             $.ajax({
@@ -317,7 +295,7 @@ sap.ui.define([
  
         _getApprovalDetails: function (userId) {
             var that = this;
-            let sServiceUrl = this.getPath() + "/odata/v2/cust_PositionStatusChange?$expand=wfRequestNav,wfRequestNav/workflowAllowedActionListNav,wfRequestNav/wfRequestStepNav,wfRequestNav/empWfRequestNav/wfConfigNav/wfStepApproverNav/approverPositionNav,wfRequestNav/wfRequestParticipatorNav&recordStatus=pending&$filter = cust_Emp_ID eq 'userId'&$format=json";
+            let sServiceUrl = this.getPath("SF_OAUTH") + "/cust_PositionStatusChange?$expand=wfRequestNav,wfRequestNav/workflowAllowedActionListNav,wfRequestNav/wfRequestStepNav,wfRequestNav/empWfRequestNav/wfConfigNav/wfStepApproverNav/approverPositionNav,wfRequestNav/wfRequestParticipatorNav&recordStatus=pending&$filter = cust_Emp_ID eq 'userId'&$format=json";
  
             $.ajax({
                 url: sServiceUrl,
@@ -339,7 +317,7 @@ sap.ui.define([
         _getLastExpDetails: function (userId) {
            
             var that = this;
-            let sServiceUrl =  this.getPath() + "/odata/v2/Background_OutsideWorkExperience?$format=json&$select=startTitle,endDate,startDate,employer,yearsofexperience&$top=1&$filter=userId eq '"+userId+"'";
+            let sServiceUrl =  this.getPath("SF_OAUTH") + "/Background_OutsideWorkExperience?$format=json&$select=startTitle,endDate,startDate,employer,yearsofexperience&$top=1&$filter=userId eq '"+userId+"'";
  
  
             $.ajax({
@@ -363,7 +341,7 @@ sap.ui.define([
  
         _getSalaryAdjustDetails: function (userId) {
             var that = this;
-            let sServiceUrl =  this.getPath() + "/odata/v2/FormHeader?$format=json&$select=dateAssigned,formLastContent/pmReviewContentDetail/summarySection/calculatedFormRating/rating,&$expand=formLastContent/pmReviewContentDetail/summarySection/calculatedFormRating&$filter=formSubjectId eq '"+userId+"' and formDataStatus eq 3";
+            let sServiceUrl =  this.getPath("SF_OAUTH") + "/FormHeader?$format=json&$select=dateAssigned,formLastContent/pmReviewContentDetail/summarySection/calculatedFormRating/rating,&$expand=formLastContent/pmReviewContentDetail/summarySection/calculatedFormRating&$filter=formSubjectId eq '"+userId+"' and formDataStatus eq 3";
  
  
             $.ajax({
@@ -380,17 +358,16 @@ sap.ui.define([
                     MessageToast.show("Server Send Error");
                 }
             });
-            // Create a promise to handle the asynchronous call
- 
+      
         },
  
         formatRecordStatusState: function (value) {
             if (value === "P") {
-                return sap.ui.core.ValueState.Error; // Red for Pending
+                return sap.ui.core.ValueState.Error; 
             } else if (value === "C") {
-                return sap.ui.core.ValueState.Success; // Green for Completed
+                return sap.ui.core.ValueState.Success;
             }
-            return sap.ui.core.ValueState.None; // Default color
+            return sap.ui.core.ValueState.None;
         },
  
         formatMaritalStatus: function (value) {
@@ -511,7 +488,6 @@ sap.ui.define([
         onSearch: function (oEvent) {
             var sQuery = oEvent.getParameter("query");
             if (sQuery) {
-                // Perform search logic here
                 console.log("Search:", sQuery);
             }
         },
@@ -520,18 +496,15 @@ sap.ui.define([
  
         onOpenRequestDialog: function () {
             var oView = this.getView();
- 
-            // Load the fragment only once
             if (!this._oRequestDialog) {
                 Fragment.load({
-                    id: oView.getId(), // Ensures unique ID
+                    id: oView.getId(),
                     name: "com.taqa.psnform.taqapsnform.view.NewRequest",
-                    controller: this // Use the same controller
+                    controller: this
                 }).then(function (oDialog) {
                     this._oRequestDialog = oDialog;
                     oView.addDependent(this._oRequestDialog);
  
-                    // Initialize the suggestions model
                     this.oEmployeeSearchModel.setData({
                         employees: []
                     });
@@ -567,24 +540,18 @@ sap.ui.define([
         _searchNewEmployees: function (sSearchTerm) {
             console.log("Searching for employees with term:", sSearchTerm);
         
-            // Get OData model
             var oModel = this.getOwnerComponent().getModel();
         
             if (!oModel) {
                 console.error("OData model not found");
                 return;
             }
-        
-            // Create the search term
             var sSearchLower = sSearchTerm.toLowerCase();
-        
-            // Create the filter string for the OData query
             var sFilter = "tolower(username) like '%" + sSearchLower + "%' or " +
                 "tolower(firstName) like '%" + sSearchLower + "%' or " +
                 "tolower(lastName) like '%" + sSearchLower + "%' or " +
                 "tolower(userId) like '%" + sSearchLower + "%'";
         
-            // Use the OData model to read data
             oModel.read("/User", {
                 urlParameters: {
                     "$top": "10",
@@ -593,7 +560,7 @@ sap.ui.define([
                 success: function (data) {
                     console.log("Search results:", data);
                     if (data && data.results) {
-                        // Format the results
+
                         var aEmployees = data.results.map(function (emp) {
             
                             return {
@@ -619,30 +586,7 @@ sap.ui.define([
         
  
         onNewSuggestionItemSelected: function (oEvent) {
-            // console.log("Suggestion item selected event:", oEvent);
-            // var oItem = oEvent.getParameter("listItem");
- 
-            // if (oItem) {
-
-            //     var oCustomData = oItem.getCustomData().find(function (data) {
-            //         return data.getKey() === "userId";
-            //     });
- 
-            //     var sEmployeeId = oCustomData ? oCustomData.getValue() : "";
-            //     this._selectedEmployeeId = sEmployeeId;
-
-            //     var sEmployeeName = oItem.getTitle();
- 
-            //     var oSearchField = this.byId("idNewEmployeeSearch");
-            //     if (oSearchField) {
-            //         oSearchField.setValue(sEmployeeName);
-            //         this.byId("idNewEmployeeList").setVisible(false);
-            //     }
- 
-            //     console.log("Selected employee ID:", sEmployeeId, "Name:", sEmployeeName);
-            // }
-
-
+          
             console.log("Selection changed event:", oEvent);
            
             var oList = this.byId("idNewEmployeeList");
@@ -680,7 +624,6 @@ sap.ui.define([
  
                     if (oData && oData.results) {
                         var aEventReasons = oData.results.map(function (item) {
-                            // Find the en_US label
                             var oLabel = item.picklistLabels.results.find(function (label) {
                                 return label.locale === "en_US";
                             });
@@ -690,11 +633,8 @@ sap.ui.define([
                                 name: oLabel ? oLabel.label : item.externalCode
                             };
                         });
- 
-                        // Sort actions for better UX
                         aEventReasons.sort((a, b) => a.name.localeCompare(b.name));
  
-                        // Update the model
                         this.oEventReasonsModel.setProperty("/eventReasons", aEventReasons);
                         console.log("Loaded required actions:", aEventReasons);
                     } else {
@@ -704,7 +644,6 @@ sap.ui.define([
                 error: function (oError) {
                     console.error("Error fetching required actions:", oError);
  
-                    // More detailed error logging
                     if (oError.responseText) {
                         try {
                             var errorDetails = JSON.parse(oError.responseText);
@@ -719,25 +658,19 @@ sap.ui.define([
  
  
         onCloseDialog: function() {
-            // Clear the selection
             var oList = this.byId("idNewEmployeeList");
             if (oList) {
                 oList.removeSelections(true);
             }
             
-            // Reset the search field
             var oSearchField = this.byId("idNewEmployeeSearch");
             if (oSearchField) {
                 oSearchField.setValue("");
                 oSearchField.setPlaceholder("Search Employee");
             }
-            
-            // Hide the list
             if (oList) {
                 oList.setVisible(false);
             }
-            
-            // Close the dialog
             if (this._oDialog) {
                 this._oDialog.close();
             } else {
@@ -747,145 +680,6 @@ sap.ui.define([
                 }
             }
         },
- 
-        // onSubmit: function () {
-        //     var oView = this.getView();
-        //     var oSelectedRowModel = oView.getModel("selectedRowModel");
-        
-        //     console.log("Full Selected Row Model:", oSelectedRowModel.getData());
-        
-        //     var oRequestTypeSelect = this.byId("idRequestTypeNew");
-        //     var oDatePicker = this.byId("idRequestDateNew");
-        //     var oCommentsTextArea = this.byId("idCommentsNew");
-        //     var oFileUploader = this.byId("idFileUploaderNew");
-        
-        //     var sRequestType = oRequestTypeSelect.getSelectedKey();
-        //     var oEffectiveDate = oDatePicker.getDateValue();
-        //     var sJustification = oCommentsTextArea.getValue();
-        
-        //     if (!sRequestType) {
-        //         sap.m.MessageBox.error("Please select a Required Action");
-        //         return;
-        //     }
-        
-        //     if (!oEffectiveDate) {
-        //         sap.m.MessageBox.error("Please select an effective change date");
-        //         return;
-        //     }
-        
-        //     var sExternalCode = oSelectedRowModel.getProperty("/selectedRow/externalCode");
-        //     console.log("External Code:", sExternalCode);
-        
-        //     var that = this;
-        
-        //     if (!oFileUploader) {
-        //         console.error("FileUploader with ID 'idFileUploaderNew' not found.");
-        //         sap.m.MessageBox.error("File upload control not found.");
-        //         this.submitPSNForm(sExternalCode, oEffectiveDate, sRequestType, sJustification, null); // Submit without file.
-        //         return;
-        //     }
-        
-        //     if (typeof oFileUploader.getFileObject !== "function") {
-        //         console.error("oFileUploader.getFileObject is not a function. Control is not a valid FileUploader");
-        //         sap.m.MessageBox.error("File upload control is invalid.");
-        //         this.submitPSNForm(sExternalCode, oEffectiveDate, sRequestType, sJustification, null); // Submit without file.
-        //         return;
-        //     }
-        
-        //     var oFile = oFileUploader.getFileObject();
-        
-        //     if (oFile) {
-        //         var reader = new FileReader();
-        //         reader.onload = function (event) {
-        //             var sFileContent = event.target.result.split(',')[1];
-        
-        //             var oAttachmentPayload = {
-        //                 "__metadata": {
-        //                     "uri": "Attachment"
-        //                 },
-        //                 "fileName": oFile.name,
-        //                 "module": "GENERIC_OBJECT",
-        //                 "userId": sExternalCode,
-        //                 "viewable": true,
-        //                 "fileContent": sFileContent
-        //             };
-        
-        //             var sAttachmentUrl = that.getPath() + "/odata/v2/upsert";
-        
-        //             $.ajax({
-        //                 url: sAttachmentUrl,
-        //                 type: "POST",
-        //                 contentType: "application/json",
-        //                 data: JSON.stringify(oAttachmentPayload),
-        //                 success: function (oAttachmentData) {
-        //                     console.log("Attachment upload successful", oAttachmentData);
-        //                     var sAttachmentId = oAttachmentData.d.results[0].attachmentId;
-        //                      that.submitPSNForm(sExternalCode, oEffectiveDate, sRequestType, sJustification, sAttachmentId);
-        //                 },
-        //                 error: function (oAttachmentError) {
-        //                     console.error("Attachment upload failed", oAttachmentError);
-        //                     var sAttachmentErrorMessage = "Attachment upload failed.";
-        
-        //                     if (oAttachmentError.responseJSON && oAttachmentError.responseJSON.error && oAttachmentError.responseJSON.error.message) {
-        //                         sAttachmentErrorMessage = oAttachmentError.responseJSON.error.message;
-        //                     }
-        
-        //                     sap.m.MessageBox.error(sAttachmentErrorMessage, { title: "Error" });
-        //                 }
-        //             });
-        //         };
-        //         reader.readAsDataURL(oFile);
-        //     } else {
-        //         // this.submitPSNForm(sExternalCode, oEffectiveDate, sRequestType, sJustification,sAttachmentId);
-        //     }
-        // },
-        
-        // submitPSNForm: function (sExternalCode, oEffectiveDate, sRequestType, sJustification, sAttachmentId) {
-        //     var oPayload = {
-        //         "__metadata": { "uri": "cust_PositionStatusChange" },
-        //         "externalCode": sExternalCode,
-        //         "cust_Emp_ID": sExternalCode,
-        //         "effectiveStartDate": this.convertToODataDate(new Date()),
-        //         "cust_EffectiveDate": this.convertToODataDate(oEffectiveDate),
-        //         "cust_TypeOfChange": sRequestType,
-        //         "cust_Justification": sJustification || "No justification provided",
-        //     };
-        
-        //     if (sAttachmentId) {
-        //         oPayload.cust_AttachmentNav = {
-        //             "__metadata": {
-        //                 "uri": "Attachment(" + sAttachmentId + "L)"
-        //             }
-        //         };
-        //     }
-        
-        //     console.log("PSN Form Payload prepared:", JSON.stringify(oPayload));
-        
-        //     var sUrl = this.getPath() + "/odata/v2/upsert?workflowConfirmed=true";
-        
-        //     $.ajax({
-        //         url: sUrl,
-        //         type: "POST",
-        //         contentType: "application/json",
-        //         data: JSON.stringify(oPayload),
-        //         success: function (oData) {
-        //             console.log("PSN Form Upsert successful", oData);
-        //             sap.m.MessageBox.success("Workflow confirmed successfully!", {
-        //                 title: "Success"
-        //             });
-        //         },
-        //         error: function (oError) {
-        //             console.error("PSN Form Upsert failed", oError);
-        //             var sErrorMessage = "Workflow confirmation failed.";
-        
-        //             if (oError.responseJSON && oError.responseJSON.error && oError.responseJSON.error.message) {
-        //                 sErrorMessage = oError.responseJSON.error.message;
-        //             }
-        
-        //             sap.m.MessageBox.error(sErrorMessage, { title: "Error" });
-        //         }
-        //     });
-        // },
 
         onSubmit: function () {
             var oView = this.getView();
@@ -931,7 +725,7 @@ sap.ui.define([
                         "fileContent": sFileContent
                     };
         
-                    var sAttachmentUrl = that.getPath() + "/odata/v2/upsert";
+                    var sAttachmentUrl = that.getPath("SF_OAUTH") + "/upsert";
         
                     $.ajax({
                         url: sAttachmentUrl + "?$format=json", // Append $format=json to the URL
@@ -985,51 +779,6 @@ sap.ui.define([
                             sap.m.MessageBox.error(sAttachmentErrorMessage, { title: "Error" });
                         }
                     });
-                    // $.ajax({
-                    //     url: sAttachmentUrl,
-                    //     type: "POST",
-                    //     contentType: "application/json",
-                    //     data: JSON.stringify(oAttachmentPayload),
-                    //     success: function (oAttachmentData) {
-                    //         console.log("Attachment upload successful", oAttachmentData);
-                    
-                    //         // Parse the XML response
-                    //         var parser = new DOMParser();
-                    //         var xmlDoc = parser.parseFromString(oAttachmentData, "text/xml");
-                    
-                    //         // Extract the <d:key> element
-                    //         var keyElement = xmlDoc.getElementsByTagName("d:key")[0];
-                    //         if (keyElement && keyElement.textContent) {
-                    //             // Extract the attachmentId from the <d:key> content
-                    //             var keyContent = keyElement.textContent;
-                    //             var attachmentIdMatch = keyContent.match(/Attachment\/attachmentId=(\d+)/);
-                    
-                    //             if (attachmentIdMatch && attachmentIdMatch[1]) {
-                    //                 var sAttachmentId = attachmentIdMatch[1]; // Captured attachmentId
-                    //                 console.log("Extracted Attachment ID:", sAttachmentId);
-                    
-                    //                 // Proceed with the next step
-                    //                 that.submitPSNForm(sExternalCode, oEffectiveDate, sRequestType, sJustification, sAttachmentId);
-                    //             } else {
-                    //                 console.error("Failed to extract attachmentId from the response.");
-                    //                 sap.m.MessageBox.error("Failed to extract attachmentId from the response.", { title: "Error" });
-                    //             }
-                    //         } else {
-                    //             console.error("No <d:key> element found in the response.");
-                    //             sap.m.MessageBox.error("Invalid response format. Missing <d:key> element.", { title: "Error" });
-                    //         }
-                    //     },
-                    //     error: function (oAttachmentError) {
-                    //         console.error("Attachment upload failed", oAttachmentError);
-                    //         var sAttachmentErrorMessage = "Attachment upload failed.";
-                    
-                    //         if (oAttachmentError.responseJSON && oAttachmentError.responseJSON.error && oAttachmentError.responseJSON.error.message) {
-                    //             sAttachmentErrorMessage = oAttachmentError.responseJSON.error.message;
-                    //         }
-                    
-                    //         sap.m.MessageBox.error(sAttachmentErrorMessage, { title: "Error" });
-                    //     }
-                    // });
                     
                 };
                 reader.readAsDataURL(oFile);
@@ -1056,7 +805,7 @@ sap.ui.define([
             }
         
             console.log("PSN Form Payload prepared:", JSON.stringify(oPayload));
-            var sUrl = this.getPath() + "/odata/v2/upsert?workflowConfirmed=true";
+            var sUrl = this.getPath("SF_OAUTH") + "/upsert?workflowConfirmed=true";
         
             $.ajax({
                 url: sUrl,
@@ -1168,50 +917,6 @@ sap.ui.define([
       
 
         onSelectRequest: function () {
-            // Get the selected employee ID
-            // var sEmployeeId = this._selectedEmployeeId;
-            // var oSearchField = this.byId("idEmployeeSearch");
-            // var oDataModel = this.getView().getModel("DataModel");
-            // var aEmployeeInformation = oDataModel.getProperty("/EmployeeInformation");
-            // var oSelectedEmployee = this.getView().getModel("employeeSearch").getProperty(`/employees`).find(emp => emp.userId === sEmployeeId);
-            // console.log(oSelectedEmployee);
-        
-            // if (!sEmployeeId) {
-            //     sap.m.MessageToast.show("Please select an employee from the suggestions");
-            //     return;
-            // }
-        
-            // if (oSelectedEmployee) {
-            //     var oSelectedEmployeeModel = this.getView().getModel("selectedEmployeeModel");
-        
-            //     if (!oSelectedEmployeeModel) {
-            //         oSelectedEmployeeModel = new sap.ui.model.json.JSONModel({ selectedEmployee: [] });
-            //         this.getView().setModel(oSelectedEmployeeModel, "selectedEmployeeModel");
-            //     }
-        
-            //     var aExistingEmployees = oSelectedEmployeeModel.getProperty("/selectedEmployee");
-        
-            //     if (!Array.isArray(aExistingEmployees)) {
-            //         aExistingEmployees = [];
-            //     }
-        
-            //     var oCopiedSelectedEmployee = JSON.parse(JSON.stringify(oSelectedEmployee));
-        
-            //     var bExists = aExistingEmployees.some(emp => emp.userId === sEmployeeId);
-            //     if (!bExists) {
-            //         aExistingEmployees.push(oCopiedSelectedEmployee); // Use deep copied object
-            //         oSelectedEmployeeModel.setProperty("/selectedEmployee", aExistingEmployees);
-            //         console.log("Updated Model Data:", oSelectedEmployeeModel.getData());
-            //     } else {
-            //         sap.m.MessageToast.show("Employee is already added!");
-            //     }
-            // }
-        
-            // console.log("Submitting request for employee:", sEmployeeId);
-            // sap.m.MessageToast.show("Request Submitted!");
-            // this.onCloseDialog();
-
-              // Get the list control and selected items
               var oList = this.byId("idNewEmployeeList");
               var aSelectedItems = oList.getSelectedItems();
              

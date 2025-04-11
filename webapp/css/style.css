@@ -21,4 +21,12 @@
   .input-spacing {
     margin-right: 30px;
   }
+
+  .sapMListItem.selected-row {
+    background-color: lightblue !important; /* Or any color you prefer */
+}
+
+.addComponentButton {
+  
+}
   

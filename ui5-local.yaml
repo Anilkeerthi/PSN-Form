@@ -30,9 +30,19 @@ server:
       configuration:
         ignoreCertError: false # If set to true, certificate errors will be ignored. E.g. self-signed certificates will be accepted
         backend:
-          - path: /odata
+          - path: /odata/v2/basic
             url: https://api2preview.sapsf.eu
             destination: SF_1
+            authenticationType: 'basic'
+            username: 'ODATAAPI@industrialT1'
+            password: 'Taqasap@123'  
+          - path: /odata/v2/oauth
+            url: https://api2preview.sapsf.eu
+            destination: SF_OAUTH  
+            authenticationType: 'oauth2ClientCredentials'
+            tokenEndpoint: 'https://api2preview.sapsf.eu/oauth/token'
+            clientId: 'YTFhOTFkZTFjOTNhZTI2MDU2ZTBjYWRmYjUxOQ'
+            clientSecret: 'd67a00f1-c9ef-4e98-8d01-529da1f3fe49$NyeHscbJS5ncrUVsXMmd19NKoB1uaKSCJjvCtKrVzuM='    
     - name: sap-fe-mockserver
       beforeMiddleware: csp
       configuration:
