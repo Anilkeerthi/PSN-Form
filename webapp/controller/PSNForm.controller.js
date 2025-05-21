@@ -551,11 +551,11 @@ sap.ui.define([
         },
 
         onSortIconPress: function () {
-            let oList = this.getView().byId("page2").getContent()[0]; // Assuming your List is the first content element
+            let oList = this.getView().byId("page2").getContent()[0]; 
             let oBinding = oList.getBinding("items");
-            let bSortAscending = this._bSortAscending; // Get the current sort order
+            let bSortAscending = this._bSortAscending; 
 
-            let oSorter = new sap.ui.model.Sorter("externalCode", !bSortAscending); // Sort by externalCode, you can change to any property
+            let oSorter = new sap.ui.model.Sorter("externalCode", !bSortAscending);
 
             oBinding.sort(oSorter);
 
