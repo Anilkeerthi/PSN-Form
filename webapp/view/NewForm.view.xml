@@ -120,10 +120,10 @@
                                                 <form:content>
                                                     <Label text="Required Action" />
                                                     <Select id="idRequestTypeNew" width="60%" items="{
-        path: 'eventReasons>/eventReasons',
-        sorter: { path: 'name' }
-    }">
-                                                        <core:Item key="{eventReasons>externalCode}" text="{eventReasons>name}" />
+                                                            path: 'eventReasonsModel>/',
+                                                            sorter: { path: 'name' }
+                                                     }">
+                                                        <core:Item key="{eventReasonsModel>externalCode}" text="{parts: [{path: 'eventReasonsModel>externalCode'},{path: 'eventReasonsModel>name'}], formatter: '.formatExternalCodeWithName'}" />
                                                     </Select>
 
                                                     <Label text="Change Effective" />

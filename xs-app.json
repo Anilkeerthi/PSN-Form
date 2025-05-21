@@ -10,6 +10,34 @@
       "csrfProtection": false
     },
     {
+      "source": "^/odata/v2/sf2/(.*)$",
+      "target": "/$1",
+      "destination": "SF_2",
+      "authenticationType": "xsuaa",
+      "csrfProtection": false
+    },
+    {
+      "source": "^/odata/v2/sf3/(.*)$",
+      "target": "/$1",
+      "destination": "SF_3",
+      "authenticationType": "xsuaa",
+      "csrfProtection": false
+    },
+    {
+      "source": "^/odata/v2/sf4/(.*)$",
+      "target": "/$1",
+      "destination": "SF_4",
+      "authenticationType": "xsuaa",
+      "csrfProtection": false
+    },
+    {
+      "source": "^/odata/v2/sf5/(.*)$",
+      "target": "/$1",
+      "destination": "SF_5",
+      "authenticationType": "xsuaa",
+      "csrfProtection": false
+    },
+    {
       "source": "^/odata/v2/oauth/(.*)$",
       "target": "/$1",
       "destination": "SF_OAUTH",

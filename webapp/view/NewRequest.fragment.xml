@@ -8,7 +8,7 @@
                 <Label text="Employee" />
                 <SearchField id="idNewEmployeeSearch" placeholder="Search Employee" search=".onNewEmployeeSearch" suggest=".onNewEmployeeSearch" enableSuggestions="true" width="100%" />
 
-                <List id="idNewEmployeeList" items="{employeeSearch>/employees}" visible="{= ${employeeSearch>/employees}.length > 0}" mode="MultiSelect" selectionChange=".onNewSuggestionItemSelected">
+                <List id="idNewEmployeeList" items="{employeeSearch>/employees}" visible="{= ${employeeSearch>/employees}.length > 0}"  selectionChange=".onNewSuggestionItemSelected" mode="MultiSelect">
                     <StandardListItem title="{= ${employeeSearch>firstName} + ' ' + ${employeeSearch>lastName} + ' (' + ${employeeSearch>userId} + ')'}" type="Active">
                         <customData>
                             <core:CustomData key="userId" value="{employeeSearch>userId}" />
