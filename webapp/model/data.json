@@ -1,660 +1,1036 @@
 {
-    "EmployeeInformation": [
-        {
-            "Employee Name": "Emily Chen",
-            "Employee #": "#E1234",
-            "Nationality": "Chinese",
-            "tenure": "5 years",
-            "Last Salary Adjustment Date": "2022-07-01",
-            "Last Promotion Date": "2020-01-01",
-            "Employment Type": "Full-time",
-            "Marital Status": "Married",
-            "EducationProfessionalCertifications": {
-                "HighestEducationLevel": "Master's in Computer Science",
-                "Major": "Computer Science",
-                "Certificates": [
-                    {
-                        "CertificateName": "AWS Certified Solutions Architect",
-                        "Institute": "Amazon Web Services"
-                    },
-                    {
-                        "CertificateName": "SAP Certified Development Associate",
-                        "Institute": "SAP SE"
-                    }
-                ]
-            },
-            "LastProfessionalExperience": [
-                {
-                    "Position": "Software Engineer",
-                    "Company": "Neoteric Technologies",
-                    "Tenure": "March 2018 - November 2023",
-                    "Total Years of Experience": "6 years"
-                }
-            ],
-            "performanceRatings": {
-                "2022": "Excellent",
-                "2021": "Very Good",
-                "2020": "Good"
-            },
-            "ChangeOfStatus": [
-                {
-                    "SNo": 1,
-                    "Item": "Entity",
-                    "CurrentStatus": "Q Search L",
-                    "NewStatus": "Taqa Well Solutions"
-                },
-                {
-                    "SNo": 2,
-                    "Item": "Department",
-                    "CurrentStatus": "Software Development",
-                    "NewStatus": "Cloud Engineering"
-                },
-                {
-                    "SNo": 3,
-                    "Item": "Job Title",
-                    "CurrentStatus": "Senior Developer",
-                    "NewStatus": "Lead Developer"
-                },
-                {
-                    "SNo": 4,
-                    "Item": "Location",
-                    "CurrentStatus": "New York",
-                    "NewStatus": "San Francisco"
-                },
-                {
-                    "SNo": 5,
-                    "Item": "Work Schedule",
-                    "CurrentStatus": "Full Time (5X2)",
-                    "NewStatus": "Remote Work (Flexible)"
-                },
-                {
-                    "SNo": 6,
-                    "Item": "Line Manager",
-                    "CurrentStatus": "Michael Smith",
-                    "NewStatus": "Emily Johnson"
-                }
-            ],
-            "TypeOfChange": {
-                "type": "Promotion & Salary Increase",
-                "effectiveDate": "2024-12-02"
-            },
-            "ODRecommendation": {
-                "VacancyAvailable": "Yes",
-                "PositionBudgeted": "Yes",
-                "OrgDesignReflected": "Yes",
-                "JDAvailable": "No"
-            },
-            "CHANGEOFCOMPENSATION": [
-                {
-                    "SNo": "1",
-                    "Items": "Grade",
-                    "Current Status": "Grade 4",
-                    "New Status": "Grade 5"
-                },
-                {
-                    "SNo": "2",
-                    "Items": "Basic Salary",
-                    "Current Status": "20000",
-                    "New Status": "25000"
-                },
-                {
-                    "SNo": "3",
-                    "Items": "Accommodation Allowance",
-                    "Current Status": "4000",
-                    "New Status": "5000"
-                },
-                {
-                    "SNo": "4",
-                    "Items": "Transportation Allowance",
-                    "Current Status": "1500",
-                    "New Status": "2000"
-                },
-                {
-                    "SNo": "5",
-                    "Items": "Market Premium",
-                    "Current Status": "750",
-                    "New Status": "1000"
-                },
-                {
-                    "SNo": "6",
-                    "Items": "Shift Allowance",
-                    "Current Status": "1000",
-                    "New Status": "1500"
-                }
-            ],
-            "Approvals": [
-                {
-                    "preparedBy": "Alice Brown",
-                    "recommendedBy": "David Wilson",
-                    "reviewedBy": "Emma Johnson",
-                    "endorsedBy": "HR Committee",
-                    "approvedBy": "Samuel Adams"
-                }
-            ]
+  "ButtonVisibility": {
+    "RequestTypes": {
+      "RaiseAReq": {
+        "DirectSupervisor": {
+          "code": "RR-DS",
+          "updateButton": false,
+          "submitButton": true,
+          "approveButton": false,
+          "rejectButton": false,
+          "withdrawButton": false,
+          "returnButton": false,
+          "delegateButton": false,
+          "changeOfStatus": false,
+          "changeOfComp": false,
+          "submitApprovals": false,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
         },
-        {
-            "Employee Name": "Michael Lee",
-            "Employee #": "#E5678",
-            "Nationality": "American",
-            "tenure": "8 years",
-            "Last Salary Adjustment Date": "2021-06-15",
-            "Last Promotion Date": "2019-03-10",
-            "Employment Type": "Full-time",
-            "Marital Status": "Single",
-            "EducationProfessionalCertifications": {
-                "HighestEducationLevel": "PhD in Data Science",
-                "Major": "Data Science",
-                "Certificates": [
-                    {
-                        "CertificateName": "Google Data Engineer",
-                        "Institute": "Google"
-                    }
-                ]
-            },
-            "LastProfessionalExperience": [
-                {
-                    "Position": "Senior Data Scientist",
-                    "Company": "DataCorp Inc.",
-                    "Tenure": "April 2015 - August 2023",
-                    "Total Years of Experience": "8 years"
-                }
-            ],
-            "performanceRatings": {
-                "2022": "Very Good",
-                "2021": "Excellent",
-                "2020": "Very Good"
-            },
-            "ChangeOfStatus": [
-                {
-                    "SNo": 1,
-                    "Item": "Entity",
-                    "CurrentStatus": "DataCorp Inc.",
-                    "NewStatus": "AI Research Labs"
-                },
-                {
-                    "SNo": 2,
-                    "Item": "Department",
-                    "CurrentStatus": "Data Analytics",
-                    "NewStatus": "AI & Machine Learning"
-                },
-                {
-                    "SNo": 3,
-                    "Item": "Job Title",
-                    "CurrentStatus": "Lead Data Scientist",
-                    "NewStatus": "AI Research Scientist"
-                },
-                {
-                    "SNo": 4,
-                    "Item": "Work Schedule",
-                    "CurrentStatus": "Full Time (5X2)",
-                    "NewStatus": "Hybrid (3X2)"
-                },
-                {
-                    "SNo": 5,
-                    "Item": "Project",
-                    "CurrentStatus": "Customer Insights",
-                    "NewStatus": "AI Forecasting"
-                },
-                {
-                    "SNo": 6,
-                    "Item": "Team",
-                    "CurrentStatus": "Analytics Team",
-                    "NewStatus": "Deep Learning Division"
-                }
-            ],
-            "TypeOfChange": {
-                "type": "Promotion & Salary Increase",
-                "effectiveDate": "2023-12-01"
-            },
-            "ODRecommendation": {
-                "VacancyAvailable": "No",
-                "PositionBudgeted": "Yes",
-                "OrgDesignReflected": "No",
-                "JDAvailable": "No"
-            },
-            "CHANGEOFCOMPENSATION": [
-                {
-                    "SNo": "1",
-                    "Items": "Grade",
-                    "Current Status": "Grade 3",
-                    "New Status": "Grade 4"
-                },
-                {
-                    "SNo": "2",
-                    "Items": "Basic Salary",
-                    "Current Status": "18000",
-                    "New Status": "21000"
-                },
-                {
-                    "SNo": "3",
-                    "Items": "Accommodation Allowance",
-                    "Current Status": "3500",
-                    "New Status": "4500"
-                },
-                {
-                    "SNo": "4",
-                    "Items": "Transportation Allowance",
-                    "Current Status": "1200",
-                    "New Status": "1700"
-                },
-                {
-                    "SNo": "5",
-                    "Items": "Bonus",
-                    "Current Status": "500",
-                    "New Status": "800"
-                },
-                {
-                    "SNo": "6",
-                    "Items": "Other Allowances",
-                    "Current Status": "900",
-                    "New Status": "1100"
-                }
-            ],
-            "Approvals": [
-                {
-                    "preparedBy": "Michael Lee",
-                    "recommendedBy": "Sophia Martinez",
-                    "reviewedBy": "Daniel White",
-                    "endorsedBy": "HR Advisory",
-                    "approvedBy": "Olivia Carter"
-                }
-            ]
-        },
-        {
-            "Employee Name": "Sophia Patel",
-            "Employee #": "#E9101",
-            "Nationality": "Indian",
-            "tenure": "3 years",
-            "Last Salary Adjustment Date": "2023-05-20",
-            "Last Promotion Date": "2022-02-05",
-            "Employment Type": "Part-time",
-            "Marital Status": "Married",
-            "EducationProfessionalCertifications": {
-                "HighestEducationLevel": "Master's in Human Resources",
-                "Major": "Human Resource Management",
-                "Certificates": [
-                    {
-                        "CertificateName": "Certified HR Professional",
-                        "Institute": "HRCI"
-                    },
-                    {
-                        "CertificateName": "Strategic HR Leadership",
-                        "Institute": "Harvard Business School"
-                    }
-                ]
-            },
-            "LastProfessionalExperience": [
-                {
-                    "Position": "HR Business Partner",
-                    "Company": "PeopleFirst Solutions",
-                    "Tenure": "May 2012 - February 2015",
-                    "Total Years of Experience": "3 years"
-                }
-            ],
-            "performanceRatings": {
-                "2022": "Very Good",
-                "2021": "Good",
-                "2020": "Satisfactory"
-            },
-            "ChangeOfStatus": [
-                {
-                    "SNo": 1,
-                    "Item": "Entity",
-                    "CurrentStatus": "PeopleFirst Solutions",
-                    "NewStatus": "HR Excellence Inc."
-                },
-                {
-                    "SNo": 2,
-                    "Item": "Job Title",
-                    "CurrentStatus": "HR Manager",
-                    "NewStatus": "Director of HR"
-                },
-                {
-                    "SNo": 3,
-                    "Item": "Benefits",
-                    "CurrentStatus": "Standard Package",
-                    "NewStatus": "Executive Package"
-                },
-                {
-                    "SNo": 4,
-                    "Item": "Office Location",
-                    "CurrentStatus": "Chicago",
-                    "NewStatus": "New York"
-                },
-                {
-                    "SNo": 5,
-                    "Item": "HR Policies",
-                    "CurrentStatus": "Old Version",
-                    "NewStatus": "Updated Version"
-                },
-                {
-                    "SNo": 6,
-                    "Item": "Team Size",
-                    "CurrentStatus": "10 Employees",
-                    "NewStatus": "20 Employees"
-                }
-            ],
-            "TypeOfChange": {
-                "type": "Promotion & Salary Increase",
-                "effectiveDate": "2023-12-05"
-            },
-            "ODRecommendation": {
-                "VacancyAvailable": "Yes",
-                "PositionBudgeted": "No",
-                "OrgDesignReflected": "Yes",
-                "JDAvailable": "Yes"
-            },
-            "CHANGEOFCOMPENSATION": [
-                {
-                    "SNo": "1",
-                    "Items": "Grade",
-                    "Current Status": "Grade 5",
-                    "New Status": "Grade 6"
-                },
-                {
-                    "SNo": "2",
-                    "Items": "Basic Salary",
-                    "Current Status": "25000",
-                    "New Status": "28000"
-                },
-                {
-                    "SNo": "3",
-                    "Items": "Housing Allowance",
-                    "Current Status": "5000",
-                    "New Status": "6000"
-                },
-                {
-                    "SNo": "4",
-                    "Items": "Commuting Allowance",
-                    "Current Status": "2000",
-                    "New Status": "2500"
-                },
-                {
-                    "SNo": "5",
-                    "Items": "Performance Bonus",
-                    "Current Status": "1000",
-                    "New Status": "2000"
-                },
-                {
-                    "SNo": "6",
-                    "Items": "Food Allowance",
-                    "Current Status": "800",
-                    "New Status": "1200"
-                }
-            ],
-            "Approvals": [
-                {
-                    "preparedBy": "Ethan Harris",
-                    "recommendedBy": "Charlotte Thompson",
-                    "reviewedBy": "Henry Clark",
-                    "endorsedBy": "Executive HR",
-                    "approvedBy": "Lucas Anderson"
-                }
-            ]
-        },
-        {
-            "Employee Name": "Daniel Kim",
-            "Employee #": "#E1122",
-            "Nationality": "Korean",
-            "tenure": "6 years",
-            "Last Salary Adjustment Date": "2022-11-30",
-            "Last Promotion Date": "2021-08-15",
-            "Employment Type": "Full-time",
-            "Marital Status": "Single",
-            "EducationProfessionalCertifications": {
-                "HighestEducationLevel": "MBA in Finance",
-                "Major": "Finance",
-                "Certificates": [
-                    {
-                        "CertificateName": "Chartered Financial Analyst (CFA)",
-                        "Institute": "CFA Institute"
-                    },
-                    {
-                        "CertificateName": "Financial Risk Manager (FRM)",
-                        "Institute": "GARP"
-                    }
-                ]
-            },
-            "LastProfessionalExperience": [
-                {
-                    "Position": "Investment Analyst",
-                    "Company": "Capital Finance Ltd.",
-                    "Tenure": "June 2016 - May 2018",
-                    "Total Years of Experience": "2 years"
-                }
-            ],
-            "performanceRatings": {
-                "2022": "Good",
-                "2021": "Satisfactory",
-                "2020": "Needs Improvement"
-            },
-            "ChangeOfStatus": [
-                {
-                    "SNo": 1,
-                    "Item": "Entity",
-                    "CurrentStatus": "Capital Finance Ltd.",
-                    "NewStatus": "Global Wealth Management"
-                },
-                {
-                    "SNo": 2,
-                    "Item": "Job Title",
-                    "CurrentStatus": "Financial Analyst",
-                    "NewStatus": "Senior Financial Consultant"
-                },
-                {
-                    "SNo": 3,
-                    "Item": "Work Schedule",
-                    "CurrentStatus": "Full Time (5X2)",
-                    "NewStatus": "Hybrid (4X1)"
-                },
-                {
-                    "SNo": 4,
-                    "Item": "Investment Sector",
-                    "CurrentStatus": "Retail Banking",
-                    "NewStatus": "Corporate Finance"
-                },
-                {
-                    "SNo": 5,
-                    "Item": "Reporting Manager",
-                    "CurrentStatus": "David Miller",
-                    "NewStatus": "Sophia Carter"
-                },
-                {
-                    "SNo": 6,
-                    "Item": "Portfolio Management",
-                    "CurrentStatus": "Regional Clients",
-                    "NewStatus": "Global Clients"
-                }
-            ],
-            "TypeOfChange": {
-                "type": "Promotion & Salary Increase",
-                "effectiveDate": "2024-11-01"
-            },
-            "ODRecommendation": {
-                "VacancyAvailable": "No",
-                "PositionBudgeted": "No",
-                "OrgDesignReflected": "Yes",
-                "JDAvailable": "Yes"
-            },
-            "CHANGEOFCOMPENSATION": [
-                {
-                    "SNo": "1",
-                    "Items": "Grade",
-                    "Current Status": "Grade 2",
-                    "New Status": "Grade 3"
-                },
-                {
-                    "SNo": "2",
-                    "Items": "Basic Salary",
-                    "Current Status": "15000",
-                    "New Status": "18000"
-                },
-                {
-                    "SNo": "3",
-                    "Items": "Housing Allowance",
-                    "Current Status": "3000",
-                    "New Status": "4000"
-                },
-                {
-                    "SNo": "4",
-                    "Items": "Fuel Allowance",
-                    "Current Status": "1000",
-                    "New Status": "1500"
-                },
-                {
-                    "SNo": "5",
-                    "Items": "Internet Allowance",
-                    "Current Status": "500",
-                    "New Status": "700"
-                },
-                {
-                    "SNo": "6",
-                    "Items": "Skill Development Bonus",
-                    "Current Status": "600",
-                    "New Status": "900"
-                }
-            ],
-            "Approvals": [
-                {
-                    "preparedBy": "Benjamin Walker",
-                    "recommendedBy": "Madison Roberts",
-                    "reviewedBy": "James Hall",
-                    "endorsedBy": "Corporate HR",
-                    "approvedBy": "Ella Moore"
-                }
-            ]
-        },
-        {
-            "Employee Name": "Olivia Martinez",
-            "Employee #": "#E3344",
-            "Nationality": "Spanish",
-            "tenure": "4 years",
-            "Last Salary Adjustment Date": "2023-03-25",
-            "Last Promotion Date": "2021-12-10",
-            "Employment Type": "Full-time",
-            "Marital Status": "Married",
-            "EducationProfessionalCertifications": {
-                "HighestEducationLevel": "Bachelor's in Computer Engineering",
-                "Major": "Computer Engineering",
-                "Certificates": [
-                    {
-                        "CertificateName": "Microsoft Certified: Azure Developer Associate",
-                        "Institute": "Microsoft"
-                    },
-                    {
-                        "CertificateName": "Google Professional Cloud Developer",
-                        "Institute": "Google"
-                    }
-                ]
-            },
-            "LastProfessionalExperience": [
-                {
-                    "Position": "Junior Developer",
-                    "Company": "Tech Innovators",
-                    "Tenure": "August 2018 - December 2020",
-                    "Total Years of Experience": "2.5 years"
-                }
-            ],
-            "performanceRatings": {
-                "2022": "Outstanding",
-                "2021": "Exceptional",
-                "2020": "Excellent"
-            },
-            "ChangeOfStatus": [
-                {
-                    "SNo": 1,
-                    "Item": "Entity",
-                    "CurrentStatus": "Tech Innovators",
-                    "NewStatus": "Future Code Labs"
-                },
-                {
-                    "SNo": 2,
-                    "Item": "Project",
-                    "CurrentStatus": "E-commerce Platform",
-                    "NewStatus": "AI-driven Marketplace"
-                },
-                {
-                    "SNo": 3,
-                    "Item": "Technology Stack",
-                    "CurrentStatus": "JavaScript & Node.js",
-                    "NewStatus": "Python & Django"
-                },
-                {
-                    "SNo": 4,
-                    "Item": "Work Location",
-                    "CurrentStatus": "Onsite",
-                    "NewStatus": "Remote"
-                },
-                {
-                    "SNo": 5,
-                    "Item": "Development Methodology",
-                    "CurrentStatus": "Agile",
-                    "NewStatus": "DevOps"
-                },
-                {
-                    "SNo": 6,
-                    "Item": "Team Collaboration",
-                    "CurrentStatus": "Physical Meetings",
-                    "NewStatus": "Virtual Standups"
-                }
-            ],
-            "TypeOfChange": {
-                "type": "Promotion & Salary Increase",
-                "effectiveDate": "2022-12-04"
-            },
-            "ODRecommendation": {
-                "VacancyAvailable": "Yes",
-                "PositionBudgeted": "Yes",
-                "OrgDesignReflected": "Yes",
-                "JDAvailable": "Yes"
-            },
-            "CHANGEOFCOMPENSATION": [
-                {
-                    "SNo": "1",
-                    "Items": "Grade",
-                    "Current Status": "Grade 6",
-                    "New Status": "Grade 7"
-                },
-                {
-                    "SNo": "2",
-                    "Items": "Basic Salary",
-                    "Current Status": "28000",
-                    "New Status": "32000"
-                },
-                {
-                    "SNo": "3",
-                    "Items": "Rent Allowance",
-                    "Current Status": "6000",
-                    "New Status": "7000"
-                },
-                {
-                    "SNo": "4",
-                    "Items": "Meal Allowance",
-                    "Current Status": "1800",
-                    "New Status": "2500"
-                },
-                {
-                    "SNo": "5",
-                    "Items": "Special Incentive",
-                    "Current Status": "1200",
-                    "New Status": "1800"
-                },
-                {
-                    "SNo": "6",
-                    "Items": "Overtime Bonus",
-                    "Current Status": "2000",
-                    "New Status": "3000"
-                }
-            ],
-            "Approvals": [
-                {
-                    "preparedBy": "William Scott",
-                    "recommendedBy": "Ava Lewis",
-                    "reviewedBy": "Noah King",
-                    "endorsedBy": "HR Strategy Team",
-                    "approvedBy": "Mia Young"
-                }
-            ]
+        "Learning Centre Team": {
+          "code": "RR-LCT",
+          "updateButton": false,
+          "submitButton": true,
+          "approveButton": false,
+          "rejectButton": false,
+          "withdrawButton": false,
+          "returnButton": false,
+          "delegateButton": false,
+          "changeOfStatus": false,
+          "changeOfComp": false,
+          "submitApprovals": false,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
         }
-    ]
+      },
+      "PSN_DemotionBudgeted": {
+        "DepartmentHead": {
+          "code": "E1-DH",
+          "updateButton": false,
+          "submitButton": false,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": true,
+          "changeOfStatus": false,
+          "changeOfComp": false,
+          "submitApprovals": false,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
+        },
+        "HRBP_RW": {
+          "code": "E1-HRBPRW",
+          "updateButton": false,
+          "submitButton": false,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": true,
+          "changeOfStatus": false,
+          "changeOfComp": false,
+          "submitApprovals": false,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
+        },
+        "Country HR": {
+          "code": "E1-CHR",
+          "updateButton": true,
+          "submitButton": true,
+          "approveButton": false,
+          "rejectButton": false,
+          "withdrawButton": false,
+          "returnButton": false,
+          "delegateButton": true,
+          "changeOfStatus": true,
+          "changeOfComp": true,
+          "submitApprovals": true,
+          "enableCompany": true,
+          "enableCostCenter": true,
+          "enablePosition": true,
+          "enableDepartment": true,
+          "enableDivision": true,
+          "enableLocation": true,
+          "enableWorkSchedule": true,
+          "enableManager": true,
+          "enableJobTitle": true
+        },
+        "Total Rewards": {
+          "code": "E1-TR",
+          "updateButton": false,
+          "submitButton": true,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": true,
+          "changeOfStatus": true,
+          "changeOfComp": true,
+          "submitApprovals": true,
+          "enableCompany": true,
+          "enableCostCenter": true,
+          "enablePosition": true,
+          "enableDepartment": true,
+          "enableDivision": true,
+          "enableLocation": true,
+          "enableWorkSchedule": true,
+          "enableManager": true,
+          "enableJobTitle": true
+        },
+        "Organizational Effectiveness": {
+          "code": "E1-OE",
+          "updateButton": false,
+          "submitButton": false,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": true,
+          "changeOfStatus": true,
+          "changeOfComp": true,
+          "submitApprovals": true,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
+        },
+        "HRBP_SW": {
+          "code": "E1-HRBPSW",
+          "updateButton": false,
+          "submitButton": false,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": true,
+          "changeOfStatus": true,
+          "changeOfComp": true,
+          "submitApprovals": true,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
+        },
+        "EVP WS": {
+          "code": "E1-EVPWS",
+          "updateButton": false,
+          "submitButton": false,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": true,
+          "changeOfStatus": true,
+          "changeOfComp": true,
+          "submitApprovals": true,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
+        }
+      },
+      "PSN_Promotion_LearningCenterBud": {
+        "HRBP_RW": {
+          "code": "E2-HRBPRW",
+          "updateButton": false,
+          "submitButton": false,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": false,
+          "changeOfStatus": false,
+          "changeOfComp": false,
+          "submitApprovals": false,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
+        },
+        "Country HR": {
+          "code": "E2-CHR",
+          "updateButton": true,
+          "submitButton": true,
+          "approveButton": false,
+          "rejectButton": false,
+          "withdrawButton": false,
+          "returnButton": false,
+          "delegateButton": true,
+          "changeOfStatus": true,
+          "changeOfComp": true,
+          "submitApprovals": true,
+          "enableCompany": true,
+          "enableCostCenter": true,
+          "enablePosition": true,
+          "enableDepartment": true,
+          "enableDivision": true,
+          "enableLocation": true,
+          "enableWorkSchedule": true,
+          "enableManager": true,
+          "enableJobTitle": true
+        },
+        "Total Rewards": {
+          "code": "E2-TR",
+          "updateButton": false,
+          "submitButton": true,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": true,
+          "changeOfStatus": true,
+          "changeOfComp": true,
+          "submitApprovals": true,
+          "enableCompany": true,
+          "enableCostCenter": true,
+          "enablePosition": true,
+          "enableDepartment": true,
+          "enableDivision": true,
+          "enableLocation": true,
+          "enableWorkSchedule": true,
+          "enableManager": true,
+          "enableJobTitle": true
+        },
+        "Organizational Effectiveness": {
+          "code": "E2-OE",
+          "updateButton": false,
+          "submitButton": false,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": true,
+          "changeOfStatus": true,
+          "changeOfComp": true,
+          "submitApprovals": true,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
+        },
+        "HRBP_SW": {
+          "code": "E2-HRBPSW",
+          "updateButton": false,
+          "submitButton": false,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": true,
+          "changeOfStatus": true,
+          "changeOfComp": true,
+          "submitApprovals": true,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
+        },
+        "EVP WS": {
+          "code": "E2-EVPWS",
+          "updateButton": false,
+          "submitButton": false,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": true,
+          "changeOfStatus": true,
+          "changeOfComp": true,
+          "submitApprovals": true,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
+        }
+      },
+      "PSN_SalaryAdjustmentBudgeted": {
+        "DepartmentHead": {
+          "code": "E3-DH",
+          "updateButton": false,
+          "submitButton": false,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": false,
+          "changeOfStatus": false,
+          "changeOfComp": false,
+          "submitApprovals": false,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
+        },
+        "HRBP_RW": {
+          "code": "E3-HRBPRW",
+          "updateButton": false,
+          "submitButton": false,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": false,
+          "changeOfStatus": false,
+          "changeOfComp": false,
+          "submitApprovals": false,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
+        },
+        "Country HR": {
+          "code": "E3-CHR",
+          "updateButton": true,
+          "submitButton": true,
+          "approveButton": false,
+          "rejectButton": false,
+          "withdrawButton": false,
+          "returnButton": false,
+          "delegateButton": true,
+          "changeOfStatus": true,
+          "changeOfComp": true,
+          "submitApprovals": true,
+          "enableCompany": true,
+          "enableCostCenter": true,
+          "enablePosition": true,
+          "enableDepartment": true,
+          "enableDivision": true,
+          "enableLocation": true,
+          "enableWorkSchedule": true,
+          "enableManager": true,
+          "enableJobTitle": true
+        },
+        "Total Rewards": {
+          "code": "E3-TR",
+          "updateButton": false,
+          "submitButton": true,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": true,
+          "changeOfStatus": true,
+          "changeOfComp": true,
+          "submitApprovals": true,
+          "enableCompany": true,
+          "enableCostCenter": true,
+          "enablePosition": true,
+          "enableDepartment": true,
+          "enableDivision": true,
+          "enableLocation": true,
+          "enableWorkSchedule": true,
+          "enableManager": true,
+          "enableJobTitle": true
+        },
+        "HRBP_SW": {
+          "code": "E3-HRBPSW",
+          "updateButton": false,
+          "submitButton": false,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": true,
+          "changeOfStatus": true,
+          "changeOfComp": true,
+          "submitApprovals": true,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
+        },
+        "EVP WS": {
+          "code": "E3-EVPWS",
+          "updateButton": false,
+          "submitButton": false,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": true,
+          "changeOfStatus": true,
+          "changeOfComp": true,
+          "submitApprovals": true,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
+        }
+      },
+      "PSN_TransCountryWithoutSalChUBud": {
+        "DepartmentHead": {
+          "code": "E4-DH",
+          "updateButton": false,
+          "submitButton": false,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": false,
+          "changeOfStatus": false,
+          "changeOfComp": false,
+          "submitApprovals": false,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
+        },
+        "HRBP_RW": {
+          "code": "E4-HRBPRW",
+          "updateButton": false,
+          "submitButton": false,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": false,
+          "changeOfStatus": false,
+          "changeOfComp": false,
+          "submitApprovals": false,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
+        },
+        "Country HR": {
+          "code": "E4-CHR",
+          "updateButton": true,
+          "submitButton": true,
+          "approveButton": false,
+          "rejectButton": false,
+          "withdrawButton": false,
+          "returnButton": false,
+          "delegateButton": true,
+          "changeOfStatus": true,
+          "changeOfComp": true,
+          "submitApprovals": true,
+          "enableCompany": true,
+          "enableCostCenter": true,
+          "enablePosition": true,
+          "enableDepartment": true,
+          "enableDivision": true,
+          "enableLocation": true,
+          "enableWorkSchedule": true,
+          "enableManager": true,
+          "enableJobTitle": true
+        },
+        "Organizational Effectiveness": {
+          "code": "E4-OE",
+          "updateButton": false,
+          "submitButton": false,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": true,
+          "changeOfStatus": true,
+          "changeOfComp": true,
+          "submitApprovals": true,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
+        },
+        "HRBP_SW": {
+          "code": "E4-HRBPSW",
+          "updateButton": false,
+          "submitButton": false,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": true,
+          "changeOfStatus": true,
+          "changeOfComp": true,
+          "submitApprovals": true,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
+        },
+        "EVP WS": {
+          "code": "E4-EVPWS",
+          "updateButton": false,
+          "submitButton": false,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": true,
+          "changeOfStatus": true,
+          "changeOfComp": true,
+          "submitApprovals": true,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
+        }
+      },
+      "PSN_TransBetLEorDepWithPromBud": {
+        "DepartmentHead": {
+          "code": "E5-DH",
+          "updateButton": false,
+          "submitButton": false,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": false,
+          "changeOfStatus": false,
+          "changeOfComp": false,
+          "submitApprovals": false,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
+        },
+        "HRBP_RW": {
+          "code": "E5-HRBPRW",
+          "updateButton": false,
+          "submitButton": false,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": false,
+          "changeOfStatus": false,
+          "changeOfComp": false,
+          "submitApprovals": false,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
+        },
+        "Country HR": {
+          "code": "E5-CHR",
+          "updateButton": true,
+          "submitButton": true,
+          "approveButton": false,
+          "rejectButton": false,
+          "withdrawButton": false,
+          "returnButton": false,
+          "delegateButton": true,
+          "changeOfStatus": true,
+          "changeOfComp": true,
+          "submitApprovals": true,
+          "enableCompany": true,
+          "enableCostCenter": true,
+          "enablePosition": true,
+          "enableDepartment": true,
+          "enableDivision": true,
+          "enableLocation": true,
+          "enableWorkSchedule": true,
+          "enableManager": true,
+          "enableJobTitle": true
+        },
+        "Total Rewards": {
+          "code": "E5-TR",
+          "updateButton": false,
+          "submitButton": true,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": true,
+          "changeOfStatus": true,
+          "changeOfComp": true,
+          "submitApprovals": true,
+          "enableCompany": true,
+          "enableCostCenter": true,
+          "enablePosition": true,
+          "enableDepartment": true,
+          "enableDivision": true,
+          "enableLocation": true,
+          "enableWorkSchedule": true,
+          "enableManager": true,
+          "enableJobTitle": true
+        },
+        "Organizational Effectiveness": {
+          "code": "E5-OE",
+          "updateButton": false,
+          "submitButton": false,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": true,
+          "changeOfStatus": true,
+          "changeOfComp": true,
+          "submitApprovals": true,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
+        },
+        "HRBP_SW": {
+          "code": "E5-HRBPSW",
+          "updateButton": false,
+          "submitButton": false,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": true,
+          "changeOfStatus": true,
+          "changeOfComp": true,
+          "submitApprovals": true,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
+        },
+        "EVP WS": {
+          "code": "E5-EVPWS",
+          "updateButton": false,
+          "submitButton": false,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": true,
+          "changeOfStatus": true,
+          "changeOfComp": true,
+          "submitApprovals": true,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
+        }
+      },
+      "PSN_WorkScheduleChange": {
+        "DepartmentHead": {
+          "code": "E7-DH",
+          "updateButton": false,
+          "submitButton": false,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": false,
+          "changeOfStatus": false,
+          "changeOfComp": false,
+          "submitApprovals": false,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
+        },
+        "Country HR": {
+          "code": "E7-CHR",
+          "updateButton": true,
+          "submitButton": true,
+          "approveButton": false,
+          "rejectButton": false,
+          "withdrawButton": false,
+          "returnButton": false,
+          "delegateButton": true,
+          "changeOfStatus": true,
+          "changeOfComp": true,
+          "submitApprovals": true,
+          "enableCompany": true,
+          "enableCostCenter": true,
+          "enablePosition": true,
+          "enableDepartment": true,
+          "enableDivision": true,
+          "enableLocation": true,
+          "enableWorkSchedule": true,
+          "enableManager": true,
+          "enableJobTitle": true
+        },
+        "EVP WS": {
+          "code": "E7-EVPWS",
+          "updateButton": false,
+          "submitButton": false,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": true,
+          "changeOfStatus": true,
+          "changeOfComp": true,
+          "submitApprovals": true,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
+        }
+      },
+      "PSN_JobTitleChange": {
+        "DepartmentHead": {
+          "code": "E8-DH",
+          "updateButton": false,
+          "submitButton": false,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": false,
+          "changeOfStatus": false,
+          "changeOfComp": false,
+          "submitApprovals": false,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
+        },
+        "Country HR": {
+          "code": "E8-CHR",
+          "updateButton": true,
+          "submitButton": true,
+          "approveButton": false,
+          "rejectButton": false,
+          "withdrawButton": false,
+          "returnButton": false,
+          "delegateButton": true,
+          "changeOfStatus": true,
+          "changeOfComp": true,
+          "submitApprovals": true,
+          "enableCompany": true,
+          "enableCostCenter": true,
+          "enablePosition": true,
+          "enableDepartment": true,
+          "enableDivision": true,
+          "enableLocation": true,
+          "enableWorkSchedule": true,
+          "enableManager": true,
+          "enableJobTitle": true
+        },
+        "Organizational Effectiveness": {
+          "code": "E8-OE",
+          "updateButton": false,
+          "submitButton": false,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": true,
+          "changeOfStatus": true,
+          "changeOfComp": true,
+          "submitApprovals": true,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
+        },
+        "HRBP_SW": {
+          "code": "E8-HRBPSW",
+          "updateButton": false,
+          "submitButton": false,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": true,
+          "changeOfStatus": true,
+          "changeOfComp": true,
+          "submitApprovals": true,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
+        },
+        "EVP WS": {
+          "code": "E8-EVPWS",
+          "updateButton": false,
+          "submitButton": false,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": true,
+          "changeOfStatus": true,
+          "changeOfComp": true,
+          "submitApprovals": true,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
+        }
+      },
+      "PSN_ManagerChange": {
+        "DepartmentHead": {
+          "code": "E9-DH",
+          "updateButton": false,
+          "submitButton": false,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": false,
+          "changeOfStatus": false,
+          "changeOfComp": false,
+          "submitApprovals": false,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
+        },
+        "Country HR": {
+          "code": "E9-CHR",
+          "updateButton": true,
+          "submitButton": true,
+          "approveButton": false,
+          "rejectButton": false,
+          "withdrawButton": false,
+          "returnButton": false,
+          "delegateButton": true,
+          "changeOfStatus": true,
+          "changeOfComp": true,
+          "submitApprovals": true,
+          "enableCompany": true,
+          "enableCostCenter": true,
+          "enablePosition": true,
+          "enableDepartment": true,
+          "enableDivision": true,
+          "enableLocation": true,
+          "enableWorkSchedule": true,
+          "enableManager": true,
+          "enableJobTitle": true
+        },
+        "Organizational Effectiveness": {
+          "code": "E9-OE",
+          "updateButton": false,
+          "submitButton": false,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": true,
+          "changeOfStatus": true,
+          "changeOfComp": true,
+          "submitApprovals": true,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
+        },
+        "HRBP_SW": {
+          "code": "E9-HRBPSW",
+          "updateButton": false,
+          "submitButton": false,
+          "approveButton": true,
+          "rejectButton": true,
+          "withdrawButton": true,
+          "returnButton": true,
+          "delegateButton": true,
+          "changeOfStatus": true,
+          "changeOfComp": true,
+          "submitApprovals": true,
+          "enableCompany": false,
+          "enableCostCenter": false,
+          "enablePosition": false,
+          "enableDepartment": false,
+          "enableDivision": false,
+          "enableLocation": false,
+          "enableWorkSchedule": false,
+          "enableManager": false,
+          "enableJobTitle": false
+        }
+      }
+    }
+  }
 }

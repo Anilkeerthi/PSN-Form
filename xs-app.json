@@ -1,13 +1,53 @@
 {
   "welcomeFile": "/index.html",
-  "authenticationMethod": "none",
+  "authenticationMethod": "route",
   "routes": [
     {
-      "source": "^/odata/.*/(.*)$",
+      "source": "^/odata/v2/basic/(.*)$",
       "target": "/$1",
-      "destination": "SF",
+      "destination": "SF_1",
       "authenticationType": "xsuaa",
       "csrfProtection": false
+    },
+    {
+      "source": "^/odata/v2/sf2/(.*)$",
+      "target": "/$1",
+      "destination": "SF_2",
+      "authenticationType": "xsuaa",
+      "csrfProtection": false
+    },
+    {
+      "source": "^/odata/v2/sf3/(.*)$",
+      "target": "/$1",
+      "destination": "SF_3",
+      "authenticationType": "xsuaa",
+      "csrfProtection": false
+    },
+    {
+      "source": "^/odata/v2/sf4/(.*)$",
+      "target": "/$1",
+      "destination": "SF_4",
+      "authenticationType": "xsuaa",
+      "csrfProtection": false
+    },
+    {
+      "source": "^/odata/v2/sf5/(.*)$",
+      "target": "/$1",
+      "destination": "SF_5",
+      "authenticationType": "xsuaa",
+      "csrfProtection": false
+    },
+    {
+      "source": "^/odata/v2/oauth/(.*)$",
+      "target": "/$1",
+      "destination": "SF_OAUTH",
+      "authenticationType": "xsuaa",
+      "csrfProtection": false
+    },
+    {
+      "source": "^/user-api(.*)",
+      "target": "$1",
+      "service": "sap-approuter-userapi"
     },
     {
       "source": "^/resources/(.*)$",
