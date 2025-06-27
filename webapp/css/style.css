@@ -17,6 +17,10 @@
     min-width: 150px;
     margin-right: 10px;
   }
+
+  .warningText {
+    color: #e78c07; 
+}
   
   .input-spacing {
     margin-right: 30px;

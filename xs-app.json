@@ -50,6 +50,12 @@
       "service": "sap-approuter-userapi"
     },
     {
+      "source": "^/mail/(.*)$",
+      "target": "/$1",
+      "destination": "psn_mail",
+      "authenticationType": "basic"
+    },   
+    {
       "source": "^/resources/(.*)$",
       "target": "/resources/$1",
       "authenticationType": "none",

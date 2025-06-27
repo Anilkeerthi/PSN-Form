@@ -1,0 +1,50 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
+    <Dialog 
+        id="statusDetailsDialog" 
+        title="Comments" 
+        contentWidth="600px" 
+        contentHeight="500px"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <List 
+                items="{sendBackCommentModel>/wfRequestCommentsNav/results}" 
+                noDataText="No comments available for this step" 
+                class="sapUiSmallMarginTop">
+                
+                <CustomListItem>
+                    <content>
+                        <VBox class="sapUiSmallMargin">
+                        
+                            <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiTinyMarginBottom">
+                                <VBox>
+                                    <Text text="Action: {sendBackCommentModel>actionType}" class="sapMText sapUiTinyMarginBottom"/>
+                                    <Text text="By: {sendBackCommentModel>createdBy}" class="sapMText"/>
+                                </VBox>
+                                <Text text="{path: 'sendBackCommentModel>createdDateTime', formatter: '.formatDateTime'}" class="sapMText"/>
+                            </HBox>
+                            
+                            <VBox class="sapUiTinyMarginTop">
+                                <Text text="{sendBackCommentModel>comments}" 
+                                    visible="{= ${sendBackCommentModel>comments} !== null &amp;&amp; ${sendBackCommentModel>comments} !== '' }"
+                                    renderWhitespace="true"/>
+                                    
+                                <Text 
+                                    text="No comments provided" 
+                                    class="sapMText sapMTextMuted" 
+                                    visible="{= ${sendBackCommentModel>comments} === null || ${sendBackCommentModel>comments} === '' }"/>
+                            </VBox>
+                            
+                            <core:HTML content="&lt;hr style='margin: 10px 0; border: 0; border-top: 1px solid #e5e5e5;'&gt;"/>
+                        </VBox>
+                    </content>
+                </CustomListItem>
+            </List>
+        </content>
+
+        <buttons>
+            <Button text="Close" press=".onCloseStatusDetailsDialog" type="Emphasized"/>
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

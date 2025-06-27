@@ -1,0 +1,24 @@
+<core:FragmentDefinition xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:layout="sap.ui.layout.form">
+    <Dialog id="idRqApproverDialog" title="Change The Approver" afterClose=".onCloseDialog" contentWidth="30rem">
+        <content>
+            <layout:SimpleForm id="idRqRequestForm11" layout="ResponsiveGridLayout" labelSpanXL="3" labelSpanL="3" labelSpanM="4" labelSpanS="12" adjustLabelSpan="false" emptySpanXL="0" emptySpanL="0" emptySpanM="0" emptySpanS="0" columnsXL="1" columnsL="1" columnsM="1" singleContainerFullSize="true">
+                <Label text="Approver" />
+                <SearchField id="idRqEmployeeSearch1" placeholder="Search Approver" search=".onApproverSearch" suggest=".onApproverSearch" enableSuggestions="true" width="100%" />
+
+                <List id="idRqEmployeeList1" items="{changeApproval>/approvers}" visible="{= ${changeApproval>/approvers}.length > 0}" mode="MultiSelect" selectionChange=".onSuggestionItemSelectedRqApprover">
+                    <StandardListItem title="{= ${changeApproval>firstName} + ' ' + ${changeApproval>lastName} + ' (' + ${changeApproval>userId} + ')'}" type="Active">
+                        <customData>
+                            <core:CustomData key="userId" value="{changeApproval>userId}" />
+                        </customData>
+                    </StandardListItem>
+                </List>
+            </layout:SimpleForm>
+        </content>
+        <buttons>
+            <Button text="Select" type="Emphasized" press=".onChangeRequestApprover" />
+            <Button text="Cancel" press="onCloseDialog" />
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

@@ -119,7 +119,7 @@
                                             <form:SimpleForm id="idChangeFormNew" editable="true" layout="ResponsiveGridLayout" labelSpanL="3" labelSpanM="3" labelSpanS="12" adjustLabelSpan="false" emptySpanL="0" emptySpanM="0" emptySpanS="0" columnsL="2" columnsM="2">
                                                 <form:content>
                                                     <Label text="Required Action" />
-                                                    <Select id="idRequestTypeNew" width="60%" items="{
+                                                    <Select id="idRequestTypeNew" width="60%" change=".onEventReasonChange" items="{
                                                             path: 'eventReasonsModel>/',
                                                             sorter: { path: 'name' }
                                                      }">

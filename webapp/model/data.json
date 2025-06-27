@@ -844,7 +844,7 @@
           "submitApprovals": false,
           "enableCompany": false,
           "enableCostCenter": false,
-          "enablePosition": false,
+          "enableCostCenter": false,
           "enableDepartment": false,
           "enableDivision": false,
           "enableLocation": false,
@@ -872,6 +872,7 @@
           "enableLocation": true,
           "enableWorkSchedule": true,
           "enableManager": true,
+          "enableBusinessUnit" : true,
           "enableJobTitle": true
         },
         "Organizational Effectiveness": {
