@@ -1,0 +1,15 @@
+<core:FragmentDefinition xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:layout="sap.ui.layout.form">
+    <Dialog id="idReturnDialog" title="Reason for Return" afterClose=".onCloseReturnDialog" contentWidth="30rem">
+        <content>
+            <layout:SimpleForm id="idReturnForm" layout="ResponsiveGridLayout" labelSpanXL="3" labelSpanL="3" labelSpanM="4" labelSpanS="12" adjustLabelSpan="false" emptySpanXL="0" emptySpanL="0" emptySpanM="0" emptySpanS="0" columnsXL="1" columnsL="1" columnsM="1" singleContainerFullSize="true">
+                <TextArea id="idReturnReason" width="100%" rows="5" placeholder="Enter return reason..." change=".onReturnReasonChange" />
+            </layout:SimpleForm>
+        </content>
+        <buttons>
+            <Button text="Return" type="Emphasized" press=".onReturnRequest" />
+            <Button text="Cancel" press=".onCloseReturnDialog" />
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

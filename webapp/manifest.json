@@ -63,7 +63,12 @@
           "bundleName": "com.taqa.psnform.taqapsnform.i18n.i18n"
         }
       },
-
+      "userRolesModel": {
+          "dataSource": "",
+          "type": "sap.ui.model.json.JSONModel",
+          "settings": {},
+          "preload": true
+      },
       "DataModel": {
         "type": "sap/ui/model/json/JSONModel",
         "uri": "model/data.json"

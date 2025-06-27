@@ -17,7 +17,7 @@
             </layout:SimpleForm>
         </content>
         <buttons>
-            <Button text="Select" type="Emphasized" press=".onChangeApprover" />
+            <Button text="Select" type="Emphasized" press=".onChangeRequestApprover" />
             <Button text="Cancel" press="onCloseDialog" />
         </buttons>
     </Dialog>

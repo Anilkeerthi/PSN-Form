@@ -1,5 +1,6 @@
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
+    
     "sap/ui/model/json/JSONModel",
     "sap/f/library",
     "sap/ui/layout/HorizontalLayout",
@@ -38,6 +39,8 @@ sap.ui.define([
             });
        
             this.getView().setModel(this.oEmployeeSearchModel, "employeeSearch");
+            // var oUserModel = this.getOwnerComponent().getModel("UserInfo");
+
          
             // Create a model for the required actions dropdown (renamed from eventReasons)
             this.oEventReasonsModel = new JSONModel({
@@ -131,7 +134,7 @@ sap.ui.define([
             if (sQuery && sQuery.length > 0) {
                 var oFilter = new sap.ui.model.Filter([
                     new sap.ui.model.Filter("displayName", sap.ui.model.FilterOperator.Contains, sQuery),
-                    new sap.ui.model.Filter("userId", sap.ui.model.FilterOperator.Contains, sQuery)
+                    new sap.ui.model.Filter("empId", sap.ui.model.FilterOperator.Contains, sQuery)
                 ], false); 
         
                 oBinding.filter(oFilter);
@@ -386,6 +389,38 @@ sap.ui.define([
                 }
             });
         },
+
+        onEventReasonChange: function (oEvent) {
+            var oSelectedItem = oEvent.getParameter("selectedItem");
+            if (!oSelectedItem) return;
+        
+            var oContext = oSelectedItem.getBindingContext("eventReasonsModel");
+            var sCode = oContext.getProperty("externalCode"); // Example: PSN_PromotionBudgeted
+        
+            var oFileUploader = this.byId("idFileUploaderNew");
+            var bIsMandatory = false;
+        
+            if (
+                sCode.includes("PromotionBudgeted") ||
+                sCode.includes("PromotionUnBudgeted") ||
+                sCode.includes("DemotionBudgeted") ||
+                sCode.includes("DemotionUnBudgeted")
+            ) {
+                bIsMandatory = true;
+            }
+        
+            if (bIsMandatory) {
+                oFileUploader.setValueState("Error");
+                oFileUploader.setValueStateText("Attachment is required for this action.");
+                oFileUploader.data("mandatory", true);
+            } else {
+                oFileUploader.setValueState("None");
+                oFileUploader.setValueStateText("");
+                oFileUploader.data("mandatory", false);
+            }
+        },
+        
+        
  
         formatRecordStatusState: function (value) {
             if (value === "P") {
@@ -555,26 +590,48 @@ sap.ui.define([
             }
         },
  
+        // onNewEmployeeSearch: function (oEvent) {
+        //     var sValue = "";
+ 
+        //     if (oEvent.getParameter("suggestValue") !== undefined) {
+        //         sValue = oEvent.getParameter("suggestValue");
+        //         console.log("Suggest value:", sValue);
+        //     } else if (oEvent.getParameter("query") !== undefined) {
+        //         sValue = oEvent.getParameter("query");
+        //         console.log("Query value:", sValue);
+        //     }
+ 
+        //     this._searchTerm = sValue;
+ 
+        //     if (sValue && sValue.length >= 2) {
+        //         this._searchNewEmployees(sValue);
+        //     } else {
+        //         this.oEmployeeSearchModel.setProperty("/employees", []);
+        //     }
+        // },
+ 
+
         onNewEmployeeSearch: function (oEvent) {
             var sValue = "";
- 
+        
             if (oEvent.getParameter("suggestValue") !== undefined) {
                 sValue = oEvent.getParameter("suggestValue");
-                console.log("Suggest value:", sValue);
             } else if (oEvent.getParameter("query") !== undefined) {
                 sValue = oEvent.getParameter("query");
-                console.log("Query value:", sValue);
             }
- 
+        
             this._searchTerm = sValue;
- 
+        
             if (sValue && sValue.length >= 2) {
-                this._searchNewEmployees(sValue);
+                var oUserModel = this.getOwnerComponent().getModel("UserInfo");
+                var managerUsername = oUserModel ? oUserModel.getProperty("/managerUsername") : "";
+        
+                this._searchNewEmployees(sValue, managerUsername);
             } else {
                 this.oEmployeeSearchModel.setProperty("/employees", []);
             }
         },
- 
+        
  
         // _searchNewEmployees: function (sSearchTerm) {
         //     console.log("Searching for employees with term:", sSearchTerm);
@@ -623,49 +680,152 @@ sap.ui.define([
         //     });
         // },
 
-        _searchNewEmployees: function (sSearchTerm) {
-            console.log("Searching for employees with term:", sSearchTerm);
+
+        // main search function
+
+        // _searchNewEmployees: function (sSearchTerm) {
+        //     console.log("Searching for employees with term:", sSearchTerm);
             
+        //     var sSearchLower = sSearchTerm.toLowerCase();
+        //     var sFilter = "tolower(username) like '%" + sSearchLower + "%' or " +
+        //         "tolower(firstName) like '%" + sSearchLower + "%' or " +
+        //         "tolower(lastName) like '%" + sSearchLower + "%' or " +
+        //         "tolower(userId) like '%" + sSearchLower + "%'";
+            
+        //     // Get the base path using the updated getPath function - use the destination you need
+        //     var sPath = this.getPath("SF_1"); // or this.getPath("SF_1") depending on which one you need
+            
+        //     // Construct the full URL with query parameters
+        //     var sUrl = sPath + "/User";
+            
+        //     // Make the AJAX call
+        //     jQuery.ajax({
+        //         url: sUrl,
+        //         method: "GET",
+        //         headers: {
+        //             "Accept": "application/json"
+        //         },
+        //         data: {
+        //             "$top": "10",
+        //             "$filter": sFilter
+        //         },
+        //         success: function (data) {
+        //             console.log("Search results:", data);
+        //             // if (data && data.results)
+        //             if (data && data.d && data.d.results) {
+        //                 var aEmployees = data.d.results.map(function (emp) {
+        //                     return {
+        //                         userId: emp.userId || "",
+        //                         firstName: emp.firstName || "",
+        //                         lastName: emp.lastName || "",
+        //                         username: emp.username || "",
+        //                         hireDate: emp.hireDate || "",
+        //                         employeeType: emp.empInfo && emp.empInfo.label ? emp.empInfo.label : "N/A",
+        //                         displayName: (emp.firstName || "") + " " + (emp.lastName || "")
+        //                     };
+        //                 });
+        //                 this.oEmployeeSearchModel.setProperty("/employees", aEmployees);
+        //                 console.log("Updated employee suggestions:", aEmployees);
+        //             }
+        //         }.bind(this),
+        //         error: function (jqXHR, textStatus, errorThrown) {
+        //             console.error("Error fetching employee data:", textStatus, errorThrown);
+        //             this.oEmployeeSearchModel.setProperty("/employees", []);
+        //         }.bind(this)
+        //     });
+        // },
+        
+
+        // updated according to username 
+
+        // _searchNewEmployees: function(sSearchTerm) {
+        //     var sSearchLower = sSearchTerm.toLowerCase();
+        //     var sPath = this.getPath("SF_1");
+        
+        //     // Get username from global model
+        //     var oGlobalModel = sap.ui.getCore().getModel("globalData");
+        //     var managerUsername = oGlobalModel.getProperty("/managerUsername");
+        
+        //     var sFilter = "manager/username eq '" + managerUsername + "' and status eq 't' and (" +
+        //         "tolower(username) like '%" + sSearchLower + "%' or " +
+        //         "tolower(firstName) like '%" + sSearchLower + "%' or " +
+        //         "tolower(lastName) like '%" + sSearchLower + "%' or " +
+        //         "tolower(userId) like '%" + sSearchLower + "%')";
+        
+        //     jQuery.ajax({
+        //         url: sPath + "/User",
+        //         method: "GET",
+        //         headers: {
+        //             "Accept": "application/json"
+        //         },
+        //         data: {
+        //             "$top": "10",
+        //             "$format": "JSON",
+        //             "$select": "username,empId,firstName,lastName,displayName,manager/userId,manager/username",
+        //             "$expand": "manager",
+        //             "$filter": sFilter
+        //         },
+        //         success: function (data) {
+        //             if (data && data.d && data.d.results) {
+        //                 var aEmployees = data.d.results.map(function (emp) {
+        //                     return {
+        //                         userId: emp.userId || "",
+        //                         firstName: emp.firstName || "",
+        //                         lastName: emp.lastName || "",
+        //                         username: emp.username || "",
+        //                         displayName: emp.displayName || "",
+        //                         manager: emp.manager || {}
+        //                     };
+        //                 });
+        //                 this.oEmployeeSearchModel.setProperty("/employees", aEmployees);
+        //             }
+        //         }.bind(this),
+        //         error: function (jqXHR, textStatus, errorThrown) {
+        //             console.error("Error fetching employee data:", textStatus, errorThrown);
+        //             this.oEmployeeSearchModel.setProperty("/employees", []);
+        //         }.bind(this)
+        //     });
+        // },
+
+        _searchNewEmployees: function (sSearchTerm) {
             var sSearchLower = sSearchTerm.toLowerCase();
-            var sFilter = "tolower(username) like '%" + sSearchLower + "%' or " +
+            var sPath = this.getPath("SF_1");
+        
+            var oUserModel = this.getOwnerComponent().getModel("UserInfo");
+            var managerUsername = oUserModel ? oUserModel.getProperty("/managerUsername") : "";
+        
+            var sFilter = "manager/username eq '" + managerUsername + "' and status eq 't' and (" +
+                "tolower(username) like '%" + sSearchLower + "%' or " +
                 "tolower(firstName) like '%" + sSearchLower + "%' or " +
                 "tolower(lastName) like '%" + sSearchLower + "%' or " +
-                "tolower(userId) like '%" + sSearchLower + "%'";
-            
-            // Get the base path using the updated getPath function - use the destination you need
-            var sPath = this.getPath("SF_1"); // or this.getPath("SF_1") depending on which one you need
-            
-            // Construct the full URL with query parameters
-            var sUrl = sPath + "/User";
-            
-            // Make the AJAX call
+                "tolower(userId) like '%" + sSearchLower + "%')";
+        
             jQuery.ajax({
-                url: sUrl,
+                url: sPath + "/User",
                 method: "GET",
                 headers: {
                     "Accept": "application/json"
                 },
                 data: {
                     "$top": "10",
+                    "$format": "JSON",
+                    "$select": "username,empId,firstName,lastName,displayName,manager/userId,manager/username",
+                    "$expand": "manager",
                     "$filter": sFilter
                 },
                 success: function (data) {
-                    console.log("Search results:", data);
-                    // if (data && data.results)
                     if (data && data.d && data.d.results) {
                         var aEmployees = data.d.results.map(function (emp) {
                             return {
-                                userId: emp.userId || "",
+                                userId: emp.empId || "",
                                 firstName: emp.firstName || "",
                                 lastName: emp.lastName || "",
                                 username: emp.username || "",
-                                hireDate: emp.hireDate || "",
-                                employeeType: emp.empInfo && emp.empInfo.label ? emp.empInfo.label : "N/A",
-                                displayName: (emp.firstName || "") + " " + (emp.lastName || "")
+                                displayName: emp.displayName || "",
+                                manager: emp.manager || {}
                             };
                         });
                         this.oEmployeeSearchModel.setProperty("/employees", aEmployees);
-                        console.log("Updated employee suggestions:", aEmployees);
                     }
                 }.bind(this),
                 error: function (jqXHR, textStatus, errorThrown) {
@@ -674,8 +834,8 @@ sap.ui.define([
                 }.bind(this)
             });
         },
-        
  
+
         onNewSuggestionItemSelected: function (oEvent) {
           
             console.log("Selection changed event:", oEvent);
@@ -1000,6 +1160,17 @@ sap.ui.define([
             var oDatePicker = this.byId("idRequestDateNew");
             var oCommentsTextArea = this.byId("idCommentsNew");
             var oFileUploader = this.byId("idFileUploaderNew");
+
+            var bIsMandatory = oFileUploader.data("mandatory");
+
+            if (bIsMandatory && !oFileUploader.getValue()) {
+                oFileUploader.setValueState("Error");
+                oFileUploader.setValueStateText("Attachment is required.");
+                MessageToast.show("Please upload the required document.");
+                return;
+            }
+        
+            oFileUploader.setValueState("None");
         
             var sRequestType = oRequestTypeSelect.getSelectedKey();
             var oEffectiveDate = oDatePicker.getDateValue();
@@ -1016,10 +1187,13 @@ sap.ui.define([
             }
         
             var sExternalCode = oSelectedRowModel.getData().selectedRow.userId;
+            var sName = oSelectedRowModel.getData().selectedRow.displayName;
+
             console.log("External Code:", sExternalCode);
         
             var that = this;
             var oFile = oFileUploader && oFileUploader.oFileUpload && oFileUploader.oFileUpload.files[0];
+            
         
             if (oFile) {
                 var reader = new FileReader();
@@ -1030,12 +1204,12 @@ sap.ui.define([
                         "__metadata": { "uri": "Attachment" },
                         "fileName": oFile.name,
                         "module": "GENERIC_OBJECT",
-                        "userId": "SFPSN",
+                        "userId": that.getOwnerComponent().getModel("appModel").getProperty("/currentUserId"),
                         "viewable": true,
                         "fileContent": sFileContent
                     };
         
-                    var sAttachmentUrl = that.getPath("SF_1") + "/upsert";
+                    var sAttachmentUrl = that.getPath("SF_OAUTH") + "/upsert";
         
                     $.ajax({
                         url: sAttachmentUrl + "?$format=json",
@@ -1078,7 +1252,7 @@ sap.ui.define([
                                     }
                                 }
         
-                                that._submitPSNForm(sExternalCode, oEffectiveDate, sRequestType, sJustification, sAttachmentId);
+                                that._submitPSNForm(sExternalCode,sName, oEffectiveDate, sRequestType, sJustification, sAttachmentId);
         
                             } catch (error) {
                                 console.error("Error processing JSON response:", error);
@@ -1100,11 +1274,11 @@ sap.ui.define([
                 };
                 reader.readAsDataURL(oFile);
             } else {
-                that._submitPSNForm(sExternalCode, oEffectiveDate, sRequestType, sJustification, null);
+                that._submitPSNForm(sExternalCode,sName, oEffectiveDate, sRequestType, sJustification, null);
             }
         },
         
-        _submitPSNForm: function (sExternalCode, oEffectiveDate, sRequestType, sJustification, sAttachmentId) {
+        _submitPSNForm: function (sExternalCode,sName, oEffectiveDate, sRequestType, sJustification, sAttachmentId) {
             var that = this;
         
             sap.m.MessageBox.confirm(
@@ -1118,6 +1292,7 @@ sap.ui.define([
                                 "__metadata": { "uri": "cust_PositionStatusChange" },
                                 "externalCode": sExternalCode,
                                 "cust_Emp_ID": sExternalCode,
+                                "cust_EMP_Name":sName,
                                 "effectiveStartDate": that.convertToODataDate(new Date()),
                                 "cust_EffectiveDate": that.convertToODataDate(oEffectiveDate),
                                 "cust_PSNTypeChange": sRequestType,
@@ -1130,7 +1305,8 @@ sap.ui.define([
                                 };
                             }
         
-                            var sUrl = that.getPath("SF_2") + "/upsert?workflowConfirmed=true";
+                            //var sUrl = that.getPath("SF_2") + "/upsert?workflowConfirmed=true";
+                            var sUrl = that.getPath("SF_OAUTH") + "/upsert?workflowConfirmed=true";
         
                             that._makePostCall(sUrl, oPayload, "PSN Form Upsert successful!", "Workflow confirmation failed!", that.onNavBackHome.bind(that));
                         }
