@@ -46,7 +46,7 @@ sap.ui.define([], function() {
                       'As part of organizational restructuring, the Management has made the decision to ',
                       { text: 'adjust your current position', bold: true },
                       ', effective ',
-                      { text: data.effectiveDate || 'September 1, 2024', bold: true },
+                      { text: data.changeDate || '', bold: true },
                       '. Your revised job title and reporting structure shall be as follows:\n\n'
                   ],
                   margin: [0, 0, 0, 10]
@@ -196,7 +196,7 @@ sap.ui.define([], function() {
               {
                   text: [
                       'This correspondence is to officially advise you that, effective ',
-                      { text: data.effectiveDate || 'January 1, 2025', bold: true },
+                      { text: data.changeDate || '' , bold: true },
                       ', you will be transferred to the ',
                       { text: (data.department || 'Supply Chain Department') + ' as ' + (data.positionTitle || 'Logistics Manager NME') + '.', bold: true },
                       ' You will be reporting to ',
@@ -249,7 +249,7 @@ sap.ui.define([], function() {
               {
                   text: [
                       'This correspondence is to officially advise you that',
-                      { text: data.effectiveDate || 'January 1, 2025', bold: true },
+                      { text: data.changeDate || '', bold: true },
                       ', you will be transferred to ',
                       { text: (data.CompanyCurrentStatus || 'TAQA Well Solutions') + ', based in ' + (data.location || 'KSA') + ', under the ' + (data.division || 'Well Intervention division') + ', as ' + (data.positionTitle || 'Senior Operations Support Lead'), bold: true },
                       '. You will be reporting to ',
@@ -304,7 +304,7 @@ sap.ui.define([], function() {
               {
                   text: [
                       'This correspondence is to officially advise you that effective ',
-                      { text: data.effectiveDate || 'January 1, 2025', bold: true },
+                      { text: data.changeDate || '', bold: true },
                       ', you will be transferred to the ',
                       { text: data.department || 'Well Intervention', bold: true },
                       ' department, as ',
@@ -360,7 +360,7 @@ sap.ui.define([], function() {
               {
                   text: [
                       'This correspondence is to officially advise you that, effective ',
-                      { text: data.effectiveDate || 'January 1, 2024', bold: true },
+                      { text: data.changeDate || '', bold: true },
                       ', your salary has been ',
                       { text: 'revised as part of a merit increase in recognition of your performance and contributions.', bold: true },
                       ' Your new salary structure and benefits shall be as follows:\n\n'
@@ -422,7 +422,7 @@ sap.ui.define([], function() {
               {
                   text: [
                       'This correspondence is to officially advise you that, effective ',
-                      { text: data.effectiveDate || 'January 1, 2024', bold: true },
+                      { text: data.changeDate || '', bold: true },
                       ', your ',
                       { text: data.adjustmentType || 'Housing Allowance', bold: true },
                       ' has been revised. Your updated salary structure and benefits shall be as under:\n\n'
@@ -499,7 +499,7 @@ sap.ui.define([], function() {
               {
                   text: [
                       'This correspondence is to officially advise you that, effective ',
-                      { text: data.effectiveDate || 'January 1, 2024', bold: true },
+                      { text: data.changeDate || '', bold: true },
                       ', a ',
                       { text: 'Market Variance (MV)', bold: true },
                       ' component has been added/Revised to align your salary with market standards. Your updated salary structure and benefits shall be as under:\n\n'
@@ -578,7 +578,7 @@ sap.ui.define([], function() {
               {
                   text: [
                       'This correspondence serves as formal notification that, in line with organizational requirements, your position has been adjusted effective ',
-                      { text: data.effectiveDate || 'January 1, 2024', bold: true },
+                      { text: data.changeDate || '', bold: true },
                       '. Accordingly, your new salary structure and benefits shall be as follows:\n\n'
                   ],
                   margin: [0, 0, 0, 10]
@@ -663,7 +663,7 @@ sap.ui.define([], function() {
               {
                   text: [
                       'This correspondence is to inform you that your work schedule will be changed effective ',
-                      { text: data.effectiveDate || 'September 1, 2024', bold: true },
+                      { text: data.changeDate || '', bold: true },
                       '. Your new work schedule details are as follows:\n\n'
                   ],
                   margin: [0, 0, 0, 10]
@@ -738,7 +738,7 @@ sap.ui.define([], function() {
               {
                   text: [
                       'This correspondence is to inform you that your work schedule will be changed effective ',
-                      { text: data.effectiveDate || 'September 1, 2024', bold: true },
+                      { text: data.changeDate || '', bold: true },
                       '. Your new work schedule details are as follows:\n\n'
                   ],
                   margin: [0, 0, 0, 10]
@@ -815,7 +815,7 @@ sap.ui.define([], function() {
                       'As part of the organizations review of compensation structures, the Management has decided to ',
                       { text: 'restructure your salary', bold: true },
                       ', effective ',
-                      { text: data.effectiveDate || 'September 1, 2024', bold: true },
+                      { text: data.changeDate || '', bold: true },
                       '. Your revised salary structure and benefits shall be as follows:\n\n'
                     ],
                     margin: [0, 0, 0, 10]
@@ -844,10 +844,10 @@ sap.ui.define([], function() {
                           ':  ' + (data.division || '') + '\n',
                           ':  ' + (data.managerName || '') + '\n',
                           ':  ' + (data.grade || '') + '\n\n',
-                          ':  SR. ' + (data.basicSalary || '') + '/-\n',
-                          ':  SR. ' + (data.housingAllowance || '') + '/-\n',
-                          ':  SR. ' + (data.transportationAllowance || '') + '/-\n',
-                          ':  SR. ' + (data.grossSalary || '') + '/-'
+                          ':  '+ data.currencyCode+'. ' + (data.basicSalary || '') + '/-\n',
+                          ':  '+ data.currencyCode+'. ' + (data.housingAllowance || '') + '/-\n',
+                          ':  '+ data.currencyCode+'. ' + (data.transportationAllowance || '') + '/-\n',
+                          ':  '+ data.currencyCode+'. ' + (data.grossSalary || '') + '/-'
                         ]
                       }
                     ],
@@ -901,7 +901,7 @@ sap.ui.define([], function() {
                   {
                     text: [
                       'In recognition of services rendered by you to the organization, the Management is pleased to award you a promotion with effect from ',
-                      { text: data.effectiveDate || 'September 1, 2024', bold: true },
+                      { text: data.changeDate || '', bold: true },
                       '. Your new salary structure and Benefits shall be as under:\n\n'
                     ],
                     margin: [0, 0, 0, 10]

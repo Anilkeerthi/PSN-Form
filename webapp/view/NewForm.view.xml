@@ -66,23 +66,25 @@
                                 <!-- First Column -->
                                 <VBox class="sapUiSmallMarginEnd">
                                     <HBox alignItems="Start">
-                                        <m:Label text="Employee Name : :" width="120px" />
-                                        <m:Text text="{selectedEmployeeModel>displayName}" />
+                                        <m:Label text="Employee Name :" width="120px" />
+                                        <m:Text text="{empData>/personalInfoNav/results/0/displayName}" />
                                     </HBox>
 
                                     <HBox alignItems="Start">
                                         <m:Label text="Employee ID :" width="120px" />
-                                        <m:Text text="{selectedEmployeeModel>userId}" />
+                                        <!-- <m:Text text="{selectedEmployeeModel>userId}" /> -->
+                                        <m:Text text="{empData>/personIdExternal}" />
                                     </HBox>
 
-                                    <HBox alignItems="Start">
+  <HBox alignItems="Start">
                                         <m:Label text="Nationality :" width="120px" />
-                                        <m:Text text="{selectedEmployeeModel>nationality}" />
+                                        <m:Text text="{countryDetailsModel>/externalName_en_US}" />
                                     </HBox>
 
                                     <HBox alignItems="Start">
                                         <m:Label text="DOJ/Tenure :" width="120px" />
-                                        <m:Text text="{path: 'selectedEmployeeModel>hireDate', formatter: '.formatTenureDate'}" />
+                                        <!-- <m:Text text="{path: 'selectedEmployeeModel>hireDate', formatter: '.formatTenureDate'}" /> -->
+                                        <m:Text text="{path: 'empData>/personalInfoNav/results/0/startDate', formatter: '.formatTenureDate'}" />
                                     </HBox>
                                 </VBox>
 
@@ -99,12 +101,15 @@
 
                                     <HBox>
                                         <m:Label text="Employment Type :" width="190px" />
-                                        <m:Text text="{selectedEmployeeModel>/empInfo/jobInfoNav/results/0/employmentTypeNav/picklistLabels/results/0/label}" />
+                                        <!-- <m:Text text="{selectedEmployeeModel>/empInfo/jobInfoNav/results/0/employmentTypeNav/picklistLabels/results/0/label}" /> -->
+                                        <m:Text text="{path:'empData>/employmentNav/results/0/jobInfoNav/results/0/employmentTypeNav/picklistLabels/results', formatter: '.getLabelByLocale'}" />
+
                                     </HBox>
 
                                     <HBox>
                                         <m:Label text="Marital Status :" width="190px" />
-                                        <m:Text text="{path: 'selectedEmployeeModel>/married', formatter: '.formatMaritalStatus'}" />
+                                        <!-- <m:Text text="{path: 'selectedEmployeeModel>/married', formatter: '.formatMaritalStatus'}" /> -->
+                                        <m:Text text="{path: 'empData>/personalInfoNav/results/0/maritalStatusNav/picklistLabels/results', formatter: '.getLabelByLocale'}" />
                                     </HBox>
                                 </VBox>
                             </FlexBox>

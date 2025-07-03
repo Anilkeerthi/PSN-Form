@@ -100,8 +100,9 @@
 
                                     <m:Button id="submitUpdateButton" text="Update Position" type="Emphasized" visible="{viewsubModel>/showUpdateButton}" press="onUpdatePosition" />
 
-                                    <m:Button id="submitChangesButton" text="Submit Position" type="Emphasized" visible="true" press="onSubmitPosition" />
-
+                                    <m:Button id="submitChangesButton" text="Submit Position" type="Emphasized" visible="{= ${ListData>wfRequestNav/results/0/status} === '' &amp;&amp; ${wfData_0>status} === ''}" press="onSubmitPosition" />
+                                    <!-- <m:Button id="submitChangesButton" text="Submit Position" type="Emphasized" visible="{viewModel>/submitButtonVisible}" press="onSubmitPosition" /> -->
+                                    
                                     <m:Button id="approveButton" text="Approve" type="Accept" visible="{viewsubModel>/showApproveButton}" press="onAccept" />
 
                                     <m:Button id="rejectButton" text="Reject" type="Reject" visible="{viewsubModel>/showRejectButton}" press="_showRejectDialog" />
@@ -134,22 +135,22 @@
                                 <VBox class="sapUiSmallMarginEnd">
                                     <HBox alignItems="Start">
                                         <m:Label text="Employee Name :" width="120px" />
-                                        <m:Text text="{empData>/displayName}" />
+                                        <m:Text text="{empData>/personalInfoNav/results/0/displayName}" />
                                     </HBox>
 
                                     <HBox alignItems="Start">
                                         <m:Label text="Employee ID :" width="120px" />
-                                        <m:Text text="{empData>/empId}" />
+                                        <m:Text text="{empData>/personIdExternal}" />
                                     </HBox>
 
                                     <HBox alignItems="Start">
                                         <m:Label text="Nationality :" width="120px" />
-                                        <m:Text text="{empData>/nationality}" />
+                                        <m:Text text="{countryDetailsModel>/externalName_en_US}" />
                                     </HBox>
 
                                     <HBox alignItems="Start">
                                         <m:Label text="DOJ/Tenure :" width="120px" />
-                                        <m:Text text="{path: 'empData>/hireDate', formatter: '.formatTenureDate'}" />
+                                        <m:Text text="{path: 'empData>/personalInfoNav/results/0/startDate', formatter: '.formatTenureDate'}" />
                                     </HBox>
                                 </VBox>
 
@@ -166,12 +167,13 @@
 
                                     <HBox>
                                         <m:Label text="Employment Type :" width="190px" />
-                                        <m:Text text="{empData>/empInfo/jobInfoNav/results/0/employmentTypeNav/picklistLabels/results/0/label}" />
+                                        <!-- <m:Text text="{path:'empData>employmentNav/results/0/jobInfoNav/results/0/employmentTypeNav/picklistLabels/results',formatter:'.getLabelByLocale'}" /> -->
+                                        <m:Text text="{path:'empData>/employmentNav/results/0/jobInfoNav/results/0/employmentTypeNav/picklistLabels/results', formatter: '.getLabelByLocale'}" />
                                     </HBox>
 
                                     <HBox>
                                         <m:Label text="Marital Status :" width="190px" />
-                                        <m:Text text="{path: 'empData>/married', formatter: '.formatMaritalStatus'}" />
+                                        <m:Text text="{path: 'empData>/personalInfoNav/results/0/maritalStatusNav/picklistLabels/results', formatter: '.getLabelByLocale'}" />
                                     </HBox>
                                 </VBox>
                             </FlexBox>
@@ -407,7 +409,7 @@
                                 <uxap:subSections>
                                     <uxap:ObjectPageSubSection>
                                         <uxap:actions>
-                                            <m:Button id="addComponentButton" text="Add Component" type="Emphasized" visible="true" class="sapUiSmallMarginBottom sapUiSmallMarginEnd" press=".onAddComponent" />
+                                            <m:Button id="addComponentButton" text="Add Component" type="Emphasized" visible="true" class="sapUiSmallMarginBottom sapUiSmallMarginEnd" press=".onAddComponent" enabled="{= ${ListData>wfRequestNav/results/0/status} === '' &amp;&amp; ${wfData_0>status} === ''}"/>
                                         </uxap:actions>
 
                                         <uxap:blocks>
@@ -427,7 +429,7 @@
                                                             <Text text="New Value" />
                                                         </Column>
                                                         <Column hAlign="End">
-                                                            <Text text="Action"  />
+                                                            <Text text="Action" />
                                                         </Column>
                                                     </columns>
                                                     <items>
