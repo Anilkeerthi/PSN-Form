@@ -23,7 +23,7 @@ sap.ui.define([
 
 
 
-], (Controller, JSONModel, ExternalUtil, fioriLibrary, HorizontalLayout, VerticalLayout, BusyIndicator, Filter, FilterOperator, MessageBox, MessageToast, Fragment, MenuItem, Menu, ColumnListItem, Text, ComboBox, Input, VBox, Select,Button) => {
+], (Controller, JSONModel, ExternalUtil, fioriLibrary, HorizontalLayout, VerticalLayout, BusyIndicator, Filter, FilterOperator, MessageBox, MessageToast, Fragment, MenuItem, Menu, ColumnListItem, Text, ComboBox, Input, VBox, Select, Button) => {
     "use strict";
 
 
@@ -37,7 +37,7 @@ sap.ui.define([
             let data = this.getOwnerComponent().getModel("DataModel")
             this.getView().setModel(data, "DataModel");
 
-            //this._getDetails();
+            // this._getDetails();
 
             let oListDataModel = new JSONModel({});
             this.getView().setModel(oListDataModel, "ListData");
@@ -50,6 +50,8 @@ sap.ui.define([
                 showRaiseRequest: true
             });
             this.getView().setModel(this.oViewModel, "buttonModel");
+
+
 
             this.oEmployeeSearchModel = new JSONModel({
                 employees: []
@@ -209,9 +211,171 @@ sap.ui.define([
 
             let oItem = oEvent.getParameter("listItem");
             let oModel = this.getView().getModel("ListData");
+            let oWFDataModel = this.getView().getModel("wfData_0");
             let sPath = oItem.getBindingContextPath();
             let oSelectedRowData = oModel.getProperty(sPath);
             let userId = oSelectedRowData.externalCode;
+            // let effectiveDate = oSelectedRowData.cust_EffectiveDate;
+            // let formattedEffectiveDate = this.formatDate(effectiveDate);
+
+            let eventType = oSelectedRowData?.cust_PSNTypeChange;
+
+            console.log("Event type:", eventType);
+            this.selectedEventType = eventType;
+
+            this.byId("submitUpdateButton").setVisible(true);
+            BusyIndicator.show(0);
+
+            // Clear relevant sub-models
+            this.oViewSubModel.setData({});
+            this.oSelectedRowModel.setData({});
+
+            // Optional: Clear individual models if defined separately
+            this.getView().getModel("EducationDetailsModel")?.setData({});
+            this.getView().getModel("ApprovalDetailsModel")?.setData({});
+            this.getView().getModel("GroupDetailsModel")?.setData({});
+            this.getView().getModel("SalaryAdjustModel")?.setData({});
+
+            try {
+                let busyPromise = new Promise(function (resolve) {
+                    setTimeout(function () {
+                        resolve();
+                    }, 100);
+                });
+
+                busyPromise.then(function () {
+                    this._refreshAllData(userId, eventType);
+
+                    let status = oSelectedRowData?.wfRequestNav?.results?.[0]?.status;
+
+                    if (!status) {
+                        this._setWorkflowStage("SubmitApprovalsPending", true);
+                        this._getWorkflowDetails(userId);
+
+
+                        this.oViewSubModel.setProperty("/showSubmitApprovals", true);
+                        this.oViewSubModel.setProperty("/showSubmitButton", false);
+                        this.oViewSubModel.setProperty("/showUpdateButton", true);
+
+                        this.onUpdatePosition();
+
+                    } else if (status === "SENTBACK") {
+                        this._resetWorkflowButtons();
+                        this._setWorkflowStage("SubmitApprovalsCompleted", true);
+                        this._getWorkflowDetails(userId);
+
+                    } else if (status === "PENDING") {
+                        this._setWorkflowStage("RQApprovalsPending", true);
+
+                    } else {
+                        this._getWorkflowDetails(userId);
+
+
+                        this.oViewSubModel.setProperty("/showSubmitApprovals", false);
+                        this.oViewSubModel.setProperty("/showChangeOfComp", false);
+                        this.oViewSubModel.setProperty("/showChangeOfSts", false);
+                        this.oViewSubModel.setProperty("/showSubmitButton", false);
+                        this.oViewSubModel.setProperty("/showUpdateButton", false);
+                        this.oViewSubModel.setProperty("/showApproveButton", false);
+                        this.oViewSubModel.setProperty("/showRejectButton", false);
+                        this.oViewSubModel.setProperty("/showReturnButton", false);
+                        this.oViewSubModel.setProperty("/showDelegateButton", false);
+                        this.oViewSubModel.setProperty("/showGeneratePDFButton", true);
+                        this.oViewSubModel.setProperty("/showMenuButton", false);
+                    }
+
+                    this._currentUserId = userId;
+
+                    this.oSelectedRowModel.setData({
+                        selectedRow: oSelectedRowData
+                    });
+
+                    this.oFlexibleColumnLayout.setLayout(fioriLibrary.LayoutType.TwoColumnsMidExpanded);
+                    this.oViewModel.setProperty("/showSearchSort", true);
+                    this.oViewModel.setProperty("/showRaiseRequest", false);
+
+                    let oMidColumnPage = this.byId("ObjectPageLayout");
+                    oMidColumnPage.bindElement({
+                        path: sPath,
+                        model: "ListData"
+                    });
+
+                    if (oMidColumnPage.getElementBinding()) {
+                        oMidColumnPage.getElementBinding().refresh(true);
+                    }
+
+                }.bind(this)).catch(function (error) {
+                    console.error("Error during processing: ", error);
+                }).finally(function () {
+                    BusyIndicator.hide();
+                }.bind(this));
+
+                this._getCountryName();
+            } catch (error) {
+                console.error("Error during processing: ", error);
+                BusyIndicator.hide();
+            }
+
+            this._selectedItemContext = oItem.getBindingContext("ListData");
+            this._bSortAscending = true;
+        },
+
+        _refreshAllData: function (userId, eventType) {
+            this._getEventReasons();
+            this._loadTypeofChangePicklist();
+            this.dynamicButtonsEnable(eventType);
+
+            this._getDetails(userId);
+            this._getEducationDetails(userId);
+            this._getLastExpDetails(userId);
+            this._getSalaryAdjustDetails(userId);
+            this._getApprovalDetails(userId);
+            this._getGroupDetails(userId);
+            this.fetchRequestApprovalData(userId);
+        },
+
+        updateWorkflowBinding: function (sPath, selectedIndex) {
+            let oObjectPageLayout = this.byId("ObjectPageLayout");
+            let customPath = sPath + "/wfRequestNav/results/" + selectedIndex;
+            let oModel = this.getView().getModel("ListData");
+            let oSelectedRowData = oModel.getProperty(sPath);
+            let selectedWfRequest = oSelectedRowData.wfRequestNav.results[selectedIndex];
+            let oSelectedWfModel = new sap.ui.model.json.JSONModel({
+                selectedWfRequest: selectedWfRequest,
+                selectedIndex: selectedIndex
+            });
+            this.getView().setModel(oSelectedWfModel, "SelectedWorkflow");
+
+            console.log("Selected workflow request index:", selectedIndex);
+            console.log("Selected workflow status:", selectedWfRequest?.status);
+        },
+
+        onRefreshItemPressed: function (userId) {
+            this.disableSubmitApprovalsSection();
+
+            // Get the current selected row data from the model instead of event
+            let oModel = this.getView().getModel("ListData");
+            let oSelectedRowData;
+
+            // Find the selected row data using the userId
+            if (this._selectedItemContext) {
+                // Use existing selected context if available
+                let sPath = this._selectedItemContext.getPath();
+                oSelectedRowData = oModel.getProperty(sPath);
+            } else {
+                // Alternative: Find the row by userId in the model data
+                let aData = oModel.getData();
+                if (aData && aData.results) {
+                    oSelectedRowData = aData.results.find(item => item.externalCode === userId);
+                }
+            }
+
+            if (!oSelectedRowData) {
+                console.error("Could not find selected row data for userId:", userId);
+                MessageBox.error("Could not find the selected item data.");
+                return;
+            }
+
             let eventType = oSelectedRowData?.cust_PSNTypeChange;
 
             console.log("Event type:", eventType);
@@ -286,59 +450,33 @@ sap.ui.define([
                     this.oViewModel.setProperty("/showSearchSort", true);
                     this.oViewModel.setProperty("/showRaiseRequest", false);
 
+                    // Update the binding context for the ObjectPageLayout
                     let oMidColumnPage = this.byId("ObjectPageLayout");
-                    oMidColumnPage.bindElement({
-                        path: sPath,
-                        model: "ListData"
-                    });
+                    if (this._selectedItemContext) {
+                        let sPath = this._selectedItemContext.getPath();
+                        oMidColumnPage.bindElement({
+                            path: sPath,
+                            model: "ListData"
+                        });
 
-                    // Force refresh of binding context
-                    if (oMidColumnPage.getElementBinding()) {
-                        oMidColumnPage.getElementBinding().refresh(true);
+                        if (oMidColumnPage.getElementBinding()) {
+                            oMidColumnPage.getElementBinding().refresh(true);
+                        }
                     }
 
                 }.bind(this)).catch(function (error) {
                     console.error("Error during processing: ", error);
+                    MessageBox.error("An error occurred during refresh.");
                 }).finally(function () {
                     BusyIndicator.hide();
                 }.bind(this));
             } catch (error) {
                 console.error("Error during processing: ", error);
                 BusyIndicator.hide();
+                MessageBox.error("An error occurred during refresh.");
             }
 
-            this._selectedItemContext = oItem.getBindingContext("ListData");
             this._bSortAscending = true;
-        },
-
-        _refreshAllData: function (userId, eventType) {
-            this._getEventReasons();
-            this._loadTypeofChangePicklist();
-            this.dynamicButtonsEnable(eventType);
-
-            this._getDetails(userId);
-            this._getEducationDetails(userId);
-            this._getLastExpDetails(userId);
-            this._getSalaryAdjustDetails(userId);
-            this._getApprovalDetails(userId);
-            this._getGroupDetails(userId);
-            this.fetchRequestApprovalData(userId);
-        },
-
-        updateWorkflowBinding: function (sPath, selectedIndex) {
-            let oObjectPageLayout = this.byId("ObjectPageLayout");
-            let customPath = sPath + "/wfRequestNav/results/" + selectedIndex;
-            let oModel = this.getView().getModel("ListData");
-            let oSelectedRowData = oModel.getProperty(sPath);
-            let selectedWfRequest = oSelectedRowData.wfRequestNav.results[selectedIndex];
-            let oSelectedWfModel = new sap.ui.model.json.JSONModel({
-                selectedWfRequest: selectedWfRequest,
-                selectedIndex: selectedIndex
-            });
-            this.getView().setModel(oSelectedWfModel, "SelectedWorkflow");
-
-            console.log("Selected workflow request index:", selectedIndex);
-            console.log("Selected workflow status:", selectedWfRequest?.status);
         },
 
         dynamicButtonsEnable: function () {
@@ -483,23 +621,23 @@ sap.ui.define([
             this._oMoreActionsMenu.openBy(oEvent.getSource());
         },
 
-        _updateButtonVisibilityAfterApproval: function () {
+        // _updateButtonVisibilityAfterApproval: function () {
 
-            let oSubmitButton = this.byId("submitChangesButton");
-            if (oSubmitButton) {
-                oSubmitButton.setVisible(true);
-            }
+        //     let oSubmitButton = this.byId("submitChangesButton");
+        //     if (oSubmitButton) {
+        //         oSubmitButton.setVisible(true);
+        //     }
 
-            // Hide other buttons
-            let oApproveButton = this.byId("approveButton");
-            let oRejectButton = this.byId("rejectButton");
-            let oMoreActionsButton = this.byId("moreActionsButton");
+        //     // Hide other buttons
+        //     let oApproveButton = this.byId("approveButton");
+        //     let oRejectButton = this.byId("rejectButton");
+        //     let oMoreActionsButton = this.byId("moreActionsButton");
 
-            if (oApproveButton) oApproveButton.setVisible(false);
-            if (oRejectButton) oRejectButton.setVisible(false);
-            if (oMoreActionsButton) oMoreActionsButton.setVisible(false);
+        //     if (oApproveButton) oApproveButton.setVisible(false);
+        //     if (oRejectButton) oRejectButton.setVisible(false);
+        //     if (oMoreActionsButton) oMoreActionsButton.setVisible(false);
 
-        },
+        // },
 
         onToggleFooter: function () {
             MessageToast.show("Delegate action triggered");
@@ -770,148 +908,6 @@ sap.ui.define([
             });
         },
 
-        // _fetchWorkflowDetails: function (wfRequestId, listItem) {
-        //     let that = this;
-        //     let sDetailUrl = this.getPath("SF_1") +
-        //         `/WfRequest(${wfRequestId}L)?$format=json&$expand=wfRequestStepNav,wfRequestStepNav/positionNav,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverGroupNav,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverDynamicRoleNav/departmentNav,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverDynamicRoleNav/positionNav,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverPositionNav,wfRequestStepNav/dynamicRoleNav&$select=wfRequestId,totalSteps,currentStepNum,status,wfRequestStepNav/stepNum,wfRequestStepNav/wfRequestStepId,wfRequestStepNav/status,wfRequestStepNav/positionNav/code,wfRequestStepNav/positionNav/externalName_en_US,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverGroupNav/groupID,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverGroupNav/groupName,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverPositionNav/externalName_en_US,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverPositionNav/code,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverDynamicRoleNav/name,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverDynamicRoleNav/resolverType,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverDynamicRoleNav/department,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverDynamicRoleNav/businessUnit,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverDynamicRoleNav/departmentNav/name,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverDynamicRoleNav/position,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverDynamicRoleNav/positionNav/externalName_en_US,empWfRequestNav/wfConfigNav/wfStepApproverNav/stepNum,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverType,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverRole,empWfRequestNav/wfConfigNav,wfRequestStepNav/approverType,wfRequestStepNav/role,wfRequestStepNav/ownerId,wfRequestStepNav/dynamicRoleNav/resolverType,wfRequestStepNav/dynamicRoleNav/name,wfRequestStepNav/dynamicRoleNav/person`;
-
-        //     $.ajax({
-        //         url: sDetailUrl,
-        //         type: "GET",
-        //         dataType: "json",
-        //         async: true,
-        //         success: async function (oDetailData) {
-        //             if (oDetailData && oDetailData.d) {
-        //                 let wfEntry = listItem.wfRequestNav.results.find(
-        //                     entry => entry.wfRequestId === oDetailData.d.wfRequestId
-        //                 );
-
-        //                 if (wfEntry) {
-        //                     let isUserAuthorized = false; 
-        //                     let enableWorkflowButtons = () => {                              
-        //                         that.oViewSubModel.setProperty("/showApproveButton", true);
-        //                         that.oViewSubModel.setProperty("/showRejectButton", true);
-        //                         that.oViewSubModel.setProperty("/showReturnButton", true);
-        //                         that.oViewSubModel.setProperty("/showDelegateButton", true);                              
-        //                         that.oViewSubModel.setProperty("/showMenuButton", true);
-
-        //                     };
-
-        //                     let disableWorkflowButtons = () => {
-
-        //                         that.oViewSubModel.setProperty("/showApproveButton", false);
-        //                         that.oViewSubModel.setProperty("/showRejectButton", false);
-        //                         that.oViewSubModel.setProperty("/showReturnButton", false);
-        //                         that.oViewSubModel.setProperty("/showDelegateButton", false);
-        //                         that.oViewSubModel.setProperty("/showGeneratePDFButton", false);
-        //                         that.oViewSubModel.setProperty("/showMenuButton", false);
-        //                     };
-
-        //                     wfEntry.totalSteps = oDetailData.d.totalSteps;
-        //                     wfEntry.currentStepNum = oDetailData.d.currentStepNum;
-        //                     wfEntry.status = oDetailData.d.status;
-
-        //                     disableWorkflowButtons();
-
-        //                     if (Array.isArray(oDetailData.d.wfRequestStepNav.results)) {
-        //                         wfEntry.wfRequestStepNav.results = await Promise.all(
-        //                             oDetailData.d.wfRequestStepNav.results.map(async (step) => {
-        //                                 let approverType = step.approverType;
-
-        //                                 step.displayPositionInfo = "";
-        //                                 step.displayApprover = "";
-
-        //                                 if (step.ownerId && step.ownerId === that._loggedInUserId) {
-        //                                     isUserAuthorized = true;
-        //                                 }
-
-        //                                 if (approverType === "POSITION") {
-        //                                     let pos = step.positionNav?.results?.[0];
-        //                                     step.displayPositionInfo = pos ? `${pos.externalName_en_US} (${pos.code})` : "-";
-        //                                     let positionCode = pos?.code;
-
-        //                                     if (step.ownerId) {
-        //                                         step.displayApprover = await that.getApproverNameFromOwnerId(step.ownerId);
-        //                                     } else {
-        //                                         step.displayApprover = positionCode ? that.getApproverName(positionCode) : "-";
-        //                                     }
-
-        //                                 } else if (approverType === "ROLE") {
-        //                                     step.displayPositionInfo = step.role || "-";
-
-        //                                     if (step.ownerId) {
-        //                                         step.displayApprover = await that.getApproverNameFromOwnerId(step.ownerId);
-        //                                     } else {
-        //                                         step.displayApprover = "-";
-        //                                     }
-
-        //                                 } else if (approverType === "DYNAMIC_ROLE") {
-        //                                     let dyn = step.dynamicRoleNav;
-        //                                     step.displayPositionInfo = dyn?.name || "-";
-
-        //                                     if (step.ownerId) {
-        //                                         step.displayApprover = await that.getApproverNameFromOwnerId(step.ownerId);
-        //                                     } else {
-        //                                         if (dyn?.person) {
-        //                                             step.displayApprover = await that.getApproverNameFromOwnerId(dyn.person);
-        //                                         } else {
-        //                                             step.displayApprover = "-";
-        //                                         }
-        //                                     }
-
-        //                                 } else if (approverType === "DYNAMIC_GROUP") {
-        //                                     let group = oDetailData.d.empWfRequestNav?.wfConfigNav?.wfStepApproverNav.results
-        //                                         .filter(x => x.approverType === "DYNAMIC_GROUP")[0]?.approverGroupNav;
-
-        //                                     if (group) {
-        //                                         step.displayPositionInfo = `${group.groupName} (${group.groupID})`;
-        //                                         if (step.ownerId) {
-        //                                             step.displayApprover = await that.getApproverNameFromOwnerId(step.ownerId);
-        //                                         } else {
-        //                                             step.displayApprover = await that._getGroupMembersTextAsync(group.groupID);
-        //                                         }
-        //                                     } else {
-        //                                         step.displayPositionInfo = "-";
-        //                                         step.displayApprover = "-";
-        //                                     }
-        //                                 }
-
-        //                                 if (!step.positionNav || !step.positionNav.results) {
-        //                                     step.positionNav = { results: [] };
-        //                                 }
-
-        //                                 return step;
-        //                             })
-        //                         );
-        //                     }
-
-        //                     // Check workflow status and user authorization
-        //                     if (oDetailData.d.status === "COMPLETED") {
-        //                         wfEntry.status = "COMPLETED";
-        //                         listItem.positionStatus = "COMPLETED";
-
-        //                         that.oViewSubModel.setProperty("/showGeneratePDFButton", true);
-        //                         console.log("Workflow COMPLETED for item:", listItem.externalCode);
-        //                     } else {
-        //                         // Enable buttons only if user is authorized, workflow is not completed, and status is PENDING
-        //                         if (isUserAuthorized && oDetailData.d.status === "PENDING") {
-        //                             enableWorkflowButtons();                               
-        //                         }
-        //                     }
-        //                 }
-
-        //                 that.getView().getModel("ListData").refresh();
-        //                 console.log("Updated workflow details for ID:", wfRequestId);
-        //             }
-        //         },
-        //         error: function (xhr, status, error) {
-        //             console.error("Error fetching workflow detail for ID:", wfRequestId);
-        //             console.error("Status:", status);
-        //             console.error("Error:", error);
-        //         }
-        //     });
-        // },
-
         _fetchSubmitWorkflowDetails: function (wfRequestId, listItem) {
             let that = this;
             let sDetailUrl = this.getPath("SF_1") +
@@ -1138,6 +1134,7 @@ sap.ui.define([
 
                     that._TodoEntryDetails(LoggedInUserIdModel)
                     that._getLoggedInUserIdRoles(data.d.results[0].userId);
+                    that._getCountryHRUserPositions();
                 },
                 error: function () {
                     MessageToast.show("Server Send Error for gettting UserId from Username");
@@ -1150,6 +1147,7 @@ sap.ui.define([
             let that = this;
             let oUserRolesModel = new JSONModel();
             let sServiceUrl = this.getPath("SF_1") + "/getUserRolesByUserId?$format=JSON&userId='" + userId + "'";
+
 
             $.ajax({
                 url: sServiceUrl,
@@ -1170,17 +1168,46 @@ sap.ui.define([
             });
 
         },
+        _getCountryHRUserPositions(userId) {
+            let that = this;
+            let oCountryHRModel = new JSONModel();
+            let sServiceUrl = this.getPath("SF_1") + "/FODynamicRole?$format=JSON&$select=dynamicRoleAssignmentId,resolverType,externalCode,company,position&$filter=externalCode eq 'Country HR'";
+
+
+            $.ajax({
+                url: sServiceUrl,
+                type: "GET",
+                dataType: "json",
+                async: true,
+                success: function (data) {
+                    oCountryHRModel = data.d.results;
+                    that.getView().setModel(oCountryHRModel, "countryHRModel");
+                    console.log("country HR Roles Positions:" + oCountryHRModel.length);
+                    // that.getView().setModel(LoggedInUserIdModel, "LoggedInUserId")
+
+                    // that._TodoEntryDetails(LoggedInUserIdModel)
+                },
+                error: function () {
+                    MessageToast.show("Server Send Error");
+                }
+            });
+
+        },
 
 
         _getDetails: function (userId) {
             // userId = "31120";
             // Construct the complete URL
             let that = this;
-            let sServiceUrl = this.getPath("SF_1") + "/User(" + userId + ")?$select=firstName,lastName,nationality,empId,userId,username,displayName,hireDate,defaultFullName,married,empInfo/jobInfoNav/employmentTypeNav/picklistLabels/optionId,empInfo/jobInfoNav/employmentTypeNav/picklistLabels/locale,empInfo/jobInfoNav/employmentTypeNav/picklistLabels/label&$format=JSON&$expand=empInfo/jobInfoNav,empInfo/jobInfoNav/employmentTypeNav/picklistLabels";
+
+            let sServiceUrl = this.getPath("SF_1") + "/PerPerson(" + userId + ")?$format=JSON&$expand=personalInfoNav,employmentNav/jobInfoNav/employmentTypeNav/picklistLabels,personalInfoNav/maritalStatusNav/picklistLabels&$select=placeOfBirth,personalInfoNav/displayName,personIdExternal,personalInfoNav/startDate,personalInfoNav/nationality,employmentNav/jobInfoNav/position,employmentNav/jobInfoNav/company,employmentNav/jobInfoNav/countryOfCompany,employmentNav/jobInfoNav/employmentTypeNav/picklistLabels/optionId,employmentNav/jobInfoNav/employmentTypeNav/picklistLabels/locale,employmentNav/jobInfoNav/employmentTypeNav/picklistLabels/label,personalInfoNav/maritalStatusNav/picklistLabels/optionId,personalInfoNav/maritalStatusNav/picklistLabels/locale,personalInfoNav/maritalStatusNav/picklistLabels/label";
+
+            // Previous URL
+            // let sServiceUrl = this.getPath("SF_1") + "/User(" + userId + ")?$select=firstName,lastName,nationality,empId,userId,username,displayName,hireDate,defaultFullName,married,empInfo/jobInfoNav/employmentTypeNav/picklistLabels/optionId,empInfo/jobInfoNav/employmentTypeNav/picklistLabels/locale,empInfo/jobInfoNav/employmentTypeNav/picklistLabels/label&$format=JSON&$expand=empInfo/jobInfoNav,empInfo/jobInfoNav/employmentTypeNav/picklistLabels";
 
             /*==== Change to below query====*/
 
-            let sServiceUrl1 = this.getPath("SF_1") + "/User(" + userId + ")?$format=JSON&$select=personalInfoNav/displayName,personIdExternal,personalInfoNav/startDate,personalInfoNav/nationality,personalInfoNav/maritalStatus,employmentNav/jobInfoNav/employmentTypeNav/picklistLabels/optionId,employmentNav/jobInfoNav/employmentTypeNav/picklistLabels/locale,employmentNav/jobInfoNav/employmentTypeNav/picklistLabels/label&$expand=personalInfoNav,employmentNav/jobInfoNav/employmentTypeNav/picklistLabels,nationalIdNav,personalInfoNav/maritalStatusNav/picklistLabels";
+            // let sServiceUrl1 = this.getPath("SF_1") + "/User(" + userId + ")?$format=JSON&$select=personalInfoNav/displayName,personIdExternal,personalInfoNav/startDate,personalInfoNav/nationality,personalInfoNav/maritalStatus,employmentNav/jobInfoNav/employmentTypeNav/picklistLabels/optionId,employmentNav/jobInfoNav/employmentTypeNav/picklistLabels/locale,employmentNav/jobInfoNav/employmentTypeNav/picklistLabels/label&$expand=personalInfoNav,employmentNav/jobInfoNav/employmentTypeNav/picklistLabels,nationalIdNav,personalInfoNav/maritalStatusNav/picklistLabels";
 
             $.ajax({
                 url: sServiceUrl,
@@ -1191,7 +1218,48 @@ sap.ui.define([
                     let employeeDataModel = new JSONModel(data.d);
                     that.getView().setModel(employeeDataModel, "empData")
 
+                    console.log("employeeDataModel", employeeDataModel);
+                    let nationalityCode = data.d.personalInfoNav.results[0].nationality;
+                    that._getCountryName(nationalityCode);
 
+                },
+                error: function () {
+                    MessageToast.show("Server Send Error");
+                }
+
+            });
+        },
+        getLabelByLocale: function (picklistLabels) {
+            console.log("Picklist Labels:", picklistLabels); // Log the received picklistLabels
+            if (Array.isArray(picklistLabels)) {
+                const labelObject = picklistLabels.find(label => label.locale === 'en_US');
+                console.log("Found Label Object:", labelObject); // Log the found label object
+                return labelObject ? labelObject.label : ""; // Return the label or an empty string if not found
+            }
+            return ""; // Return empty string if not an array
+        },
+
+        formatCountryName: function () {
+            console.log("CountryNames:", picklistLabels);
+        },
+
+        _getCountryName: function (nationalityCode) {
+
+            let that = this;
+
+            //nationalityCode = "IND";
+            let sServiceUrl = this.getPath("SF_1") + "/Country()?$select=externalName_en_US&$format=JSON&$filter=code eq '" + nationalityCode + "'";
+
+
+            $.ajax({
+                url: sServiceUrl,
+                type: "GET",
+                dataType: "json",
+                async: true,
+                success: function (data) {
+                    let countryDetailsModel = new JSONModel(data.d.results[0]);
+                    that.getView().setModel(countryDetailsModel, "countryDetailsModel")
+                    console.log("GetCountry Name Data : ", countryDetailsModel);
                 },
                 error: function () {
                     MessageToast.show("Server Send Error");
@@ -1670,6 +1738,7 @@ sap.ui.define([
             return value === true ? "Married" : "Unmarried";
         },
 
+
         formatDate: function (value) {
             if (value) {
                 let timestamp = parseInt(value.replace("/Date(", "").replace(")/", ""), 10);
@@ -1708,6 +1777,7 @@ sap.ui.define([
             }
             return value;
         },
+
 
         formatAttachmentLink: function (fileName) {
             return fileName || "";
@@ -2022,12 +2092,33 @@ sap.ui.define([
         onOpenChangeApprovalDialog: function (oEvent) {
             try {
                 let oSource = oEvent.getSource();
-                let oBindingContext = oSource.getBindingContext();
                 let oView = this.getView();
 
+                // Get the binding context to retrieve the step ID
+                let oBindingContext = oEvent.getSource().getBindingContext("wfData_0");
+
+                // Store the context for later use
                 this._selectedSubItemContext = oBindingContext;
 
+                if (oBindingContext) {
+                    let oStepData = oBindingContext.getObject();
+                    this._selectedWfRequestStepId = oStepData.wfRequestStepId;
+                    this._selectedStepNum = oStepData.stepNum;
+                    this._selectedStepStatus = oStepData.status;
+
+                    // Debug logging - remove after testing
+                    console.log("Selected Step Data:", oStepData);
+                    console.log("wfRequestStepId:", this._selectedWfRequestStepId);
+                    console.log("stepNum:", this._selectedStepNum);
+                    console.log("status:", this._selectedStepStatus);
+                } else {
+                    console.error("No binding context found");
+                }
+
+                // Determine which section the dialog was opened from
                 let sTableId = oSource.getParent().getParent().getParent().getId();
+                console.log("Table ID:", sTableId); // Debug logging
+
                 if (sTableId.includes("wfStepsTable")) {
                     this._dialogSourceSection = "RequestApprovals";
                 } else if (sTableId.includes("approvalStepsTable")) {
@@ -2036,6 +2127,9 @@ sap.ui.define([
                     this._dialogSourceSection = null;
                 }
 
+                console.log("Dialog Source Section:", this._dialogSourceSection); // Debug logging
+
+                // Create dialog if it doesn't exist
                 if (!this._oRequestDialog) {
                     this._oRequestDialog = sap.ui.xmlfragment(
                         oView.getId(),
@@ -2045,8 +2139,12 @@ sap.ui.define([
                     oView.addDependent(this._oRequestDialog);
                 }
 
+                // Initialize or reset the approver search model
                 this.oApproverSearchModel = this.oApproverSearchModel || new sap.ui.model.json.JSONModel({ approvers: [] });
+
+                // Open the dialog
                 this._oRequestDialog.open();
+
             } catch (err) {
                 console.error("Error in onOpenChangeApprovalDialog:", err);
                 MessageBox.error("Failed to open change approver dialog.");
@@ -2643,6 +2741,8 @@ sap.ui.define([
             let wfRequestStepId = this._selectedWfRequestStepId;
             let userId = this._selectedEmployeeId;
 
+
+
             if (!wfRequestId || !wfRequestStepId || !userId) {
                 MessageBox.error("Please provide all required fields.");
                 return;
@@ -2654,6 +2754,8 @@ sap.ui.define([
                 success: function () {
                     MessageToast.show("Approver changed successfully.");
                     this._getPendingListDetails();
+                    window.location.reload();
+                    this.onListItemPress();
                 }.bind(this),
                 error: function (jqXHR, textStatus, errorThrown) {
                     let errorMessage = "Error changing approver: " + errorThrown;
@@ -2680,17 +2782,50 @@ sap.ui.define([
         },
 
 
+
         onChangeSubmitApprover: function () {
             let that = this;
-
             let selectedUsername = that._selectedApproverUsername;
+            let selectedStepId = that._selectedWfRequestStepId;
+
+            console.log("onChangeSubmitApprover called");
+            console.log("selectedUsername:", selectedUsername);
+            console.log("selectedStepId:", selectedStepId);
+            console.log("dialogSourceSection:", this._dialogSourceSection);
 
             if (!selectedUsername) {
                 MessageBox.error("Please select an approver.");
                 return;
             }
 
+            if (this._dialogSourceSection === "SubmitApprovals") {
+                console.log("Processing SubmitApprovals section");
 
+                // For Submit Approvals section, we have the step ID from the table context
+                if (selectedStepId) {
+                    // Get wfRequestId from the current model
+                    let wfRequestId = this.getModel("wfData_0").getProperty("/wfRequestId");
+                    console.log("wfRequestId from model:", wfRequestId);
+
+                    if (wfRequestId) {
+                        console.log("Calling _changeApproverForStep with:", {
+                            wfRequestId: wfRequestId,
+                            selectedStepId: selectedStepId,
+                            selectedUsername: selectedUsername
+                        });
+                        this._changeApproverForStep(wfRequestId, selectedStepId, selectedUsername);
+                        return;
+                    } else {
+                        MessageBox.error("Workflow Request ID not found.");
+                        return;
+                    }
+                } else {
+                    MessageBox.error("Workflow Step ID not found. Please try again.");
+                    return;
+                }
+            }
+
+            console.log("Using fallback logic for other sections");
 
             this._getUserIdAndOpenAddComponentDialog()
                 .then(function () {
@@ -2717,8 +2852,7 @@ sap.ui.define([
                             }
 
                             let wfRequestId = aResults[0].wfRequestId;
-
-                            that._fetchWorkflowDetailsForApprover(wfRequestId, selectedUsername);
+                            that._fetchWorkflowDetailsForSubmitApprover(wfRequestId, selectedUsername);
                         },
                         error: function () {
                             MessageBox.error("Failed to retrieve workflow request.");
@@ -2727,10 +2861,10 @@ sap.ui.define([
                 });
         },
 
-        _fetchWorkflowDetailsForApprover: function (wfRequestId, selectedUsername) {
+        _fetchWorkflowDetailsForSubmitApprover: function (wfRequestId, selectedUsername) {
             let that = this;
             let sDetailUrl = this.getPath("SF_1") +
-                `/WfRequest(${wfRequestId}L)?$format=json&$expand=wfRequestStepNav&$select=wfRequestId,wfRequestStepNav/wfRequestStepId,wfRequestStepNav/status`;
+                `/WfRequest(${wfRequestId}L)?$format=json&$expand=wfRequestStepNav&$select=wfRequestId,wfRequestStepNav/wfRequestStepId,wfRequestStepNav/status,wfRequestStepNav/stepNum,wfRequestStepNav/lastModifiedDateTime`;
 
             $.ajax({
                 url: sDetailUrl,
@@ -2745,37 +2879,14 @@ sap.ui.define([
                             return;
                         }
 
-                        let activeStep = wfSteps.find(s => s.status === "PENDING");
+                        let targetStep = that._selectedWfRequestStepId;
 
-                        let wfRequestStepId = activeStep?.wfRequestStepId || wfSteps[0]?.wfRequestStepId;
-
-                        if (!wfRequestStepId) {
-                            MessageBox.error("Workflow Step ID not found.");
+                        if (!targetStep) {
+                            MessageBox.error("Unable to determine the correct workflow step for approver change.");
                             return;
                         }
 
-                        $.ajax({
-                            url: that.getPath("SF_1") + `/changeWfRequestApprover?wfRequestId=${wfRequestId}L&wfRequestStepId=${wfRequestStepId}L&updateToUserId='${selectedUsername}'&editTransaction='NO_EDIT'`,
-                            type: "POST",
-                            success: function () {
-                                MessageToast.show("Approver changed successfully.");
-                                that._getPendingListDetails();
-                                that.onCloseDialog();
-                            },
-                            error: function (jqXHR, textStatus, errorThrown) {
-                                let errorMessage = "Error changing approver: " + errorThrown;
-                                if (jqXHR.responseJSON?.error?.message?.value) {
-                                    errorMessage = jqXHR.responseJSON.error.message.value;
-                                } else if (jqXHR.responseText) {
-                                    errorMessage = jqXHR.responseText;
-                                }
-                                MessageBox.error(errorMessage, {
-                                    title: "Error",
-                                    details: jqXHR.responseText
-                                });
-                                console.error("Error:", errorThrown, jqXHR);
-                            }
-                        });
+                        that._changeApproverForStep(wfRequestId, targetStep, selectedUsername);
                     } else {
                         MessageBox.error("No workflow steps found.");
                     }
@@ -2783,6 +2894,46 @@ sap.ui.define([
                 error: function (xhr, status, error) {
                     console.error("Error fetching workflow detail for ID:", wfRequestId);
                     MessageBox.error("Failed to fetch workflow details.");
+                }
+            });
+        },
+
+
+
+        _changeApproverForStep: function (wfRequestId, wfRequestStepId, selectedUsername) {
+            let that = this;
+
+            $.ajax({
+                url: that.getPath("SF_1") + `/changeWfRequestApprover?wfRequestId=${wfRequestId}L&wfRequestStepId=${wfRequestStepId}L&updateToUserId='${selectedUsername}'&editTransaction='NO_EDIT'`,
+                type: "POST",
+                success: function () {
+                    MessageToast.show("Approver changed successfully.");
+                    that.onCloseDialog();
+                    window.location.reload();
+                    that.onListItemPress();
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    let errorMessage = "Error changing approver: " + errorThrown;
+
+                    if (jqXHR.responseJSON?.error?.message?.value) {
+                        errorMessage = jqXHR.responseJSON.error.message.value;
+                    } else if (jqXHR.responseXML) {
+                        try {
+                            let xmlDoc = jqXHR.responseXML;
+                            let messageElement = xmlDoc.querySelector("message");
+                            if (messageElement) {
+                                errorMessage = messageElement.textContent;
+                            }
+                        } catch (e) { }
+                    } else if (jqXHR.responseText) {
+                        errorMessage = jqXHR.responseText;
+                    }
+
+                    MessageBox.error(errorMessage, {
+                        title: "Error",
+                        details: jqXHR.responseText
+                    });
+                    console.error("Error:", errorThrown, jqXHR);
                 }
             });
         },
@@ -2795,10 +2946,7 @@ sap.ui.define([
                 }
 
                 this.oEmployeeSearchModel.setProperty("/employees", []);
-
-                // Clear selected employee
                 this._selectedEmployeeId = null;
-
                 this._oRequestDialog.close();
             }
         },
@@ -2872,7 +3020,6 @@ sap.ui.define([
                     }
                 }
 
-                // Log approval attempt
                 console.log("Attempting to approve workflow:", {
                     wfRequestId: wfRequestId,
                     path: sfPath,
@@ -2880,24 +3027,21 @@ sap.ui.define([
                     userId: userId
                 });
 
-                // Construct the approval URL
                 let url = this.getPath(sfPath) + `/approveWfRequest?wfRequestId=${wfRequestId}L`;
 
-                // AJAX call to approve the workflow
                 $.ajax({
                     url: url,
                     type: "POST",
                     dataType: "xml",
                     success: function (data) {
                         try {
-                            // Parse XML response
+
                             let statusElement = $(data).find("d\\:status, status");
                             let wfRequestIdElement = $(data).find("d\\:wfRequestId, wfRequestId");
 
                             if (statusElement.length > 0 && statusElement.text() === "success") {
                                 let responseWfRequestId = wfRequestIdElement.length > 0 ? wfRequestIdElement.text() : wfRequestId;
 
-                                // Show success message and then reload
                                 MessageBox.success(`Workflow request ${responseWfRequestId} approved successfully.`, {
                                     onClose: function () {
                                         window.location.reload();
@@ -2913,7 +3057,6 @@ sap.ui.define([
                             console.error("Error parsing success response:", parseError);
                             BusyIndicator.hide();
 
-                            // Assume success if parsing fails but call was successful and reload
                             MessageToast.show("Workflow request approved successfully.");
                             window.location.reload();
                         }
@@ -3163,46 +3306,46 @@ sap.ui.define([
             });
         },
 
-        _refreshApplicationData: function (wfRequestId, requestType, userId) {
-            let that = this;
+        // _refreshApplicationData: function (wfRequestId, requestType, userId) {
+        //     let that = this;
 
-            // Keep busy indicator showing during refresh
-            BusyIndicator.show(0);
+        //     // Keep busy indicator showing during refresh
+        //     BusyIndicator.show(0);
 
-            // Check workflow completion status
-            this._checkWorkflowCompletionStatus(wfRequestId, function (isComplete, status) {
-                if (isComplete) {
-                    if (requestType === "ReqWfRequestId") {
-                        // For request-based approvals
-                        that._updateButtonVisibilityAfterApproval();
-                        that._getWorkflowDetails(userId);
-                    } else {
-                        // For submission-based approvals
-                        if (status === "") {
-                            // Don't modify the status if it's already COMPLETED
-                            // Let it naturally progress to REQUEST COMPLETED through other APIs
-                            that._updateButtonVisibilityAfterApproval();
-                            that._getWorkflowDetails(userId);
-                        } else {
-                            // Only update status if not already completed
-                            that._updatePositionStatus(wfRequestId, "REQUEST COMPLETED", function () {
-                                that._updateButtonVisibilityAfterApproval();
-                                that._getWorkflowDetails(userId);
-                            });
-                        }
-                    }
-                } else {
-                    // Workflow not complete
-                    that._updateButtonVisibilityAfterApproval();
-                    that._getWorkflowDetails(userId);
-                }
+        //     // Check workflow completion status
+        //     this._checkWorkflowCompletionStatus(wfRequestId, function (isComplete, status) {
+        //         if (isComplete) {
+        //             if (requestType === "ReqWfRequestId") {
+        //                 // For request-based approvals
+        //                 that._updateButtonVisibilityAfterApproval();
+        //                 that._getWorkflowDetails(userId);
+        //             } else {
+        //                 // For submission-based approvals
+        //                 if (status === "") {
+        //                     // Don't modify the status if it's already COMPLETED
+        //                     // Let it naturally progress to REQUEST COMPLETED through other APIs
+        //                     that._updateButtonVisibilityAfterApproval();
+        //                     that._getWorkflowDetails(userId);
+        //                 } else {
+        //                     // Only update status if not already completed
+        //                     that._updatePositionStatus(wfRequestId, "REQUEST COMPLETED", function () {
+        //                         that._updateButtonVisibilityAfterApproval();
+        //                         that._getWorkflowDetails(userId);
+        //                     });
+        //                 }
+        //             }
+        //         } else {
+        //             // Workflow not complete
+        //             that._updateButtonVisibilityAfterApproval();
+        //             that._getWorkflowDetails(userId);
+        //         }
 
-                // Hide busy indicator when all operations are complete
-                setTimeout(function () {
-                    BusyIndicator.hide();
-                }, 500); // Small delay to ensure UI updates are visible
-            });
-        },
+        //         // Hide busy indicator when all operations are complete
+        //         setTimeout(function () {
+        //             BusyIndicator.hide();
+        //         }, 500); // Small delay to ensure UI updates are visible
+        //     });
+        // },
 
         _updatePositionStatus: function (wfRequestId, status, callback) {
             let userId = this._currentUserId;
@@ -3263,32 +3406,32 @@ sap.ui.define([
             });
         },
 
-        _updateButtonVisibilityAfterApproval: function () {
-            if (this.byId("approveButton")) {
-                this.byId("approveButton").setVisible(true);
+        // _updateButtonVisibilityAfterApproval: function () {
+        //     if (this.byId("approveButton")) {
+        //         this.byId("approveButton").setVisible(true);
 
-            }
-            this._refreshView();
-        },
+        //     }
+        //     this._refreshView();
+        // },
 
 
 
-        _refreshView: function () {
-            let oButtonModel = this.getOwnerComponent().getModel("buttonVisibleModel") || this.oButtonModel;
+        // _refreshView: function () {
+        //     let oButtonModel = this.getOwnerComponent().getModel("buttonVisibleModel") || this.oButtonModel;
 
-            if (oButtonModel) {
-                oButtonModel.setProperty("/showApproveButton", true);
-                oButtonModel.setProperty("/showSubmitButton", false);
-                oButtonModel.setProperty("/showCompletedStatus", true);
-            }
-            let oView = this.getView();
-            if (oView) {
-                let oWorkflowTable = oView.byId("workflowStatusTable");
-                if (oWorkflowTable) {
-                    oWorkflowTable.getBinding("items").refresh(true);
-                }
-            }
-        },
+        //     if (oButtonModel) {
+        //         oButtonModel.setProperty("/showApproveButton", true);
+        //         oButtonModel.setProperty("/showSubmitButton", false);
+        //         oButtonModel.setProperty("/showCompletedStatus", true);
+        //     }
+        //     let oView = this.getView();
+        //     if (oView) {
+        //         let oWorkflowTable = oView.byId("workflowStatusTable");
+        //         if (oWorkflowTable) {
+        //             oWorkflowTable.getBinding("items").refresh(true);
+        //         }
+        //     }
+        // },
 
         highlightSubmitApprovalsSection: function () {
             let oApprovalSection = this.byId("submitApprovalsSection");
@@ -3560,262 +3703,6 @@ sap.ui.define([
         },
 
 
-        // fetchCompanyData: function () {
-        //     let that = this;
-        //     let url = this.getPath("SF_1") + "/FOCompany?$format=JSON&$select=externalCode,name";
-
-        //     return new Promise((resolve, reject) => {
-        //         $.ajax({
-        //             url: url,
-        //             type: "GET",
-        //             dataType: "json",
-        //             success: function (data) {
-
-        //                 let data1 = data.d.results
-        //                 console.log(data1)
-
-
-        //                 let companyModel = new sap.ui.model.json.JSONModel(data.d.results);
-        //                 that.getView().setModel(companyModel, "CompanyModel");
-        //                 resolve();
-
-        //             },
-        //             error: function (xhr, status, error) {
-        //                 MessageToast.show("Error fetching company data");
-        //                 console.error("Error fetching company data:", e);
-        //                 resolve(" - ");
-        //             }
-        //         });
-        //     });
-        // },
-
-        // fetchDepartmentData: function () {
-        //     let that = this;
-        //     let url = this.getPath("SF_1") + "/FODepartment?$format=JSON&$select=externalCode,name";
-
-        //     return new Promise((resolve, reject) => {
-        //         $.ajax({
-        //             url: url,
-        //             type: "GET",
-        //             dataType: "json",
-        //             success: function (data) {
-
-        //                 let departmentModel = new sap.ui.model.json.JSONModel(data.d.results);
-        //                 that.getView().setModel(departmentModel, "DepartmentModel");
-        //                 resolve();
-
-
-        //             },
-        //             error: function (xhr, status, error) {
-        //                 MessageToast.show("Error fetching department data");
-        //                 console.error("Error fetching department data:", e);
-        //                 resolve(" - ");
-        //             }
-        //         });
-        //     });
-
-
-        // },
-
-        // fetchDivisionData: function () {
-        //     let that = this;
-        //     let url = this.getPath("SF_1") + "/FODivision?$format=JSON&$select=externalCode,name";
-
-
-        //     return new Promise((resolve, reject) => {
-        //         $.ajax({
-        //             url: url,
-        //             type: "GET",
-        //             dataType: "json",
-        //             success: function (data) {
-
-        //                 let divisionModel = new sap.ui.model.json.JSONModel(data.d.results);
-        //                 that.getView().setModel(divisionModel, "DivisionModel");
-        //                 resolve();
-
-
-        //             },
-        //             error: function (xhr, status, error) {
-        //                 MessageToast.show("Error fetching division data");
-        //                 console.error("Error fetching division data:", e);
-        //                 resolve(" - ");
-        //             }
-        //         });
-        //     });
-
-
-
-        // },
-
-        // fetchLocationData: function () {
-        //     let that = this;
-        //     let url = this.getPath("SF_1") + "/FOLocation?$format=JSON&$select=externalCode,name,locationGroup";
-
-
-        //     return new Promise((resolve, reject) => {
-        //         $.ajax({
-        //             url: url,
-        //             type: "GET",
-        //             dataType: "json",
-        //             success: function (data) {
-
-        //                 let locationModel = new sap.ui.model.json.JSONModel(data.d.results);
-        //                 that.getView().setModel(locationModel, "LocationModel");
-        //                 resolve();
-
-
-        //             },
-        //             error: function (xhr, status, error) {
-        //                 MessageToast.show("Error fetching location data");
-        //                 console.error("Error fetching location data:", e);
-        //                 resolve(" - ");
-        //             }
-        //         });
-        //     });
-
-        // },
-
-        // fetchWorkScheduleData: function () {
-        //     let that = this;
-        //     let url = this.getPath("SF_1") + "/WorkSchedule?$format=JSON&$select=externalCode,externalName_en_US";
-
-
-        //     return new Promise((resolve, reject) => {
-        //         $.ajax({
-        //             url: url,
-        //             type: "GET",
-        //             dataType: "json",
-        //             success: function (data) {
-
-        //                 let workScheduleModel = new sap.ui.model.json.JSONModel(data.d.results);
-        //                 that.getView().setModel(workScheduleModel, "WorkScheduleModel");
-        //                 resolve();
-
-
-        //             },
-        //             error: function (xhr, status, error) {
-        //                 MessageToast.show("Error fetching work schedule data");
-        //                 console.error("Error fetching work schedule data:", e);
-        //                 resolve(" - ");
-        //             }
-        //         });
-        //     });
-
-
-
-        // },
-
-        // fetchPositionData: function () {
-        //     let that = this;
-        //     let url = this.getPath("SF_1") + "/Position?$format=JSON&$select=code,externalName_en_US,jobCode,jobTitle";
-
-        //     return new Promise((resolve, reject) => {
-        //         $.ajax({
-        //             url: url,
-        //             type: "GET",
-        //             dataType: "json",
-        //             success: function (data) {
-
-        //                 let positionModel = new sap.ui.model.json.JSONModel(data.d.results);
-        //                 that.getView().setModel(positionModel, "PositionModel");
-        //                 resolve();
-
-
-        //             },
-        //             error: function (xhr, status, error) {
-        //                 MessageToast.show("Error fetching position data");
-        //                 console.error("Error fetching position data:", e);
-        //                 resolve(" - ");
-        //             }
-        //         });
-        //     });
-
-
-        // },
-
-        // fetchJobCodeData: function () {
-        //     let that = this;
-        //     let url = this.getPath("SF_1") + "/FOJobCode?$format=JSON&$select=externalCode,name";
-
-        //     return new Promise((resolve, reject) => {
-        //         $.ajax({
-        //             url: url,
-        //             type: "GET",
-        //             dataType: "json",
-        //             success: function (data) {
-
-        //                 let jobCodeModel = new sap.ui.model.json.JSONModel(data.d.results);
-        //                 that.getView().setModel(jobCodeModel, "JobCodeModel");
-        //                 resolve();
-
-        //             },
-        //             error: function (xhr, status, error) {
-        //                 MessageToast.show("Error fetching JobCode data");
-        //                 console.error("Error fetching JobCode data:", e);
-        //                 resolve(" - ");
-        //             }
-        //         });
-        //     });
-        // },
-
-        // fetchBusinessUnitData: function () {
-        //     let that = this;
-        //     let url = this.getPath("SF_1") + "/FOBusinessUnit?$format=JSON&$select=externalCode,name";
-
-        //     return new Promise((resolve, reject) => {
-        //         $.ajax({
-        //             url: url,
-        //             type: "GET",
-        //             dataType: "json",
-        //             success: function (data) {
-
-        //                 let businessUnitModel = new sap.ui.model.json.JSONModel(data.d.results);
-        //                 that.getView().setModel(businessUnitModel, "BusinessUnitModel");
-        //                 resolve();
-
-
-        //             },
-        //             error: function (xhr, status, error) {
-        //                 MessageToast.show("Error fetching Business Unit data");
-        //                 console.error("Error fetching Business Unit data:", e);
-        //                 resolve(" - ");
-        //             }
-        //         });
-        //     });
-        // },
-
-        // fetchCostCenterData: function () {
-        //     let that = this;
-        //     let url = this.getPath("SF_1") + "/FOCostCenter?$format=json&&$select=externalCode,name";
-
-
-        //     return new Promise((resolve, reject) => {
-        //         $.ajax({
-        //             url: url,
-        //             type: "GET",
-        //             dataType: "json",
-        //             success: function (data) {
-
-        //                 let CostCenterModel = new sap.ui.model.json.JSONModel(data.d.results);
-        //                 that.getView().setModel(CostCenterModel, "CostCenterModel");
-        //                 resolve();
-
-
-        //             },
-        //             error: function (xhr, status, error) {
-        //                 MessageToast.show("Error fetching position data");
-        //                 console.error("Error fetching position data:", e);
-        //                 resolve(" - ");
-        //             }
-        //         });
-        //     });
-
-
-        // },
-
-
-        // Updated fetch functions with cascading filters
-
         fetchCompanyData: function () {
             let that = this;
             let url = this.getPath("SF_1") + "/FOCompany?$format=JSON&$select=externalCode,name";
@@ -3841,8 +3728,7 @@ sap.ui.define([
 
         fetchBusinessUnitData: function (companyCode) {
             let that = this;
-            // Use the provided companyCode or get current value from the model/UI
-            let filterCompanyCode = companyCode || this.getCurrentDropdownValue("1"); // Company is SNo 1
+            let filterCompanyCode = companyCode || this.getCurrentDropdownValue("1");
 
             let url = this.getPath("SF_1") + "/FOBusinessUnit?$format=JSON";
             if (filterCompanyCode) {
@@ -3992,14 +3878,10 @@ sap.ui.define([
 
         fetchWorkScheduleData: function (countryCode) {
             let that = this;
-            let filterCountryCode = countryCode || 'SAU';
+            // let filterCountryCode = countryCode || 'SAU';
 
-            let url = this.getPath("SF_1") + "/WorkSchedule?$format=JSON";
-            if (filterCountryCode) {
-                url += "&$filter=countryNav/code eq '" + filterCountryCode + "'&$expand=countryNav&$select=externalCode,externalName_en_US,country,countryNav/code,countryNav/externalName_en_US,countryNav/twoCharCountryCode";
-            } else {
-                url += "&$select=externalCode,externalName_en_US";
-            }
+            let url = this.getPath("SF_1") + "/WorkSchedule?$format=JSON&$select=externalCode,externalName_en_US";
+
 
             return new Promise((resolve, reject) => {
                 $.ajax({
@@ -4064,7 +3946,7 @@ sap.ui.define([
                     }
                 });
             });
-        }, 
+        },
 
         getCurrentDropdownValue: function (sNo) {
             let dataModel = this.getView().getModel("DataModel");
@@ -4139,18 +4021,12 @@ sap.ui.define([
             this._handleFieldChange(oEvent);
             let selectedKey = oEvent.getParameter("selectedItem").getKey();
 
-            // Location change might affect Work Schedule based on country
-            // Get country code from selected location if needed
             this.fetchWorkScheduleDataByLocation(selectedKey);
         },
 
-        // Additional function to fetch work schedule by location
         fetchWorkScheduleDataByLocation: function (locationCode) {
             let that = this;
-            // First get the location details to extract country information
             if (locationCode) {
-                // You might need to get country code from location
-                // For now, using default logic
                 this.fetchWorkScheduleData('SAU'); // Default or derive from location
             } else {
                 this.fetchWorkScheduleData();
@@ -4159,45 +4035,64 @@ sap.ui.define([
 
 
 
-        fetchEmpCompensationData: function (userId) {
-            let that = this;
+        // fetchEmpCompensationData: function (userId) {
+        //     let that = this;
 
-            let sServiceUrl = this.getPath("SF_1") + `/EmpCompensation?$format=JSON&$filter=userId eq '${userId}'&$expand=empPayCompRecurringNav/payComponentNav,payGroupNav,employmentNav/jobInfoNav/payGradeNav,&$select=empPayCompRecurringNav/payComponent,empPayCompRecurringNav/startDate,empPayCompRecurringNav/paycompvalue,empPayCompRecurringNav/currencyCode,empPayCompRecurringNav/frequency,empPayCompRecurringNav/payComponentNav/externalCode,empPayCompRecurringNav/payComponentNav/name,payGroupNav/externalCode,payGroupNav/name,employmentNav/jobInfoNav/payGradeNav/externalCode,employmentNav/jobInfoNav/payGradeNav/name`;
+        //     let sServiceUrl = this.getPath("SF_1") + `/EmpCompensation?$format=JSON&$filter=userId eq '${userId}'&$expand=empPayCompRecurringNav/payComponentNav,payGroupNav,employmentNav/jobInfoNav/payGradeNav,&$select=empPayCompRecurringNav/payComponent,empPayCompRecurringNav/startDate,empPayCompRecurringNav/paycompvalue,empPayCompRecurringNav/currencyCode,empPayCompRecurringNav/frequency,empPayCompRecurringNav/payComponentNav/externalCode,empPayCompRecurringNav/payComponentNav/name,payGroupNav/externalCode,payGroupNav/name,employmentNav/jobInfoNav/payGradeNav/externalCode,employmentNav/jobInfoNav/payGradeNav/name`;
 
-            jQuery.ajax({
+        //     jQuery.ajax({
 
-                url: sServiceUrl,
+        //         url: sServiceUrl,
 
-                type: "GET",
+        //         type: "GET",
 
-                dataType: "json",
+        //         dataType: "json",
 
-                async: true,
+        //         async: true,
 
-                success: function (data) {
+        //         success: function (data) {
 
-                    let empCompensationModel = new sap.ui.model.json.JSONModel(data.d);
+        //             let empCompensationModel = new sap.ui.model.json.JSONModel(data.d);
+        //             that.getView().setModel(empCompensationModel, "EmpCompensationModel");
+        //             console.log("EmpCompensation data fetched successfully:", data.d);
+        //             that.fetchGrossMonthlySalaryData(userId);
+        //             that.fetchPayGradeData();
 
-                    that.getView().setModel(empCompensationModel, "EmpCompensationModel");
 
-                    console.log("EmpCompensation data fetched successfully:", data.d);
-                    that.fetchGrossMonthlySalaryData(userId);
 
-                    that.fetchPayGradeData(); // Fetch pay grade data for the combobox
+        //         },
+        //         error: function (e) {
+        //             MessageToast.show("Error fetching employee compensation data.");
+        //             console.error("Error fetching employee compensation data:", e);
+        //         }
 
-                },
+        //     });
 
-                error: function (e) {
+        // },
 
-                    MessageToast.show("Error fetching employee compensation data.");
+        // fetchEmpCmpNewValue: function (userId, effectiveDate) {
+        //     let that = this;
 
-                    console.error("Error fetching employee compensation data:", e);
+        //     let sServiceUrl = this.getPath("SF_1") + `/EmpCompensation?$format=JSON&$filter=userId eq '${userId}'&$expand=empPayCompRecurringNav/payComponentNav,payGroupNav,employmentNav/jobInfoNav/payGradeNav,&$select=empPayCompRecurringNav/payComponent,empPayCompRecurringNav/startDate,empPayCompRecurringNav/paycompvalue,empPayCompRecurringNav/currencyCode,empPayCompRecurringNav/frequency,empPayCompRecurringNav/payComponentNav/externalCode,empPayCompRecurringNav/payComponentNav/name,payGroupNav/externalCode,payGroupNav/name,employmentNav/jobInfoNav/payGradeNav/externalCode,employmentNav/jobInfoNav/payGradeNav/name&asOfDate=${effectiveDate}`;
 
-                }
+        //     jQuery.ajax({
+        //         url: sServiceUrl,
+        //         type: "GET",
+        //         dataType: "json",
+        //         async: true,
+        //         success: function (data) {                 
+        //                 let empCmpNewValueModel = new sap.ui.model.json.JSONModel(data.d.results);
+        //                 that.getView().setModel(empCmpNewValueModel, "empCmpNewValueModel");                
+        //         },
+        //         error: function (e) {
+        //             MessageToast.show("Error fetching employee compensation data.");
+        //             console.error("Error fetching employee compensation data:", e);
+        //             that.initializeChangeOfCompensationTable();
+        //         }
+        //     });
+        // },
 
-            });
 
-        },
 
         fetchGrossMonthlySalaryData: function (userId) {
             let that = this;
@@ -4241,42 +4136,225 @@ sap.ui.define([
             });
         },
 
-        fetchPayGradeData: function () {
-            let that = this;
-            let sServiceUrl = this.getPath("SF_1") + "/FOPayGrade?$format=JSON&$select=name,externalCode";
+        // fetchPayGradeData: function () {
+        //     let that = this;
+        //     let sServiceUrl = this.getPath("SF_1") + "/FOPayGrade?$format=JSON&$select=name,externalCode";
 
-            jQuery.ajax({
-                url: sServiceUrl,
-                type: "GET",
-                dataType: "json",
-                async: true,
-                success: function (data) {
-                    let payGradeModel = new sap.ui.model.json.JSONModel(data.d.results);
-                    that.getView().setModel(payGradeModel, "PayGradeModel");
-                    that.initializeChangeOfCompensationTable(that.getView().getModel("EmpCompensationModel").getProperty("/results/0"));
-                    that.initializeGrossCompensationTable(data.d.results[0]);
-                },
-                error: function (e) {
-                    MessageToast.show("Error fetching Pay Grade data.");
-                    console.error("Error fetching Pay Grade data:", e);
+        //     jQuery.ajax({
+        //         url: sServiceUrl,
+        //         type: "GET",
+        //         dataType: "json",
+        //         async: true,
+        //         success: function (data) {
+        //             let payGradeModel = new sap.ui.model.json.JSONModel(data.d.results);
+        //             that.getView().setModel(payGradeModel, "PayGradeModel");
+        //             that.initializeChangeOfCompensationTable(that.getView().getModel("EmpCompensationModel").getProperty("/results/0"));
+
+
+        //             that.initializeGrossCompensationTable(data.d.results[0]);
+        //         },
+        //         error: function (e) {
+        //             MessageToast.show("Error fetching Pay Grade data.");
+        //             console.error("Error fetching Pay Grade data:", e);
+        //         }
+        //     });
+        // },
+
+
+
+        callCompensationFlow: function () {
+            let that = this;
+            that._getUserIdAndOpenAddComponentDialog()
+                .then(function () {
+                    let sUserId = that._currentUserId;
+                    let sEffectiveDate = that._currentPSNEffectiveDate;
+                    let formattedEffectiveDate = that.formatDate(sEffectiveDate);
+
+                    that.fetchEmpCompensationData(sUserId, formattedEffectiveDate);
+                })
+                .catch(function (error) {
+                    console.error("Error in getUserId:", error);
+                    MessageToast.show("Error retrieving user data for compensation.");
+                });
+        },
+
+        fetchEmpCompensationData: async function (userId, effectiveDate) {
+            let that = this;
+            let sServiceUrl = this.getPath("SF_1") + `/EmpCompensation?$format=JSON&$filter=userId eq '${userId}'&$expand=empPayCompRecurringNav/payComponentNav,payGroupNav,employmentNav/jobInfoNav/payGradeNav,&$select=empPayCompRecurringNav/payComponent,empPayCompRecurringNav/startDate,empPayCompRecurringNav/paycompvalue,empPayCompRecurringNav/currencyCode,empPayCompRecurringNav/frequency,empPayCompRecurringNav/payComponentNav/externalCode,empPayCompRecurringNav/payComponentNav/name,payGroupNav/externalCode,payGroupNav/name,employmentNav/jobInfoNav/payGradeNav/externalCode,employmentNav/jobInfoNav/payGradeNav/name`;
+
+            try {
+                const data = await new Promise((resolve, reject) => {
+                    jQuery.ajax({
+                        url: sServiceUrl,
+                        type: "GET",
+                        dataType: "json",
+                        async: true,
+                        success: resolve,
+                        error: reject
+                    });
+                });
+
+                let empCompensationModel = new sap.ui.model.json.JSONModel(data.d);
+                that.getView().setModel(empCompensationModel, "EmpCompensationModel");
+                console.log("EmpCompensation data fetched successfully:", data.d);
+
+                that.fetchGrossMonthlySalaryData(userId);
+
+                // FIRST check submit button 
+
+                let isSubmitButtonVisible = that.checkSubmitButtonVisibility();
+
+                console.log("Submit button visible:", isSubmitButtonVisible);
+
+                if (isSubmitButtonVisible) {
+                    // Submit button IS visible - show editable table immediately
+                    await that.fetchPayGradeDataWithInitialize();
+                } else {
+                    // Submit button NOT visible - fetch new values first
+                    try {
+                        await that.fetchEmpCmpNewValue(userId, effectiveDate);
+                        await that.fetchPayGradeDataWithNewInitialize();
+                    } catch (empCmpNewValueError) {
+                        console.warn("No empCmpNewValue data found, proceeding with standard flow");
+                        await that.fetchPayGradeDataWithInitialize();
+                    }
                 }
+
+
+            } catch (error) {
+                console.error("Error fetching employee compensation data:", error);
+                MessageToast.show("Error fetching employee compensation data.");
+            }
+        },
+
+        fetchEmpCmpNewValue: function (userId, effectiveDate) {
+            let that = this;
+            let sServiceUrl = this.getPath("SF_1") + `/EmpCompensation?$format=JSON&$filter=userId eq '${userId}'&$expand=empPayCompRecurringNav/payComponentNav,payGroupNav,employmentNav/jobInfoNav/payGradeNav,&$select=empPayCompRecurringNav/payComponent,empPayCompRecurringNav/startDate,empPayCompRecurringNav/paycompvalue,empPayCompRecurringNav/currencyCode,empPayCompRecurringNav/frequency,empPayCompRecurringNav/payComponentNav/externalCode,empPayCompRecurringNav/payComponentNav/name,payGroupNav/externalCode,payGroupNav/name,employmentNav/jobInfoNav/payGradeNav/externalCode,employmentNav/jobInfoNav/payGradeNav/name&asOfDate=${effectiveDate}`;
+
+            return new Promise((resolve, reject) => {
+                jQuery.ajax({
+                    url: sServiceUrl,
+                    type: "GET",
+                    dataType: "json",
+                    async: true,
+                    success: function (data) {
+                        let empCmpNewValueModel = new sap.ui.model.json.JSONModel(data.d);
+                        that.getView().setModel(empCmpNewValueModel, "empCmpNewValueModel");
+                        resolve(data);
+                    },
+                    error: function (e) {
+                        console.error("Error fetching employee compensation new value data:", e);
+                        reject(e);
+                    }
+                });
             });
         },
 
+        checkSubmitButtonVisibility: function () {
+            let that = this;
+            let status = false;
+            let listDataModel = that.getView().getModel("ListData");
+            let wfDataModel = that.getView().getModel("wfData_0");
+
+            if (listDataModel && !wfDataModel) {
+                status = true;
+            } else {
+                status = false;
+            }
+            return status;
+        },
+
+
+
+
+        shouldShowSubmitButton: function () {
+            const listDataModel = this.getView().getModel("ListData");
+            const wfDataModel = this.getView().getModel("wfData_0");
+
+            try {
+                const wfRequestStatus = listDataModel.getProperty("/wfRequestNav/results/0/status");
+                const wfDataStatus = wfDataModel.getProperty("/status");
+
+                // Return true ONLY when:
+                // 1. Workflow request status is 'completed'
+                // 2. Workflow data status is empty (null/undefined/'')
+                return wfRequestStatus === 'completed' &&
+                    (!wfDataStatus || wfDataStatus === '');
+            } catch (e) {
+                console.error("Error in shouldShowSubmitButton:", e);
+                return false;
+            }
+        },
+
+
+        fetchPayGradeDataWithNewInitialize: function () {
+            let that = this;
+            let sServiceUrl = this.getPath("SF_1") + "/FOPayGrade?$format=JSON&$select=name,externalCode";
+
+            return new Promise((resolve, reject) => {
+                jQuery.ajax({
+                    url: sServiceUrl,
+                    type: "GET",
+                    dataType: "json",
+                    async: true,
+                    success: function (data) {
+                        let payGradeModel = new sap.ui.model.json.JSONModel(data.d.results);
+                        that.getView().setModel(payGradeModel, "PayGradeModel");
+
+                        that.newInitializeChangeOfCompensationTable(that.getView().getModel("EmpCompensationModel").getProperty("/results/0"));
+
+                        that.initializeGrossCompensationTable(data.d.results[0]);
+                        resolve(data);
+                    },
+                    error: function (e) {
+                        MessageToast.show("Error fetching Pay Grade data.");
+                        console.error("Error fetching Pay Grade data:", e);
+                        reject(e);
+                    }
+                });
+            });
+        },
+
+        fetchPayGradeDataWithInitialize: function () {
+            let that = this;
+            let sServiceUrl = this.getPath("SF_1") + "/FOPayGrade?$format=JSON&$select=name,externalCode";
+
+            return new Promise((resolve, reject) => {
+                jQuery.ajax({
+                    url: sServiceUrl,
+                    type: "GET",
+                    dataType: "json",
+                    async: true,
+                    success: function (data) {
+                        let payGradeModel = new sap.ui.model.json.JSONModel(data.d.results);
+                        that.getView().setModel(payGradeModel, "PayGradeModel");
+
+                        // Since we're in this function, submit button is visible
+                        that.initializeChangeOfCompensationTable(that.getView().getModel("EmpCompensationModel").getProperty("/results/0"));
+
+                        that.initializeGrossCompensationTable(data.d.results[0]);
+                        resolve(data);
+                    },
+                    error: function (e) {
+                        MessageToast.show("Error fetching Pay Grade data.");
+                        console.error("Error fetching Pay Grade data:", e);
+                        reject(e);
+                    }
+                });
+            });
+        },
 
         initializeChangeOfCompensationTable: function (empCompensationData) {
             let that = this;
             let payGradeNewVal = "";
             let wfChangeData1 = that.wfchangeData;
 
-            // Flag to check if any workflow change data exists
             let hasAnyWfChangeData = false;
 
             if (wfChangeData1 != null) {
                 console.log("Initialize wf change data1:" + wfChangeData1.results);
                 let wfChangeData12 = wfChangeData1.results;
 
-                // Set flag to true if there's any workflow change data
                 if (wfChangeData12 && wfChangeData12.length > 0) {
                     hasAnyWfChangeData = true;
                 }
@@ -4301,19 +4379,20 @@ sap.ui.define([
                     empCompensationData.employmentNav.jobInfoNav.results[0].payGradeNav.externalCode : "",
                 CurrentValue: empCompensationData && empCompensationData.employmentNav && empCompensationData.employmentNav.jobInfoNav && empCompensationData.employmentNav.jobInfoNav.results[0] && empCompensationData.employmentNav.jobInfoNav.results[0].payGradeNav ?
                     empCompensationData.employmentNav.jobInfoNav.results[0].payGradeNav.externalCode + " - " + empCompensationData.employmentNav.jobInfoNav.results[0].payGradeNav.name : "",
-                NewValue: (payGradeNewVal != "" ? payGradeNewVal : empCompensationData.employmentNav?.jobInfoNav?.results?.[0]?.payGradeNav?.externalCode || ""),
+                NewValue: payGradeNewVal != "" ? payGradeNewVal : empCompensationData.employmentNav?.jobInfoNav?.results?.[0]?.payGradeNav?.externalCode || "",
                 hasWfChangeData: hasAnyWfChangeData
             });
 
             if (empCompensationData && empCompensationData.empPayCompRecurringNav && empCompensationData.empPayCompRecurringNav.results) {
                 empCompensationData.empPayCompRecurringNav.results.forEach(function (payComponent, index) {
                     changeOfCompensation.push({
-                        SNo: (index + 2).toString(), // Start SNo from 2
+                        SNo: (index + 2).toString(),
                         externalCode: payComponent.payComponentNav ? payComponent.payComponentNav.externalCode : "",
                         Item: payComponent.payComponentNav ? payComponent.payComponentNav.name : "",
                         CurrentValue: payComponent.paycompvalue || "",
-                        NewValue: empCompensationData.employmentNav?.jobInfoNav?.results?.[0]?.payGradeNav?.externalCode || "",
-                        startDate:payComponent ? payComponent.startDate : "",
+                        NewValue: "", // Initialize with current value for editing
+                        startDate: payComponent ? payComponent.startDate : "",
+                        currencyCode : payComponent ? payComponent.currencyCode : "",
                         hasWfChangeData: hasAnyWfChangeData
                     });
                 });
@@ -4358,55 +4437,39 @@ sap.ui.define([
                                 }
                             }
                         }),
-
                     ];
 
                     let newValueControl;
 
-
                     if (item.SNo === "1") {
-                        // Check if we have any workflow change data - if yes, show as text
-                        if (item.hasWfChangeData) {
-                            // Display mode: Show either new value or current value as text
-                            let displayValue = item.NewValue && item.NewValue.trim() !== "" ? item.NewValue : item.CurrentValue;
-                            let textBox = new Text({ text: displayValue });
-
-                            // Add warning style if there's a new value different from current
-                            if (item.NewValue && item.NewValue.trim() !== "" && item.NewValue !== item.externalCode) {
-                                textBox.addStyleClass("warningText");
-                            }
-
-                            newValueControl = textBox;
-                        } else {
-                            // Edit mode: Show combo box as before
-                            newValueControl = new ComboBox({
-                                selectedKey: "{ChangeOfCompensationModel>NewValue}",
-                                items: {
-                                    path: "PayGradeModel>/",
-                                    template: new sap.ui.core.Item({
-                                        key: "{PayGradeModel>externalCode}",
-                                        text: {
-                                            parts: [
-                                                { path: "PayGradeModel>name" },
-                                                { path: "PayGradeModel>externalCode" }
-                                            ],
-                                            formatter: that.formatExternalCodeWithName
-                                        }
-                                    })
-                                },
-                                change: function (oEvent) {
-                                    let selectedItem = oEvent.getParameter("selectedItem");
-                                    if (selectedItem) {
-                                        let bindingContext = oEvent.getSource().getBindingContext("ChangeOfCompensationModel");
-                                        let path = bindingContext.getPath();
-                                        let model = oEvent.getSource().getModel("ChangeOfCompensationModel");
-                                        model.setProperty(path + "/NewValue", selectedItem.getKey());
+                        // For Grade (SNo=1) - always show as ComboBox (editable)
+                        newValueControl = new ComboBox({
+                            selectedKey: "{ChangeOfCompensationModel>NewValue}",
+                            items: {
+                                path: "PayGradeModel>/",
+                                template: new sap.ui.core.Item({
+                                    key: "{PayGradeModel>externalCode}",
+                                    text: {
+                                        parts: [
+                                            { path: "PayGradeModel>externalCode" },
+                                            { path: "PayGradeModel>name" }
+                                        ],
+                                        formatter: that.formatExternalCodeWithName
                                     }
+                                })
+                            },
+                            change: function (oEvent) {
+                                let selectedItem = oEvent.getParameter("selectedItem");
+                                if (selectedItem) {
+                                    let bindingContext = oEvent.getSource().getBindingContext("ChangeOfCompensationModel");
+                                    let path = bindingContext.getPath();
+                                    let model = oEvent.getSource().getModel("ChangeOfCompensationModel");
+                                    model.setProperty(path + "/NewValue", selectedItem.getKey());
                                 }
-                            });
-                        }
+                            }
+                        });
                     } else {
-                        // For non-paygrade items, keep the input field
+                        // For all other rows (SNo > 1) - show Input box
                         newValueControl = new Input({
                             value: "{ChangeOfCompensationModel>NewValue}",
                             type: sap.m.InputType.Number,
@@ -4416,19 +4479,17 @@ sap.ui.define([
 
                     cells.push(newValueControl);
 
-                    // Add the delete button as a static icon (no functionality)
                     if (item.SNo !== "1") {
                         let deleteButton = new Button({
-                            icon: "sap-icon://delete", // Delete icon
+                            icon: "sap-icon://delete",
                             type: "Transparent",
                             tooltip: "Delete",
                             press: function (oEvent) {
-                                that.onDeleteComTblRow(oEvent); // Call the delete function
+                                that.onDeleteComTblRow(oEvent);
                             }
                         });
                         cells.push(deleteButton);
                     } else {
-                        // Add an empty cell to maintain alignment for the first row
                         cells.push(new Text({ text: "" }));
                     }
                     return new ColumnListItem({
@@ -4438,43 +4499,267 @@ sap.ui.define([
             });
         },
 
-        onDeleteComTblRow : function(oEvent){
+        newInitializeChangeOfCompensationTable: function (empCompensationData) {
+            let that = this;
+            let payGradeNewVal = "";
+            let wfChangeData1 = that.wfchangeData;
+
+            let hasAnyWfChangeData = false;
+
+            if (wfChangeData1 != null) {
+                console.log("Initialize wf change data1:" + wfChangeData1.results);
+                let wfChangeData12 = wfChangeData1.results;
+
+                if (wfChangeData12 && wfChangeData12.length > 0) {
+                    hasAnyWfChangeData = true;
+                }
+
+                wfChangeData12.forEach(function (wfchangedata) {
+                    if (wfchangedata.fieldName == "payGrade") {
+                        console.log("New PayGrade value:" + wfchangedata.newValue);
+                        payGradeNewVal = wfchangedata.newValue;
+                    }
+                });
+            }
+
+            let changeOfCompensation = [];
+
+            changeOfCompensation.push({
+                SNo: "1",
+                Item: "Grade",
+                externalCode: empCompensationData && empCompensationData.employmentNav &&
+                    empCompensationData.employmentNav.jobInfoNav &&
+                    empCompensationData.employmentNav.jobInfoNav.results[0] &&
+                    empCompensationData.employmentNav.jobInfoNav.results[0].payGradeNav ?
+                    empCompensationData.employmentNav.jobInfoNav.results[0].payGradeNav.externalCode : "",
+                CurrentValue: empCompensationData && empCompensationData.employmentNav && empCompensationData.employmentNav.jobInfoNav && empCompensationData.employmentNav.jobInfoNav.results[0] && empCompensationData.employmentNav.jobInfoNav.results[0].payGradeNav ?
+                    empCompensationData.employmentNav.jobInfoNav.results[0].payGradeNav.externalCode + " - " + empCompensationData.employmentNav.jobInfoNav.results[0].payGradeNav.name : "",
+                NewValue: (payGradeNewVal != "" ? payGradeNewVal : empCompensationData.employmentNav?.jobInfoNav?.results?.[0]?.payGradeNav?.externalCode || ""),
+                hasWfChangeData: hasAnyWfChangeData
+            });
+
+            if (empCompensationData && empCompensationData.empPayCompRecurringNav && empCompensationData.empPayCompRecurringNav.results) {
+                empCompensationData.empPayCompRecurringNav.results.forEach(function (payComponent, index) {
+                    changeOfCompensation.push({
+                        SNo: (index + 2).toString(),
+                        externalCode: payComponent.payComponentNav ? payComponent.payComponentNav.externalCode : "",
+                        Item: payComponent.payComponentNav ? payComponent.payComponentNav.name : "",
+                        CurrentValue: payComponent.paycompvalue || "",
+                        NewValue: "", // Will be filled from empCmpNewValueModel
+                        startDate: payComponent ? payComponent.startDate : "",
+                        hasWfChangeData: hasAnyWfChangeData
+                    });
+                });
+            }
+
+            let dataModel = new sap.ui.model.json.JSONModel({ ChangeOfCompensation: changeOfCompensation });
+            this.getView().setModel(dataModel, "ChangeOfNewCompensationModel");
+            this.newBindChangeOfCompensationTable();
+            this.getView().byId("changeOfCompSection").setVisible(true);
+        },
+
+        newBindChangeOfCompensationTable: function () {
+            let that = this;
+            let table = this.getView().byId("compensationTable");
+
+            table.bindItems({
+                path: "ChangeOfNewCompensationModel>/ChangeOfCompensation",
+                factory: function (sId, oContext) {
+                    let item = oContext.getObject();
+                    let cells = [
+                        new Text({ text: "{ChangeOfNewCompensationModel>SNo}" }),
+                        new Text({
+                            text: {
+                                parts: [
+                                    { path: "ChangeOfNewCompensationModel>externalCode" },
+                                    { path: "ChangeOfNewCompensationModel>Item" }
+                                ],
+                                formatter: that.formatExternalCodeWithItem
+                            }
+                        }),
+                        new Text({
+                            text: {
+                                parts: [
+                                    { path: "ChangeOfNewCompensationModel>SNo" },
+                                    { path: "ChangeOfNewCompensationModel>CurrentValue" }
+                                ],
+                                formatter: function (sno, value) {
+                                    if (sno !== "1" && value) {
+                                        return value;
+                                    }
+                                    return value || "";
+                                }
+                            }
+                        }),
+                    ];
+
+                    let newValueControl;
+
+                    if (item.SNo === "1") {
+                        // For Grade (SNo=1) - show as Text (read-only)
+                        let displayValue = item.NewValue && item.NewValue.trim() !== "" ?
+                            item.NewValue : item.CurrentValue;
+                        newValueControl = new Text({ text: displayValue });
+
+                        if (item.NewValue && item.NewValue.trim() !== "" && item.NewValue !== item.externalCode) {
+                            newValueControl.addStyleClass("warningText");
+                        }
+                    } else {
+                        // For all other rows (SNo > 1) - show Text with value from empCmpNewValueModel
+                        newValueControl = new Text({
+                            text: {
+                                parts: [
+                                    { path: "empCmpNewValueModel>/results" },
+                                    { path: "ChangeOfNewCompensationModel>externalCode" },
+                                    { path: "ChangeOfNewCompensationModel>SNo" }
+                                ],
+                                formatter: function (empResults, externalCode, sno) {
+                                    if (!empResults || !Array.isArray(empResults) || empResults.length === 0) {
+                                        return "";
+                                    }
+
+                                    let employeeData = empResults[0];
+                                    if (!employeeData ||
+                                        !employeeData.empPayCompRecurringNav ||
+                                        !employeeData.empPayCompRecurringNav.results ||
+                                        !Array.isArray(employeeData.empPayCompRecurringNav.results)) {
+                                        return "";
+                                    }
+
+                                    let payCompRecurringResults = employeeData.empPayCompRecurringNav.results;
+                                    let matchingRecord = payCompRecurringResults.find(function (record) {
+                                        return record.payComponent === externalCode ||
+                                            (record.payComponentNav && record.payComponentNav.externalCode === externalCode);
+                                    });
+
+                                    if (matchingRecord && matchingRecord.paycompvalue !== undefined) {
+                                        return matchingRecord.paycompvalue.toString();
+                                    }
+                                    return "";
+                                }
+                            }
+                        });
+                        newValueControl.addStyleClass("warningText");
+                    }
+
+                    cells.push(newValueControl);
+
+                    return new ColumnListItem({
+                        cells: cells
+                    });
+                }
+            });
+        },
+
+        // Helper function to get employee compensation data for a specific pay component
+        getEmpCompensationValue: function (externalCode) {
+            let empCmpNewValueModel = this.getView().getModel("empCmpNewValueModel");
+            if (!empCmpNewValueModel) {
+                return "";
+            }
+
+            let data = empCmpNewValueModel.getData();
+            if (!data || !data.results || !Array.isArray(data.results) || data.results.length === 0) {
+                return "";
+            }
+
+            // Get the first employee result
+            let employeeData = data.results[0];
+            if (!employeeData || !employeeData.empPayCompRecurringNav || !employeeData.empPayCompRecurringNav.results) {
+                return "";
+            }
+
+            // Find matching record
+            let payCompRecurringResults = employeeData.empPayCompRecurringNav.results;
+            let matchingRecord = payCompRecurringResults.find(function (record) {
+                return record.payComponent === externalCode ||
+                    (record.payComponentNav && record.payComponentNav.externalCode === externalCode);
+            });
+
+            return matchingRecord ? (matchingRecord.paycompvalue || "") : "";
+        },
+
+
+        // Helper function to get employee compensation data for a specific pay component
+        getEmpCompensationValue: function (externalCode) {
+            let empCmpNewValueModel = this.getView().getModel("empCmpNewValueModel");
+            if (!empCmpNewValueModel) {
+                return "";
+            }
+
+            let data = empCmpNewValueModel.getData();
+            if (!data || !data.results || !Array.isArray(data.results) || data.results.length === 0) {
+                return "";
+            }
+
+            // Get the first employee result
+            let employeeData = data.results[0];
+            if (!employeeData || !employeeData.empPayCompRecurringNav || !employeeData.empPayCompRecurringNav.results) {
+                return "";
+            }
+
+            // Find matching record
+            let payCompRecurringResults = employeeData.empPayCompRecurringNav.results;
+            let matchingRecord = payCompRecurringResults.find(function (record) {
+                return record.payComponent === externalCode ||
+                    (record.payComponentNav && record.payComponentNav.externalCode === externalCode);
+            });
+
+            return matchingRecord ? (matchingRecord.paycompvalue || "") : "";
+        },
+
+
+        onDeleteComTblRow: function (oEvent) {
             let that = this;
             let oButton = oEvent.getSource();
             let oContext = oButton.getBindingContext("ChangeOfCompensationModel");
             let oData = oContext.getObject();
             let sUrl = that.getPath("SF_1") + "/upsert";
+            let sUserId = that._currentUserId;
 
-            let oempDataModel = that.getView().getModel("empData");
-            let userId = oempDataModel.getProperty("/userId");
+            sap.m.MessageBox.confirm(
+                "Do you really want to delete this row?",
+                {
+                    title: "Delete Confirmation",
+                    onClose: function (oAction) {
+                        if (oAction === sap.m.MessageBox.Action.OK) {
 
-            let payload = {
-                "__metadata": {
-                    "uri": "EmpPayCompRecurring"
-                },
-                "userId":userId,
-                "startDate": oData.startDate, // Replace with the actual field from your model
-                "payComponent": oData.externalCode, // Replace with the actual field from your model
-                "operation": "DELIMIT"
-            };
+                            let payload = {
+                                "__metadata": {
+                                    "uri": "EmpPayCompRecurring"
+                                },
+                                "userId": sUserId,
+                                "startDate": oData.startDate,
+                                "payComponent": oData.externalCode,
+                                "operation": "DELIMIT"
+                            };
 
-            $.ajax({
-                url: sUrl, // Your API endpoint
-                method: "POST", // HTTP method
-                contentType: "application/json", // Content type of the request
-                data: JSON.stringify(payload), // Stringify the payload for POST
-                success: function (response) {
-                    // Success callback
-                    sap.m.MessageToast.show("Row deleted successfully!");
-                    // Optionally, refresh the model or table to reflect the changes
-                },
-                error: function (error) {
-                    // Error callback
-                    sap.m.MessageToast.show("Failed to delete row. Please try again.");
-                    console.error("Error:", error);
+                            $.ajax({
+                                url: sUrl,
+                                method: "POST",
+                                contentType: "application/json",
+                                data: JSON.stringify(payload),
+                                success: function (response) {
+
+                                    sap.m.MessageToast.show("Row deleted successfully!");
+                                    window.location.reload();
+                                },
+                                error: function (error) {
+
+                                    sap.m.MessageToast.show("Failed to delete row. Please try again.");
+                                    console.error("Error:", error);
+                                }
+                            });
+                        } else {
+
+                            console.log("Delete action was canceled.");
+                        }
+                    }
                 }
-            });
+            );
         },
+
+
 
         initializeGrossCompensationTable: function (empCompensationData) {
             let contractType = empCompensationData && empCompensationData.employmentNav ?
@@ -4482,32 +4767,32 @@ sap.ui.define([
 
             let grossCompensationData = [
                 {
-                    SNo: "9",
+                    SNo: "1",
                     Item: "Contract Type",
                     CurrentValue: contractType,
                     NewValue: "",
                     isContractType: true
                 },
                 {
-                    SNo: "10",
+                    SNo: "2",
                     Item: "Leave Entitlement",
                     CurrentValue: "As Per the Policy",
                     NewValue: "As Per the Policy"
                 },
                 {
-                    SNo: "11",
+                    SNo: "3",
                     Item: "Medical Insurance Class",
                     CurrentValue: "A+ Class",
                     NewValue: "As Per the Policy"
                 },
                 {
-                    SNo: "12",
+                    SNo: "4",
                     Item: "Employee Ticket Entitlement",
                     CurrentValue: "As Per the Policy",
                     NewValue: "As Per the Policy"
                 },
                 {
-                    SNo: "13",
+                    SNo: "5",
                     Item: "Family Ticket Entitlement",
                     CurrentValue: "As Per the Policy",
                     NewValue: "As Per the Policy"
@@ -4573,6 +4858,7 @@ sap.ui.define([
         _getUserIdAndOpenAddComponentDialog: function () {
             let userId = null;
             let cust_EffectiveDate = null;
+            let cust_PSNEffectiveDate = null;
             let psnTypeChange = null; // New letiable to store cust_PSNTypeChange
             let that = this;
 
@@ -4599,14 +4885,15 @@ sap.ui.define([
                 let oSelectedData = oSelectedContext.getObject();
 
                 userId = oSelectedData.externalCode;
-                psnTypeChange = oSelectedData.cust_PSNTypeChange; // Fetch the cust_PSNTypeChange value
-
+                psnTypeChange = oSelectedData.cust_PSNTypeChange;
                 if (oSelectedData.cust_EffectiveDate) {
                     let timestamp = parseInt(oSelectedData.cust_EffectiveDate.replace("/Date(", "").replace(")/", ""));
                     let date = new Date(timestamp);
                     cust_EffectiveDate = date.getFullYear() + "-" +
                         String(date.getMonth() + 1).padStart(2, '0') + "-" +
                         String(date.getDate()).padStart(2, '0');
+
+                    cust_PSNEffectiveDate = oSelectedData.cust_EffectiveDate;
                 }
 
                 console.log("Retrieved from selected list item - userId:", userId, "cust_EffectiveDate:", cust_EffectiveDate, "psnTypeChange:", psnTypeChange);
@@ -4619,6 +4906,7 @@ sap.ui.define([
                 }
 
                 that._currentUserId = userId;
+                that._currentPSNEffectiveDate = cust_PSNEffectiveDate;
                 that._currentEffectiveDate = cust_EffectiveDate;
                 that._currentPsnTypeChange = psnTypeChange; // Store the fetched value
 
@@ -4646,10 +4934,7 @@ sap.ui.define([
                 oDialog.open();
                 that.fetchAddComponentData();
             });
-            //     })
-            //     .catch(function (error) {
-            //         console.error("Error during _getUserIdAndOpenAddComponentDialog:", error);
-            //     });
+
         },
 
 
@@ -4657,7 +4942,37 @@ sap.ui.define([
 
         fetchAddComponentData: function () {
             let that = this;
-            let sServiceUrl = this.getPath("SF_1") + "/FOPayComponent?$format=JSON&$select=name,payComponentType,externalCode,frequencyCode";
+            let oDataModel = this.getView().getModel("DataModel");
+            let aChangeOfStatus = oDataModel.getProperty("/ChangeOfStatus");
+
+            let filterValues = [];
+            aChangeOfStatus.forEach(function (item) {
+                //if (item.NewStatus && item.NewStatus !== item.CurrentStatus) {
+                if (item.NewStatus) {
+                    switch (item.Item) {
+                        case "Company":
+                            // Assuming you want to filter based on the NewStatus or CurrentStatus
+                            // You can adjust this logic based on your specific filtering criteria
+                            filterValues.push(item.NewStatus.split('-')[0].trim());
+                            break;
+                    }
+                } else if (item.CurrentStatus) {
+                    switch (item.Item) {
+                        case "Company":
+                            // Assuming you want to filter based on the NewStatus or CurrentStatus
+                            // You can adjust this logic based on your specific filtering criteria
+                            filterValues.push(item.CurrentStatus.split('-')[0].trim());
+                            break;
+                    }
+                }
+            });
+            let filterString = filterValues.map(value => `companyFlxNav/externalCode eq '${value}'`).join(' or ');
+
+            let sServiceUrl = this.getPath("SF_1") + "/FOPayComponent?$format=JSON&$select=name,payComponentType,externalCode,frequencyCode,currency";
+
+            if (filterString) {
+                sServiceUrl += `&$filter=${filterString +" and (recurring eq 'true')"}`;
+            }
 
             jQuery.ajax({
                 url: sServiceUrl,
@@ -4699,6 +5014,31 @@ sap.ui.define([
                 return;
             }
 
+
+            let oModel = this.getView().getModel("ChangeOfCompensationModel");
+
+            // Prepare the new row object
+            let newRow = {
+                SNo: (oModel.getData().ChangeOfCompensation.length + 1).toString(), // Sequential number
+                externalCode: sSelectedComponentCode,
+                Item: oPayComponentSelect.getSelectedItem().getText(), // Get the text from the selected item
+                CurrentValue : '',
+                NewValue: sValue // Or whatever field you want to populate
+            };
+
+            // Update the model with the new row
+            let aData = oModel.getData().ChangeOfCompensation || []; // Ensure array exists
+            aData.push(newRow);
+            oModel.setProperty("/ChangeOfCompensation", aData);
+
+            // Clear the dialog inputs
+            oPayComponentSelect.setSelectedKey(""); // Clear selection
+            oValueInput.setValue(""); // Clear input
+            oDialog.close(); // Close the dialog
+
+            // Display success message
+            MessageToast.show("Pay component added successfully");
+
             this._getUserIdAndOpenAddComponentDialog()
                 .then(function () {
                     let sUserId = that._currentUserId;
@@ -4718,44 +5058,47 @@ sap.ui.define([
                     };
 
                     let oBusyDialog = new sap.m.BusyDialog();
-                    oBusyDialog.open();
+                   // oBusyDialog.open();
 
-                    let sUrl = that.getPath("SF_1") + "/upsert";
+                   // let sUrl = that.getPath("SF_1") + "/upsert";
 
-                    $.ajax({
-                        url: sUrl,
-                        type: "POST",
-                        contentType: "application/json",
-                        data: JSON.stringify(oPayloadData),
-                        success: function () {
-                            oBusyDialog.close();
-                            MessageToast.show("Pay component added successfully");
-                            oPayComponentSelect.setSelectedKey("");
-                            oValueInput.setValue("");
-                            oDialog.close();
+                //     $.ajax({
+                //         url: sUrl,
+                //         type: "POST",
+                //         contentType: "application/json",
+                //         data: JSON.stringify(oPayloadData),
+                //         success: function () {
+                //             oBusyDialog.close();
+                //             MessageToast.show("Pay component added successfully");
+                //             oPayComponentSelect.setSelectedKey("");
+                //             oValueInput.setValue("");
+                //             oDialog.close();
 
-                            that._refreshPayComponentsList();
+                //             //window.location.reload();
 
-                        },
-                        error: function (jqXHR, textStatus, errorThrown) {
-                            oBusyDialog.close();
+                //             //    / that._refreshPayComponentsList();
+                //             // that.onRefreshItemPressed(sUserId);
 
-                            let sErrorMessage = "Failed to add pay component";
-                            try {
-                                let oErrorResponse = JSON.parse(jqXHR.responseText);
-                                if (oErrorResponse && oErrorResponse.message) {
-                                    sErrorMessage = oErrorResponse.message || sErrorMessage;
-                                }
-                            } catch (e) {
-                                if (errorThrown) {
-                                    sErrorMessage += ": " + errorThrown;
-                                }
-                            }
+                //         },
+                //         error: function (jqXHR, textStatus, errorThrown) {
+                //             oBusyDialog.close();
 
-                            MessageBox.error(sErrorMessage);
-                        }
-                    });
-                })
+                //             let sErrorMessage = "Failed to add pay component";
+                //             try {
+                //                 let oErrorResponse = JSON.parse(jqXHR.responseText);
+                //                 if (oErrorResponse && oErrorResponse.message) {
+                //                     sErrorMessage = oErrorResponse.message || sErrorMessage;
+                //                 }
+                //             } catch (e) {
+                //                 if (errorThrown) {
+                //                     sErrorMessage += ": " + errorThrown;
+                //                 }
+                //             }
+
+                //             MessageBox.error(sErrorMessage);
+                //         }
+                //     });
+                 })
                 .catch(function (error) {
                     MessageBox.error("Could not submit: " + error.message);
                 });
@@ -4866,17 +5209,15 @@ sap.ui.define([
             console.log("Updating position for user:", userId);
 
             await this.fetchEmpJobData(userId);
-            await this.fetchEmpCompensationData(userId);
+            // await this.fetchEmpCompensationData(userId);
+            await this.callCompensationFlow();
             await this.fetchRequestApprovalData(userId);
             await this._getEventReasons();
             await this._getWorkflowDetails(userId);
-            // this.highlightChangeOfStatusSection();
-            // this.highlightChangeOfCompSection();
+
             await this.initializeView();
             this.getView().getModel("DataModel").refresh(true);
-            // this.byId("changeOfStatusSection").getBinding("items").refresh();
 
-            // Initialize view after data is fetched
             if (this.empJobData) {
                 await this.initializeView();
             } else {
@@ -5018,6 +5359,7 @@ sap.ui.define([
                     let sEffectiveDate = that._currentEffectiveDate;
                     let sFormattedDate = "/Date(" + new Date(sEffectiveDate).getTime() + ")/";
                     let sEventReason = that._currentPsnTypeChange || "";
+                    let formattedEffectiveDate = that.formatDate(sEffectiveDate);
 
                     let oPositionPayload = {
                         "__metadata": {
@@ -5043,7 +5385,6 @@ sap.ui.define([
                         }
                     }
 
-                    // Handle other ChangeOfStatus entries
                     aChangeOfStatus.forEach(function (item) {
                         if (item.NewStatus && item.NewStatus !== item.CurrentStatus) {
                             switch (item.Item) {
@@ -5079,6 +5420,7 @@ sap.ui.define([
                                              oPositionPayload.customString7 = oSelectedLocation && oSelectedLocation.locationGroup || "";
                                          }
                                      }*/
+
                                     break;
                                 case "Work Schedule":
                                     oPositionPayload.workscheduleCode = item.NewStatus.split('-')[0].trim();
@@ -5088,6 +5430,7 @@ sap.ui.define([
                                     break;
                                 case "Job Title":
                                     oPositionPayload.jobCode = item.NewStatus.split('-')[0].trim();
+                                    oPositionPayload.jobTitle = item.NewStatus.split('-')[2].trim();
                                     break;
 
                             }
@@ -5123,6 +5466,7 @@ sap.ui.define([
                     async function processRequestsSequentially() {
                         let results = [];
                         let sUrl = that.getPath("SF_2") + "/upsert";
+                        let z = 0;
 
                         try {
                             if (bHasPositionChanges || oPositionPayload.payGrade) {
@@ -5133,8 +5477,21 @@ sap.ui.define([
 
                             for (let i = 0; i < aCompensationChanges.length; i++) {
                                 let item = aCompensationChanges[i];
-                                if (item.SNo !== "1") {
+                                if (item.SNo !== "1" && item.NewValue !== "") {
                                     console.log("Processing compensation item:", item.Item);
+                                    if (z == 0) {
+                                        let oEmpCompPayload = {
+                                            "__metadata": {
+                                                "uri": "EmpCompensation"
+                                            },
+                                            "userId": sUserId,
+                                            "startDate": sFormattedDate,
+                                            "eventReason": sEventReason
+                                        };
+                                        let compData1 = await makeAjaxRequest(sUrl, oEmpCompPayload);
+                                        console.log("EmpComp Data:" + compData1);
+                                        z = 1;
+                                    }
                                     let oCompPayload = {
                                         "__metadata": {
                                             "uri": "EmpPayCompRecurring"
@@ -5201,8 +5558,9 @@ sap.ui.define([
                                 onClose: function (oAction) {
                                     if (oAction === MessageBox.Action.OK) {
                                         that.byId("submitUpdateButton").setVisible(false);
+                                        window.location.reload();
                                         // that.byId("submitChangesButton").setVisible(false);
-                                        that.oButtonModel.setProperty("/showSubmitButton", false);
+                                        that.oViewSubModel.setProperty("/showSubmitButton", false);
 
                                         let sWorkflowUrl = that.getPath("SF_1") +
                                             "/EmpWfRequest?$format=json&$filter=subjectId eq '" + sUserId + "' and requestType eq 'CHANGE_JOB'&$select=wfRequestId&$orderby=wfRequestId desc&$top=1";
@@ -5218,7 +5576,10 @@ sap.ui.define([
                                             success: function (data) {
                                                 if (data && data.d && data.d.results) {
                                                     that._setWorkflowStage("APPROVALS_WORKFLOW", false);
+
                                                     that._getWorkflowDetails(sUserId);
+                                                    that.fetchEmpCmpNewValue(sUserId, formattedEffectiveDate);
+                                                    // window.location.reload();
                                                 }
                                             },
                                             error: function (e) {
@@ -5363,8 +5724,6 @@ sap.ui.define([
             let that = this;
             let wfChangeData1 = that.wfchangeData;
 
-            
-
             let hasAnyWfChangeData = false;
 
             if (wfChangeData1 != null) {
@@ -5414,8 +5773,8 @@ sap.ui.define([
                 });
             }
 
-            let buttonModel = this.getView().getModel("buttonVisibleModel");
-            this.visibilityConfig = this.getView().getModel("buttonVisibleModel").getProperty("/ButtonVisibility/RequestTypes/PSN_JobTitleChange/Country HR");
+            // let buttonModel = this.getView().getModel("buttonVisibleModel");
+            // this.visibilityConfig = this.getView().getModel("buttonVisibleModel").getProperty("/ButtonVisibility/RequestTypes/PSN_JobTitleChange/Country HR");
 
             let changeOfStatus = [
                 {
@@ -5423,7 +5782,8 @@ sap.ui.define([
                     Item: "Company",
                     CurrentStatus: (empJobData?.companyNav?.externalCode ?? '') + " - " + (empJobData?.companyNav?.name_en_US ?? ''),
                     NewStatus: (companyNewVal != "" ? companyNewVal : ""),
-                    Visible: buttonModel.getProperty("/ButtonVisibility/RequestTypes/PSN_JobTitleChange/Country HR/enableCompany"),
+                    // Visible: buttonModel.getProperty("/ButtonVisibility/RequestTypes/PSN_JobTitleChange/Country HR/enableCompany"),
+                    Visible: true,
                     hasWfChangeData: hasAnyWfChangeData
                 },
                 {
@@ -5431,7 +5791,7 @@ sap.ui.define([
                     Item: "Business Unit",
                     CurrentStatus: (empJobData?.businessUnitNav?.externalCode ?? '') + " - " + (empJobData?.businessUnitNav?.name ?? ''),
                     NewStatus: (busUnitNewVal != "" ? busUnitNewVal : ""),
-                    Visible: this.visibilityConfig.enableBusinessUnit,
+                    Visible: true,
                     hasWfChangeData: hasAnyWfChangeData
                 },
                 {
@@ -5439,7 +5799,7 @@ sap.ui.define([
                     Item: "Department",
                     CurrentStatus: (empJobData?.departmentNav?.externalCode ?? '') + " - " + (empJobData?.departmentNav?.name_en_US ?? ''),
                     NewStatus: (departmentNewVal != "" ? departmentNewVal : ""),
-                    Visible: this.visibilityConfig.enableDepartment,
+                    Visible: true,
                     hasWfChangeData: hasAnyWfChangeData
                 },
                 {
@@ -5447,7 +5807,7 @@ sap.ui.define([
                     Item: "Division",
                     CurrentStatus: (empJobData?.divisionNav?.externalCode ?? '') + " - " + (empJobData?.divisionNav?.name_en_US ?? ''),
                     NewStatus: (divisionNewVal != "" ? divisionNewVal : ""),
-                    Visible: this.visibilityConfig.enableDivision,
+                    Visible: true,
                     hasWfChangeData: hasAnyWfChangeData
                 },
                 {
@@ -5455,7 +5815,7 @@ sap.ui.define([
                     Item: "Cost Center",
                     CurrentStatus: (empJobData?.costCenterNav?.externalCode ?? '') + " - " + (empJobData?.costCenterNav?.name ?? ''),
                     NewStatus: (costcenterNewVal != "" ? costcenterNewVal : ""),
-                    Visible: this.visibilityConfig.enableCostCenter,
+                    Visible: true,
                     hasWfChangeData: hasAnyWfChangeData
                 },
                 {
@@ -5463,7 +5823,7 @@ sap.ui.define([
                     Item: "Location",
                     CurrentStatus: (empJobData?.locationNav?.externalCode ?? '') + " - " + (empJobData?.locationNav?.name ?? ''),
                     NewStatus: (locationNewVal != "" ? locationNewVal : ""),
-                    Visible: this.visibilityConfig.enableLocation,
+                    Visible: true,
                     hasWfChangeData: hasAnyWfChangeData
                 },
                 {
@@ -5471,7 +5831,7 @@ sap.ui.define([
                     Item: "Work Schedule",
                     CurrentStatus: (empJobData?.workscheduleCodeNav?.externalCode ?? '') + " - " + (empJobData?.workscheduleCodeNav?.externalName_en_US ?? ''),
                     NewStatus: (workScheduleNewVal != "" ? workScheduleNewVal : ""),
-                    Visible: this.visibilityConfig.enableWorkSchedule,
+                    Visible: true,
                     hasWfChangeData: hasAnyWfChangeData
                 },
                 {
@@ -5479,7 +5839,7 @@ sap.ui.define([
                     Item: "Manager",
                     CurrentStatus: (empJobData?.managerUserNav?.userId ?? '') + " - " + (empJobData?.managerUserNav?.displayName ?? ''),
                     NewStatus: (managerNewVal != "" ? managerNewVal : ""),
-                    Visible: this.visibilityConfig.enableManager,
+                    Visible: true,
                     hasWfChangeData: hasAnyWfChangeData
                 },
                 {
@@ -5487,7 +5847,7 @@ sap.ui.define([
                     Item: "Position",
                     CurrentStatus: (empJobData?.position ?? '') + " - " + (empJobData?.positionNav?.externalName_en_US ?? ''),
                     NewStatus: (positionNewVal != "" ? positionNewVal : ""),
-                    Visible: this.visibilityConfig.enablePosition,
+                    Visible: true,
                     hasWfChangeData: hasAnyWfChangeData
                 },
                 {
@@ -5495,7 +5855,7 @@ sap.ui.define([
                     Item: "Job Title",
                     CurrentStatus: (empJobData?.jobCode ?? '') + " - " + (empJobData?.jobCodeNav?.name ?? ''),
                     NewStatus: (jobTitleNewVal != "" ? jobTitleNewVal : ""),
-                    Visible: this.visibilityConfig.enableJobTitle,
+                    Visible: true,
                     hasWfChangeData: hasAnyWfChangeData
                 }
             ];
@@ -5904,7 +6264,7 @@ sap.ui.define([
             let empJobData = this.empJobData;
             let oChangeDate = this.getView().byId("cust_EffectiveDate").getText();
 
-            let employeeName = oEmpModel.getProperty("/displayName");
+            let employeeName = oEmpModel.getProperty("/personalInfoNav/results/0/displayName");
             let positionTitle = empJobData.position;
             let roleName = empJobData.jobTitle;
             let changeDate = oChangeDate;
@@ -5973,8 +6333,22 @@ sap.ui.define([
                 }
             });
 
-            let oCompensationModel = this.getView().getModel("ChangeOfCompensationModel");
-            let compensationData = oCompensationModel ? oCompensationModel.getProperty("/ChangeOfCompensation") : [];
+            let oCompensationModel = this.getView().getModel("empCmpNewValueModel");
+            //let compensationData = oCompensationModel ? oCompensationModel.getProperty("/ChangeOfCompensation") : [];
+            let data = oCompensationModel.getData();
+            if (!data || !data.results || !Array.isArray(data.results) || data.results.length === 0) {
+                return "";
+            }
+
+            // Get the first employee result
+            let employeeData = data.results[0];
+            if (!employeeData || !employeeData.empPayCompRecurringNav || !employeeData.empPayCompRecurringNav.results) {
+                return "";
+            }
+
+            // Find matching record
+            let payCompRecurringResults = employeeData.empPayCompRecurringNav.results;
+          
 
             let currentGrade = "";
             let currentBasicSalary = "";
@@ -5982,12 +6356,15 @@ sap.ui.define([
             let currentTransportationAllowance = "";
             let currentGrossSalary = "";
 
-            compensationData.forEach(item => {
+            let currencyCode = "";
+
+           payCompRecurringResults.forEach(item => {
                 if (item.SNo === "1") { // Grade
                     currentGrade = item.CurrentValue || "";
                 } else {
-                    let itemName = item.Item ? item.Item.toLowerCase() : "";
-                    let currentValue = item.CurrentValue || "";
+                    let itemName = item.payComponentNav.name ? item.payComponentNav.name.toLowerCase() : "";
+                    let currentValue = item.paycompvalue || "";
+                    currencyCode = item.currencyCode
 
                     if (itemName.includes("basic") || itemName.includes("salary")) {
                         currentBasicSalary = currentValue;
@@ -5997,7 +6374,21 @@ sap.ui.define([
                         currentTransportationAllowance = currentValue;
                     }
                 }
-            });
+            }
+        );
+        // let compNewData = [];
+        // let index = 0;
+        // payCompRecurringResults.forEach(item => {
+          
+        //     compNewData[index].name = item.payComponentNav.name;
+        //     compNewData[index].currency = item.currencyCode;
+        //     compNewData[index].compValue = item.paycompvalue;
+        //     index++;
+
+        // })
+
+
+
 
             if (!currentGrossSalary && currentBasicSalary && currentHousingAllowance && currentTransportationAllowance) {
                 let basic = parseFloat(currentBasicSalary) || 0;
@@ -6014,7 +6405,7 @@ sap.ui.define([
             let currentMedicalInsurance = "";
             let currentEmployeeTicket = "";
             let currentFamilyTicket = "";
-
+            
             grossCompensationData.forEach(item => {
                 switch (item.SNo) {
                     case "9": // Contract Type
@@ -6075,6 +6466,7 @@ sap.ui.define([
                 housingAllowance: currentHousingAllowance,
                 transportationAllowance: currentTransportationAllowance,
                 grossSalary: currentGrossSalary,
+                currencyCode:currencyCode,
 
                 // Benefits Information - Current Values Only
                 contractType: currentContractType,
@@ -6222,10 +6614,10 @@ sap.ui.define([
                                 if (oAttachmentData && oAttachmentData.d && Array.isArray(oAttachmentData.d) && oAttachmentData.d[0].status === 'ERROR') {
                                     console.error("Attachment upload failed on the server:", oAttachmentData.d[0].message);
                                     sap.m.MessageBox.error("Attachment upload failed: " + oAttachmentData.d[0].message, { title: "Error" });
-                                    return; // Stop further processing if attachment upload failed
+                                    return;
                                 }
 
-                                // Attempt to extract the attachment ID
+                                // extract the attachment ID
                                 if (oAttachmentData && oAttachmentData.d) {
                                     if (Array.isArray(oAttachmentData.d) && oAttachmentData.d.length > 0 && oAttachmentData.d[0].key) {
                                         let attachmentIdMatch = oAttachmentData.d[0].key.match(/Attachment\/attachmentId=(\d+)/);
@@ -6430,7 +6822,7 @@ sap.ui.define([
             this.oViewSubModel.setProperty("/showDelegateButton", false);
             this.oViewSubModel.setProperty("/showGeneratePDFButton", false);
             this.oViewSubModel.setProperty("/showMenuButton", false);
-            this.oViewSubModel.setProperty("/showSubmitPositionButton", true);
+
         },
 
         // Helper function to enable workflow action buttons
@@ -6443,18 +6835,20 @@ sap.ui.define([
         },
 
         _setWorkflowStage: function (stage, userAuthorized = false) {
+            // this.oViewSubModel.setProperty("/workflowStage", stage);
+            // this.oViewSubModel.setProperty("/isUserAuthorized", userAuthorized);
+
+            let that = this;
             this.oViewSubModel.setProperty("/workflowStage", stage);
             this.oViewSubModel.setProperty("/isUserAuthorized", userAuthorized);
 
-            // this._resetWorkflowButtons();
-
             switch (stage) {
                 case "RQApprovalsPending":
-                    this.setWorkflowPending(false, false, false, true, true, true, true, true, false, true, false, false);
+                    this.setWorkflowPending(false, false, false, true, true, true, true, true, false, false, false);
                     break;
 
                 case "RQApprovalsCompleted":
-                    this.setWorkflowPending(true, true, false, false, false, false, false, false, false, true, true, false);
+                    this.setWorkflowPending(true, true, false, false, false, false, false, false, false, true, false);
                     break;
 
                 case "SubmitPositionCompleted":
@@ -6463,13 +6857,12 @@ sap.ui.define([
                     this.oViewSubModel.setProperty("/showChangeOfComp", true);
                     break;
 
-
                 case "SubmitApprovalsPending":
-                    this.setWorkflowPending(true, true, true, true, true, true, true, true, false, true, true, false);
+                    this.setWorkflowPending(true, true, true, true, true, true, true, true, false, false, false);
                     break;
 
                 case "SubmitApprovalsCompleted":
-                    this.setWorkflowPending(true, true, true, false, false, false, false, false, true, true, true, false);
+                    this.setWorkflowPending(true, true, true, false, false, false, false, false, true, false, false);
                     break;
             }
 
@@ -6478,20 +6871,20 @@ sap.ui.define([
 
         setWorkflowPending: function (isshowChangeOfComp, isshowChangeOfSts, isshowSubmitApprovals, isshowApproveButton, isshowRejectButton, isshowReturnButton, isshowDelegateButton, isshowMenuButton, isshowGeneratePDFButton, isshowSubmitPositionButton, isshowSubmitButton, isshowUpdateButton) {
 
-            var oViewModel = this.getView().getModel("viewsubModel");
-            oViewModel.setProperty("/showChangeOfComp", isshowChangeOfComp);
-            oViewModel.setProperty("/showChangeOfSts", isshowChangeOfSts);
-            oViewModel.setProperty("/showSubmitApprovals", isshowSubmitApprovals);
-            oViewModel.setProperty("/showApproveButton", isshowApproveButton);
-            oViewModel.setProperty("/showRejectButton", isshowRejectButton);
-            oViewModel.setProperty("/showReturnButton", isshowReturnButton);
-            oViewModel.setProperty("/showDelegateButton", isshowDelegateButton);
-            oViewModel.setProperty("/showMenuButton", isshowMenuButton);
-            oViewModel.setProperty("/showGeneratePDFButton", isshowGeneratePDFButton);
-            oViewModel.setProperty("/showSubmitPositionButton", isshowSubmitPositionButton);
-            oViewModel.setProperty("/showSubmitButton", isshowSubmitButton);
-            oViewModel.setProperty("/showUpdateButton", isshowUpdateButton);
-            oViewModel.refresh();
+            var oViewButtonModel = this.getView().getModel("viewsubModel");
+            oViewButtonModel.setProperty("/showChangeOfComp", isshowChangeOfComp);
+            oViewButtonModel.setProperty("/showChangeOfSts", isshowChangeOfSts);
+            oViewButtonModel.setProperty("/showSubmitApprovals", isshowSubmitApprovals);
+            oViewButtonModel.setProperty("/showApproveButton", isshowApproveButton);
+            oViewButtonModel.setProperty("/showRejectButton", isshowRejectButton);
+            oViewButtonModel.setProperty("/showReturnButton", isshowReturnButton);
+            oViewButtonModel.setProperty("/showDelegateButton", isshowDelegateButton);
+            oViewButtonModel.setProperty("/showMenuButton", isshowMenuButton);
+            oViewButtonModel.setProperty("/showGeneratePDFButton", isshowGeneratePDFButton);
+
+            oViewButtonModel.setProperty("/showSubmitButton", isshowSubmitButton);
+            oViewButtonModel.setProperty("/showUpdateButton", isshowUpdateButton);
+            oViewButtonModel.refresh();
         },
 
         _fetchWorkflowDetails: function (wfRequestId, listItem) {
@@ -6529,6 +6922,8 @@ sap.ui.define([
                                 that.oViewSubModel.setProperty("/showDelegateButton", false);
                                 that.oViewSubModel.setProperty("/showGeneratePDFButton", false);
                                 that.oViewSubModel.setProperty("/showMenuButton", false);
+                                that.oViewSubModel.setProperty("/showSubmitButton", false);
+                                that.oViewSubModel.setProperty("/showUpdateButton", false);
                             };
 
                             wfEntry.totalSteps = oDetailData.d.totalSteps;
@@ -6785,8 +7180,25 @@ sap.ui.define([
                                             that._getSubmittedNewData(wfRequestId);
 
                                             let wfDataModel = new sap.ui.model.json.JSONModel(wfData);
-                                            let sModelName = "wfData_" + index;
+                                            // let sModelName = "wfData_" + index;
+                                            let sModelName = "wfData_0";
+
                                             that.getView().setModel(wfDataModel, sModelName);
+                                            that.checkSubmitButtonVisibility();
+
+                                            that._getUserIdAndOpenAddComponentDialog()
+                                                .then(function () {
+                                                    let sUserId = that._currentUserId;
+                                                    let sEffectiveDate = that._currentPSNEffectiveDate;
+                                                    let formattedEffectiveDate = that.formatDate(sEffectiveDate);
+                                                    that.fetchEmpCmpNewValue(sUserId, formattedEffectiveDate);
+                                                })
+                                                .catch(function (error) {
+                                                    console.error("Error in getUserId:", error);
+                                                    MessageToast.show("Error retrieving user data for compensation.");
+                                                });
+
+                                            that.fetchPayGradeDataWithNewInitialize();
                                             console.log("Workflow model enriched and set for:", wfRequestId);
                                         }
                                     },
