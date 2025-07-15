@@ -84,7 +84,7 @@
                                     <HBox alignItems="Start">
                                         <m:Label text="DOJ/Tenure :" width="120px" />
                                         <!-- <m:Text text="{path: 'selectedEmployeeModel>hireDate', formatter: '.formatTenureDate'}" /> -->
-                                        <m:Text text="{path: 'empData>/personalInfoNav/results/0/startDate', formatter: '.formatTenureDate'}" />
+                                        <m:Text text="{path: 'empData>/employmentNav/results/0/startDate', formatter: '.formatTenureDate'}" />
                                     </HBox>
                                 </VBox>
 
@@ -123,18 +123,18 @@
                                         <uxap:blocks>
                                             <form:SimpleForm id="idChangeFormNew" editable="true" layout="ResponsiveGridLayout" labelSpanL="3" labelSpanM="3" labelSpanS="12" adjustLabelSpan="false" emptySpanL="0" emptySpanM="0" emptySpanS="0" columnsL="2" columnsM="2">
                                                 <form:content>
-                                                    <Label text="Required Action" />
-                                                    <Select id="idRequestTypeNew" width="60%" change=".onEventReasonChange" items="{
+                                                    <Label text="Required Action" required="true" />
+                                                    <Select  id="idRequestTypeNew" width="60%" change=".onEventReasonChange" items="{
                                                             path: 'eventReasonsModel>/',
                                                             sorter: { path: 'name' }
                                                      }">
                                                         <core:Item key="{eventReasonsModel>externalCode}" text="{parts: [{path: 'eventReasonsModel>externalCode'},{path: 'eventReasonsModel>name'}], formatter: '.formatExternalCodeWithName'}" />
                                                     </Select>
 
-                                                    <Label text="Change Effective" />
+                                                    <Label text="Change Effective" required="true" />
                                                     <DatePicker id="idRequestDateNew" width="60%" />
 
-                                                    <Label text="Upload Document" />
+                                                    <Label text="Upload Document"/>
                                                     <u:FileUploader id="idFileUploaderNew" width="60%" tooltip="Upload supporting document" value="" placeholder="Choose File" />
 
                                                     <Label text="Justification" />

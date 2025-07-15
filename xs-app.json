@@ -3,6 +3,12 @@
   "authenticationMethod": "route",
   "routes": [
     {
+      "source": "^/PSN_TEST_MAIL/(.*)$",
+      "target": "$1",
+      "destination": "PSN_TEST_MAIL",
+      "authenticationType": "xsuaa"
+    },
+    {
       "source": "^/odata/v2/basic/(.*)$",
       "target": "/$1",
       "destination": "SF_1",

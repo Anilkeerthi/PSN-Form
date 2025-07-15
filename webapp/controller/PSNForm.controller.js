@@ -32,12 +32,15 @@ sap.ui.define([
         onInit() {
             BusyIndicator.show(0);
 
+
+
             this.oFlexibleColumnLayout = this.byId("flexibleColumnLayout");
 
             let data = this.getOwnerComponent().getModel("DataModel")
             this.getView().setModel(data, "DataModel");
 
             // this._getDetails();
+            //this.WFDetailsModel();
 
             let oListDataModel = new JSONModel({});
             this.getView().setModel(oListDataModel, "ListData");
@@ -124,51 +127,299 @@ sap.ui.define([
 
             this.initializeViewModel();
 
+
             let oEmailModel = new JSONModel({
-                senderEmail: ""
-            });
-            this.getView().setModel(oEmailModel);
-
-            this._loadPDFMakeLibrary();
-            this.onCallExternal();
-        },
-
-        onCallExternal: function () {
-            let oDataToSend = {
-                firstName: "John",
-                lastName: "Doe",
-                userId: "johndoe123"
-            };
-            let oResponse = ExternalUtil.processData(oDataToSend);
-            let oModel = new JSONModel(oResponse);
-            let oPre = this.byId("jsonResponse");
-
-        },
-
-        onSendEmailPressed: function () {
-            sap.ui.core.BusyIndicator.show(0);
-            let that = this;
-            let oEmail = "Current Email";
-
-            jQuery.ajax({
-                url: that.getPath() + "/mail/email/send",
-                type: "POST",
-                data: JSON.stringify(oEmail),
-                contentType: "application/json",
-                success: function () {
-                    sap.ui.core.BusyIndicator.hide();
-                    MessageBox.success("Email sent successfully to " + oEmail.recipientEmail);
-                },
-                error: function (jqXHR, textStatus, errorThrown) {
-                    sap.ui.core.BusyIndicator.hide();
-                    MessageBox.error("Failed to send email: " + errorThrown);
+                currentDate: new Date().toLocaleDateString(),
+                currentTime: new Date().toLocaleTimeString(),
+                emailData: {
+                    to: "sisiraanagani1925@gmail.com",
+                    from: "sisiraanagani1925@gmail.com",
+                    subject: "Test Email from SAP UI5 BTP Application",
+                    body: "Hello,\n\nThis is a test email sent from SAP UI5 application running on BTP.\n\nEmail Details:\n• Application: SAP UI5 BTP App\n• Sent via: Destination psn_mail\n• Date: " + new Date().toLocaleDateString() + "\n• Time: " + new Date().toLocaleTimeString() + "\n\nBest regards,\nSAP UI5 Application Team",
+                    isHtml: false
                 }
             });
+            this.getView().setModel(oEmailModel, "emailModel");
 
-            setTimeout(function () {
-                sap.ui.core.BusyIndicator.hide();
-                MessageToast.show("Email sent successfully to " + oEmail.recipientEmail);
-            }, 1500);
+            this._loadPDFMakeLibrary();
+            // this.onCallExternal();
+        },
+
+
+        // onOpenEmailDialog: function () {
+
+        //     // var sTo = "anilkeerthi7919@gmail.com";
+        //     // var sSubject = "Subject from UI5 App";
+        //     // var sBody = "Hello,\n\nThis is an email sent from UI5 application.\n\nBest regards";
+
+        //     // var sMailtoLink = "mailto:" + sTo +
+        //     //     "?subject=" + encodeURIComponent(sSubject) +
+        //     //     "&body=" + encodeURIComponent(sBody);
+
+        //     // window.open(sMailtoLink);
+
+        //     this.onGeneratePDF();
+
+        //     // Small delay to ensure PDF generation starts
+        //     setTimeout(function () {
+        //         // Then open email client
+        //         var sTo = "anilkeerthi7919@gmail.com";
+        //         var sSubject = "Subject from UI5 App - PDF Attached";
+        //         var sBody = "Hello,\n\nI have generated a PDF document. Please find it in the downloads folder.\n\nBest regards";
+
+        //         var sMailtoLink = "mailto:" + sTo +
+        //             "?subject=" + encodeURIComponent(sSubject) +
+        //             "&body=" + encodeURIComponent(sBody);
+
+        //         window.open(sMailtoLink);
+
+        //         // Show instruction to user
+        //         sap.m.MessageToast.show("PDF downloaded. Please attach it to the email manually.");
+        //     }, 1000);
+        // },
+
+        onOpenEmailDialog: function () {
+            let that = this;
+
+            if (!this._emailDialog) {
+                Fragment.load({
+                    id: this.getView().getId(),
+                    name: "com.taqa.psnform.taqapsnform.view.SendEmail",
+                    controller: this
+                }).then(function (oDialog) {
+                    that._emailDialog = oDialog;
+                    that.getView().addDependent(that._emailDialog);
+
+                    that._updateEmailTimestamp();
+
+                    that._emailDialog.open();
+                });
+            } else {
+
+                this._updateEmailTimestamp();
+                this._emailDialog.open();
+            }
+        },
+
+        _updateEmailTimestamp: function () {
+            let oModel = this.getView().getModel("emailModel");
+            oModel.setProperty("/currentDate", new Date().toLocaleDateString());
+            oModel.setProperty("/currentTime", new Date().toLocaleTimeString());
+
+            let sUpdatedBody = "Hello,\n\nThis is a test email sent from SAP UI5 application running on BTP.\n\nEmail Details:\n• Application: SAP UI5 BTP App\n• Sent via: Destination psn_mail\n• Date: " + new Date().toLocaleDateString() + "\n• Time: " + new Date().toLocaleTimeString() + "\n\nBest regards,\nSAP UI5 Application Team";
+            oModel.setProperty("/emailData/body", sUpdatedBody);
+        },
+
+        onSendEmailFromDialog: function () {
+            let that = this;
+            let oModel = this.getView().getModel("emailModel");
+            let oEmailData = oModel.getProperty("/emailData");
+
+            this._updateEmailStatus("Sending email...", "Warning");
+
+            let oSendBtn = this.byId("sendEmailBtn");
+            oSendBtn.setEnabled(false);
+
+            sap.ui.core.BusyIndicator.show(0);
+
+            this._fetchCSRFTokenAndSendEmail(oEmailData);
+        },
+
+        onCloseEmailDialog: function () {
+            this._emailDialog.close();
+            this._updateEmailStatus("Ready to send email", "Information");
+
+            let oSendBtn = this.byId("sendEmailBtn");
+            if (oSendBtn) {
+                oSendBtn.setEnabled(true);
+            }
+        },
+
+        _updateEmailStatus: function (sMessage, sType) {
+            let oStatusMessage = this.byId("emailStatusMessage");
+            if (oStatusMessage) {
+                oStatusMessage.setText(sMessage);
+                oStatusMessage.setType(sType);
+            }
+        },
+
+        _fetchCSRFTokenAndSendEmail: function (oEmail) {
+            let that = this;
+
+            jQuery.ajax({
+                url: "/mail/",
+                type: "GET",
+                headers: {
+                    "X-CSRF-Token": "Fetch"
+                },
+                success: function (data, textStatus, xhr) {
+                    let csrfToken = xhr.getResponseHeader("X-CSRF-Token");
+                    console.log("CSRF Token fetched successfully:", csrfToken);
+                    that._sendEmailWithToken(oEmail, csrfToken);
+                },
+                error: function (xhr, status, error) {
+                    let csrfToken = xhr.getResponseHeader("X-CSRF-Token");
+
+                    if (csrfToken) {
+                        console.log("CSRF Token fetched from error response:", csrfToken);
+                        that._sendEmailWithToken(oEmail, csrfToken);
+                    } else {
+                        console.error("Failed to fetch CSRF token:", error);
+                        sap.ui.core.BusyIndicator.hide();
+                        that._handleEmailError("Failed to fetch security token. This might cause 403 error. Error: " + error);
+
+                        let oSendBtn = that.byId("sendEmailBtn");
+                        if (oSendBtn) {
+                            oSendBtn.setEnabled(true);
+                        }
+                    }
+                }
+            });
+        },
+
+        _sendEmailWithToken: function (oEmail, csrfToken) {
+            let that = this;
+
+            let headers = {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            };
+
+            if (csrfToken) {
+                headers["X-CSRF-Token"] = csrfToken;
+            }
+
+            jQuery.ajax({
+                url: "/mail/send-email",
+                type: "POST",
+                headers: headers,
+                data: JSON.stringify(oEmail),
+                success: function (response) {
+                    console.log("Email sent successfully:", response);
+                    sap.ui.core.BusyIndicator.hide();
+                    that._handleEmailSuccess(oEmail.to);
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error("Email sending failed:", {
+                        status: jqXHR.status,
+                        statusText: jqXHR.statusText,
+                        responseText: jqXHR.responseText,
+                        error: errorThrown
+                    });
+
+                    sap.ui.core.BusyIndicator.hide();
+
+                    let errorMessage = "Failed to send email: ";
+
+                    if (jqXHR.status === 403) {
+                        errorMessage += "Access forbidden. This usually means:\n" +
+                            "• CSRF token is missing or invalid\n" +
+                            "• Authentication issue with destination\n" +
+                            "• Insufficient permissions\n" +
+                            "Response: " + (jqXHR.responseText || errorThrown);
+                    } else if (jqXHR.status === 404) {
+                        errorMessage += "Email service endpoint not found. Check if backend service is deployed.";
+                    } else if (jqXHR.status === 401) {
+                        errorMessage += "Authentication failed. Check destination configuration.";
+                    } else if (jqXHR.status === 500) {
+                        errorMessage += "Server error. Check backend service logs.";
+                    } else {
+                        errorMessage += (jqXHR.responseText || errorThrown);
+                    }
+
+                    that._handleEmailError(errorMessage);
+                }
+            });
+        },
+
+        // onSendEmailFromDialog: function () {
+        //     let that = this;
+        //     let oModel = this.getView().getModel("emailModel");
+        //     let oEmailData = oModel.getProperty("/emailData");
+
+        //     this._updateEmailStatus("Sending email...", "Warning");
+
+        //     let oSendBtn = this.byId("sendEmailBtn");
+        //     if (oSendBtn) {
+        //         oSendBtn.setEnabled(false);
+        //     }
+
+        //     sap.ui.core.BusyIndicator.show(0);
+
+        //     this._fetchCSRFTokenAndSendEmail(oEmailData);
+        // },
+
+
+        // onSendEmailPressed: function () {
+        //     sap.ui.core.BusyIndicator.show(0);
+        //     let that = this;
+        //     let oEmail = "Current Email";
+
+        //     jQuery.ajax({
+        //         url: that.getPath() + "/mail/email/send",
+        //         type: "POST",
+        //         data: JSON.stringify(oEmail),
+        //         contentType: "application/json",
+        //         success: function () {
+        //             sap.ui.core.BusyIndicator.hide();
+        //             MessageBox.success("Email sent successfully to " + oEmail.recipientEmail);
+        //         },
+        //         error: function (jqXHR, textStatus, errorThrown) {
+        //             sap.ui.core.BusyIndicator.hide();
+        //             MessageBox.error("Failed to send email: " + errorThrown);
+        //         }
+        //     });
+
+        //     setTimeout(function () {
+        //         sap.ui.core.BusyIndicator.hide();
+        //         MessageToast.show("Email sent successfully to " + oEmail.recipientEmail);
+        //     }, 1500);
+        // },
+
+        _handleEmailSuccess: function (sRecipient) {
+            sap.ui.core.BusyIndicator.hide();
+
+            this._updateEmailStatus("Email sent successfully!", "Success");
+
+            let oSendBtn = this.byId("sendEmailBtn");
+            oSendBtn.setEnabled(true);
+
+            MessageToast.show("Email sent successfully to " + sRecipient);
+
+            setTimeout(() => {
+                MessageBox.success("Email sent successfully to " + sRecipient, {
+                    onClose: () => {
+                        this.onCloseEmailDialog();
+                    }
+                });
+            }, 1000);
+        },
+
+        _handleEmailError: function (sErrorMessage) {
+            sap.ui.core.BusyIndicator.hide();
+
+            this._updateEmailStatus("Failed to send email", "Error");
+
+            let oSendBtn = this.byId("sendEmailBtn");
+            oSendBtn.setEnabled(true);
+
+            MessageBox.error(sErrorMessage);
+        },
+
+        _getErrorMessage: function (xhr, error) {
+            let errorMessage = "Failed to send email: ";
+
+            if (xhr.status === 404) {
+                errorMessage += "Email service endpoint not found. Please check your backend service.";
+            } else if (xhr.status === 401) {
+                errorMessage += "Authentication failed. Please check your destination configuration.";
+            } else if (xhr.status === 500) {
+                errorMessage += "Server error. Please check your email service configuration.";
+            } else {
+                errorMessage += (xhr.responseText || error || "Unknown error occurred");
+            }
+
+            return errorMessage;
         },
 
         formatButtonVisibility: function (status) {
@@ -206,24 +457,123 @@ sap.ui.define([
 
         // 19/05/2025
 
+        disableSubmitPositionBtn: function () {
+            let submitChangesButton = this.getView().byId("submitChangesButton");
+
+            if (submitChangesButton) {
+                submitChangesButton.setVisible(false);
+            }
+        },
+        disableWithdrawBtn: function () {
+            let withdrawButton = this.getView().byId("withdrawButton");
+
+            if (withdrawButton) {
+                withdrawButton.setVisible(false);
+
+            }
+        },
+
+        disableReSubBtn: function () {
+            let ReSubmitButton = this.getView().byId("ReSubmitButton");
+
+            if (ReSubmitButton) {
+                ReSubmitButton.setVisible(false);
+
+            }
+        },
+
+        disableMoreActBtn: function () {
+            let moreActionsButton = this.getView().byId("moreActionsButton");
+
+            if (moreActionsButton) {
+                moreActionsButton.setVisible(false);
+
+            }
+        },
+        // _updateWithdrawButtonState: function() {
+        //     let oWithdrawButton = this.byId("withdrawButton");
+        //     let oAppModel = this.getView().getModel("appModel");
+        //     //let oListModel = this.getView().getModel("ListData"); // or whatever your model name is
+
+        //     if (!oWithdrawButton || !oAppModel || !oListModel) {
+        //         return;
+        //     }
+
+        //     let currentUserId = oAppModel.getProperty("/currentUserId");
+        //     let createdBy = oListModel.getProperty("/wfRequestNav/results/0/createdBy");
+
+        //     // Enable button if current user is the creator
+        //     let isEnabled = (currentUserId === createdBy);
+
+        //     oWithdrawButton.setEnabled(isEnabled);
+        //     // Or if you want to control visibility instead of enabled state:
+        //     // oWithdrawButton.setVisible(isEnabled);
+        // },
+
         onListItemPress: function (oEvent) {
             this.disableSubmitApprovalsSection();
+            this.disableSubmitPositionBtn();
+            this.disableChangeOfCompSection();
+            this.disableChangeOfStatusSection();
+            this.disableWithdrawBtn();
+            this.disableReSubBtn();
+            this.disableMoreActBtn();
+
+
+
+            // let oSelectedItem = oEvent.getParameter("listItem");
+
+            // if (!oSelectedItem) {
+            //     // Fallback: get from event source
+            //     oSelectedItem = oEvent.getSource();
+            // }
+
+            // // Get binding context from the selected item
+            // let oContext = oSelectedItem.getBindingContext("ListData");
+            // let oSelectedData = oContext.getObject();
+
+            // console.log("=== SELECTED ITEM ONLY ===");
+            // console.log("Selected item:", oSelectedData);
+
+            // // Get createdBy from this specific selected item
+            // let createdBy = oSelectedData.createdBy;
+            // let currentUserId = this.getView().getModel("appModel").getProperty("/currentUserId");
+
+            // console.log("Checking permission for selected item:", {
+            //     itemCode: oSelectedData.externalCode,
+            //     itemName: oSelectedData.cust_EMP_Name,
+            //     createdBy: createdBy,
+            //     currentUserId: currentUserId
+            // });
+
+            // // Check condition for THIS selected item only
+            // let canWithdraw = (currentUserId === createdBy);
+
+            // // Update button visibility
+            // this.byId("withdrawButton").setVisible(canWithdraw);
+
+            // Store for withdraw operation
+            //this._selectedItemContext = oContext;
+
 
             let oItem = oEvent.getParameter("listItem");
             let oModel = this.getView().getModel("ListData");
             let oWFDataModel = this.getView().getModel("wfData_0");
+            let oWorkFDataModel = this.getView().getModel("WFDetailsModel");
+
+            console.log(oWFDataModel);
+            console.log(oWorkFDataModel);
             let sPath = oItem.getBindingContextPath();
             let oSelectedRowData = oModel.getProperty(sPath);
             let userId = oSelectedRowData.externalCode;
-            // let effectiveDate = oSelectedRowData.cust_EffectiveDate;
-            // let formattedEffectiveDate = this.formatDate(effectiveDate);
+
+
 
             let eventType = oSelectedRowData?.cust_PSNTypeChange;
 
             console.log("Event type:", eventType);
             this.selectedEventType = eventType;
 
-            this.byId("submitUpdateButton").setVisible(true);
             BusyIndicator.show(0);
 
             // Clear relevant sub-models
@@ -246,31 +596,53 @@ sap.ui.define([
                 busyPromise.then(function () {
                     this._refreshAllData(userId, eventType);
 
+
                     let status = oSelectedRowData?.wfRequestNav?.results?.[0]?.status;
 
+
+
                     if (!status) {
+                        console.log("Status onlist Press",status)
                         this._setWorkflowStage("SubmitApprovalsPending", true);
                         this._getWorkflowDetails(userId);
 
+                        this.updateSubmitButtonVisibility(oSelectedRowData);
 
                         this.oViewSubModel.setProperty("/showSubmitApprovals", true);
-                        this.oViewSubModel.setProperty("/showSubmitButton", false);
-                        this.oViewSubModel.setProperty("/showUpdateButton", true);
+                        this.oViewSubModel.setProperty("/showSubmitButton", true);
+                        this.oViewSubModel.setProperty("/showUpdateButton", false);
 
                         this.onUpdatePosition();
 
+
                     } else if (status === "SENTBACK") {
                         this._resetWorkflowButtons();
-                        this._setWorkflowStage("SubmitApprovalsCompleted", true);
-                        this._getWorkflowDetails(userId);
+                        this._setWorkflowStage("SendBack", true);
+
+
+                        this.byId("requestApprovalsSection")?.setVisible(false);
+
+                    } else if (status === "REJECTED") {
+                        this._resetWorkflowButtons();
+                        this._setWorkflowStage("Rejected", true);
+
+
+                    } else if (status === "CANCELLED") {
+                        this._resetWorkflowButtons();
+                        this._setWorkflowStage("Rejected", true);
+
+                    } else if (status === "WITHDRAW") {
+                        this._resetWorkflowButtons();
+                        this._setWorkflowStage("Withdraw", true);
+                        // this._getWorkflowDetails(userId);
 
                     } else if (status === "PENDING") {
                         this._setWorkflowStage("RQApprovalsPending", true);
 
-                    } else {
+                    } else  {
                         this._getWorkflowDetails(userId);
 
-
+                        console.log("Status onlist Press completed",status)
                         this.oViewSubModel.setProperty("/showSubmitApprovals", false);
                         this.oViewSubModel.setProperty("/showChangeOfComp", false);
                         this.oViewSubModel.setProperty("/showChangeOfSts", false);
@@ -279,10 +651,12 @@ sap.ui.define([
                         this.oViewSubModel.setProperty("/showApproveButton", false);
                         this.oViewSubModel.setProperty("/showRejectButton", false);
                         this.oViewSubModel.setProperty("/showReturnButton", false);
+                        this.oViewSubModel.setProperty("/showWithdrawButton", false);
                         this.oViewSubModel.setProperty("/showDelegateButton", false);
                         this.oViewSubModel.setProperty("/showGeneratePDFButton", true);
                         this.oViewSubModel.setProperty("/showMenuButton", false);
-                    }
+                    } 
+
 
                     this._currentUserId = userId;
 
@@ -319,6 +693,8 @@ sap.ui.define([
             this._selectedItemContext = oItem.getBindingContext("ListData");
             this._bSortAscending = true;
         },
+
+
 
         _refreshAllData: function (userId, eventType) {
             this._getEventReasons();
@@ -412,7 +788,7 @@ sap.ui.define([
 
                         this.oViewSubModel.setProperty("/showSubmitApprovals", true);
                         this.oViewSubModel.setProperty("/showSubmitButton", false);
-                        this.oViewSubModel.setProperty("/showUpdateButton", true);
+                        this.oViewSubModel.setProperty("/showUpdateButton", false);
 
                         this.onUpdatePosition();
 
@@ -435,6 +811,7 @@ sap.ui.define([
                         this.oViewSubModel.setProperty("/showApproveButton", false);
                         this.oViewSubModel.setProperty("/showRejectButton", false);
                         this.oViewSubModel.setProperty("/showReturnButton", false);
+                        this.oViewSubModel.setProperty("/showWithdrawButton", false);
                         this.oViewSubModel.setProperty("/showDelegateButton", false);
                         this.oViewSubModel.setProperty("/showGeneratePDFButton", true);
                         this.oViewSubModel.setProperty("/showMenuButton", false);
@@ -602,24 +979,15 @@ sap.ui.define([
                     items: [
                         new sap.m.MenuItem({
                             text: "Send Email",
-                            icon: "sap-icon://nav-back",
-                            press: this.onSendEmailPressed.bind(this)
+                            icon: "sap-icon://email", // Changed to email icon
+                            press: this.onOpenEmailDialog.bind(this) // Bind to dialog opener
                         }),
-                        new MenuItem({
-                            text: "Withdraw",
-                            icon: "sap-icon://delete",
-                            press: this.onWithdraw.bind(this)
-                        }),
-                        // new sap.m.MenuItem({
-                        //     text: "Delegate",
-                        //     icon: "sap-icon://user-edit",
-                        //     press: this.onToggleFooter.bind(this)
-                        // })
                     ]
                 });
             }
             this._oMoreActionsMenu.openBy(oEvent.getSource());
         },
+
 
         // _updateButtonVisibilityAfterApproval: function () {
 
@@ -676,7 +1044,6 @@ sap.ui.define([
                 dataType: "json",
                 async: true,
                 success: function (data) {
-
                     let userModel = new JSONModel(data);
                     that.getView().setModel(userModel, "UserData")
                     that._getLoggedInUserId(data.email);
@@ -735,7 +1102,7 @@ sap.ui.define([
                 let userroles = that.getView().getModel("userRolesModel");
 
                 userroles.forEach(function (oItem) {
-                    console.log("=====================User Roles Name:" + oItem.roleName);
+                    //console.log("=====================User Roles Name:" + oItem.roleName);
                     if (oItem.roleName === "PSN") {
                         countryHR = true;
                     }
@@ -829,7 +1196,6 @@ sap.ui.define([
                 async: true,
                 success: function (data) {
                     if (data && data.d && data.d.results) {
-                        console.log("Pending History Data:", data.d.results);
                         pendingHistoryData = data.d.results.map(function (item) {
                             item.recordStatus = "PENDINGHISTORY"; // Add status for identification
                             // Initialize wfRequestNav to avoid binding errors
@@ -838,6 +1204,7 @@ sap.ui.define([
                                 return item;
                             }
                         });
+                        console.log("Pending History Data:", pendingHistoryData);
                         mergeAndBindData();
                     }
                 },
@@ -998,6 +1365,7 @@ sap.ui.define([
                             if (oDetailData.d.status === "COMPLETED") {
                                 wfEntry.status = "COMPLETED";
                                 listItem.positionStatus = "COMPLETED";
+                                //this.isCompleted();
                                 console.log("Workflow COMPLETED for item:", listItem.externalCode);
                             }
                         }
@@ -1124,7 +1492,6 @@ sap.ui.define([
 
                     let oAppModel = that.getOwnerComponent().getModel("appModel");
                     if (!oAppModel) {
-                        // Create a new JSON model if it doesn't exist
                         oAppModel = new sap.ui.model.json.JSONModel({});
                         that.getOwnerComponent().setModel(oAppModel, "appModel");
                     }
@@ -1200,7 +1567,7 @@ sap.ui.define([
             // Construct the complete URL
             let that = this;
 
-            let sServiceUrl = this.getPath("SF_1") + "/PerPerson(" + userId + ")?$format=JSON&$expand=personalInfoNav,employmentNav/jobInfoNav/employmentTypeNav/picklistLabels,personalInfoNav/maritalStatusNav/picklistLabels&$select=placeOfBirth,personalInfoNav/displayName,personIdExternal,personalInfoNav/startDate,personalInfoNav/nationality,employmentNav/jobInfoNav/position,employmentNav/jobInfoNav/company,employmentNav/jobInfoNav/countryOfCompany,employmentNav/jobInfoNav/employmentTypeNav/picklistLabels/optionId,employmentNav/jobInfoNav/employmentTypeNav/picklistLabels/locale,employmentNav/jobInfoNav/employmentTypeNav/picklistLabels/label,personalInfoNav/maritalStatusNav/picklistLabels/optionId,personalInfoNav/maritalStatusNav/picklistLabels/locale,personalInfoNav/maritalStatusNav/picklistLabels/label";
+            let sServiceUrl = this.getPath("SF_1") + "/PerPerson(" + userId + ")?$format=JSON&$expand=personalInfoNav,employmentNav/jobInfoNav/employmentTypeNav/picklistLabels,personalInfoNav/maritalStatusNav/picklistLabels&$select=placeOfBirth,personalInfoNav/displayName,personIdExternal,employmentNav/startDate,personalInfoNav/nationality,employmentNav/jobInfoNav/position,employmentNav/jobInfoNav/company,employmentNav/jobInfoNav/countryOfCompany,employmentNav/jobInfoNav/employmentTypeNav/picklistLabels/optionId,employmentNav/jobInfoNav/employmentTypeNav/picklistLabels/locale,employmentNav/jobInfoNav/employmentTypeNav/picklistLabels/label,personalInfoNav/maritalStatusNav/picklistLabels/optionId,personalInfoNav/maritalStatusNav/picklistLabels/locale,personalInfoNav/maritalStatusNav/picklistLabels/label";
 
             // Previous URL
             // let sServiceUrl = this.getPath("SF_1") + "/User(" + userId + ")?$select=firstName,lastName,nationality,empId,userId,username,displayName,hireDate,defaultFullName,married,empInfo/jobInfoNav/employmentTypeNav/picklistLabels/optionId,empInfo/jobInfoNav/employmentTypeNav/picklistLabels/locale,empInfo/jobInfoNav/employmentTypeNav/picklistLabels/label&$format=JSON&$expand=empInfo/jobInfoNav,empInfo/jobInfoNav/employmentTypeNav/picklistLabels";
@@ -1219,8 +1586,11 @@ sap.ui.define([
                     that.getView().setModel(employeeDataModel, "empData")
 
                     console.log("employeeDataModel", employeeDataModel);
-                    let nationalityCode = data.d.personalInfoNav.results[0].nationality;
-                    that._getCountryName(nationalityCode);
+                    let nationalityCode = data.d.personalInfoNav ? data.d.personalInfoNav.results[0].nationality : "";
+                    if (nationalityCode !== "") {
+                        that._getCountryName(nationalityCode);
+                    }
+                    // that._getCountryName(nationalityCode);
 
                 },
                 error: function () {
@@ -1259,7 +1629,7 @@ sap.ui.define([
                 success: function (data) {
                     let countryDetailsModel = new JSONModel(data.d.results[0]);
                     that.getView().setModel(countryDetailsModel, "countryDetailsModel")
-                    console.log("GetCountry Name Data : ", countryDetailsModel);
+                    //console.log("GetCountry Name Data : ", countryDetailsModel);
                 },
                 error: function () {
                     MessageToast.show("Server Send Error");
@@ -1283,7 +1653,7 @@ sap.ui.define([
                 success: function (data) {
                     let ManagerUserDetailsModel = new JSONModel(data.d.results);
                     that.getView().setModel(ManagerUserDetailsModel, "ManagerUserDetailsData")
-                    console.log(ManagerUserDetailsModel);
+                    //console.log(ManagerUserDetailsModel);
                 },
                 error: function () {
                     MessageToast.show("Server Send Error");
@@ -1567,6 +1937,8 @@ sap.ui.define([
 
         onEventReasonChangeSafe: function (oEvent) {
             try {
+
+
                 let oSelectedItem = oEvent.getParameter("selectedItem");
                 if (!oSelectedItem) return;
 
@@ -1652,7 +2024,7 @@ sap.ui.define([
                         });
 
                         this.oEventReasonsModel.setProperty("/eventReasonsModel", aEventReasons);
-                        console.log("Loaded required actions:", aEventReasons);
+                        //console.log("Loaded required actions:", aEventReasons);
                     } else {
                         console.warn("No results found in picklist options");
                         this.oEventReasonsModel.setProperty("/eventReasonsModel", []);
@@ -1762,20 +2134,86 @@ sap.ui.define([
 
 
 
+        // formatTenureDate: function (value) {
+        //     if (value) {
+        //         let timestamp = parseInt(value.replace("/Date(", "").replace(")/", ""), 10);
+        //         let hireDate = new Date(timestamp);
+        //         let oDateFormat = sap.ui.core.format.DateFormat.getDateTimeInstance({ pattern: "yyyy-MM-dd" });
+
+        //         let currentDate = new Date();
+
+        //         let timeDiff = currentDate - hireDate;
+
+        //         let diffInYears = Math.floor(timeDiff / (1000 * 60 * 60 * 24 * 365.25));
+        //         return diffInYears + " years";
+        //     }
+        //     return value;
+        // },
+
+
         formatTenureDate: function (value) {
             if (value) {
                 let timestamp = parseInt(value.replace("/Date(", "").replace(")/", ""), 10);
                 let hireDate = new Date(timestamp);
-                let oDateFormat = sap.ui.core.format.DateFormat.getDateTimeInstance({ pattern: "yyyy-MM-dd" });
-
                 let currentDate = new Date();
 
                 let timeDiff = currentDate - hireDate;
 
+                // Calculate years and remaining months
                 let diffInYears = Math.floor(timeDiff / (1000 * 60 * 60 * 24 * 365.25));
-                return diffInYears + " years";
+                let remainingMs = timeDiff % (1000 * 60 * 60 * 24 * 365.25);
+                let diffInMonths = Math.floor(remainingMs / (1000 * 60 * 60 * 24 * 30.44)); // Average days per month
+
+                // Format the result
+                let result = [];
+                if (diffInYears > 0) {
+                    result.push(`${diffInYears} year${diffInYears !== 1 ? 's' : ''}`);
+                }
+                if (diffInMonths > 0) {
+                    result.push(`${diffInMonths} month${diffInMonths !== 1 ? 's' : ''}`);
+                }
+
+                if (result.length === 0) {
+                    return "Less than 1 month";
+                } else if (result.length === 1) {
+                    return result[0];
+                } else {
+                    return result.join(' and ');
+                }
             }
             return value;
+        },
+
+        calculateTenure: function (startDate, endDate) {
+            if (!startDate || !endDate) return "N/A";
+
+            // Parse dates
+            let startMs = parseInt(startDate.replace("/Date(", "").replace(")/", ""), 10);
+            let endMs = parseInt(endDate.replace("/Date(", "").replace(")/", ""), 10);
+
+            let diffMs = endMs - startMs;
+
+            // Constants
+            const msPerDay = 1000 * 60 * 60 * 24;
+            const msPerMonth = msPerDay * 30.44;
+            const msPerYear = msPerDay * 365.25;
+
+            // Calculate
+            let years = Math.floor(diffMs / msPerYear);
+            let remainingMs = diffMs % msPerYear;
+
+            let months = Math.floor(remainingMs / msPerMonth);
+            remainingMs = remainingMs % msPerMonth;
+
+            let days = Math.floor(remainingMs / msPerDay);
+
+            // Format based on what's available
+            let parts = [];
+            if (years > 0) parts.push(`${years} year${years !== 1 ? 's' : ''}`);
+            if (months > 0) parts.push(`${months} month${months !== 1 ? 's' : ''}`);
+            //if (days > 0) parts.push(`${days} day${days !== 1 ? 's' : ''}`);
+
+            return parts.length > 0 ? parts.join(' and ') : "Less than 1 day";
         },
 
 
@@ -2451,6 +2889,7 @@ sap.ui.define([
                 let sReason = oReasonTextArea.getValue();
                 if (sReason) {
                     this._rejectWfRequestWithComment(this._wfRequestIdForRejection, sReason);
+                    window.location.reload();
                 } else {
                     MessageToast.show("Please enter a rejection reason.");
                 }
@@ -2458,6 +2897,31 @@ sap.ui.define([
                 MessageToast.show("Error: Rejection reason input not found.");
             }
         },
+
+        // onRejectRequest: function () {
+        //     let oReasonTextArea = Fragment.byId("rejectFragment", "idRejectReason");
+
+        //     if (oReasonTextArea) {
+        //         let sReason = oReasonTextArea.getValue();
+        //         if (sReason) {
+        //             // Assuming _rejectWfRequestWithComment returns a promise or you can modify it to do so
+        //             this._rejectWfRequestWithComment(this._wfRequestIdForRejection, sReason)
+        //                 .then(() => {
+        //                     // Reload only after successful rejection
+        //                     window.location.reload();
+        //                 })
+        //                 .catch((error) => {
+        //                     // Handle error case
+        //                     MessageToast.show("Error occurred during rejection.");
+        //                 });
+
+        //         } else {
+        //             MessageToast.show("Please enter a rejection reason.");
+        //         }
+        //     } else {
+        //         MessageToast.show("Error: Rejection reason input not found.");
+        //     }
+        // },
 
         onCloseRejectDialog: function () {
             if (this._oRejectDialog) {
@@ -2528,6 +2992,7 @@ sap.ui.define([
                     MessageToast.show("Workflow request returned successfully.");
                     this._getPendingListDetails();
                     this.onCloseReturnDialog();
+                    window.location.reload();
                 }.bind(this),
                 error: function (jqXHR, textStatus, errorThrown) {
                     BusyIndicator.hide();
@@ -2590,7 +3055,7 @@ sap.ui.define([
                 success: function (data) {
                     let sendBackCommentModel = new sap.ui.model.json.JSONModel(data.d);
                     that.getView().setModel(sendBackCommentModel, "sendBackCommentModel");
-                    console.log("EmpCompensation data fetched successfully:", data.d);
+                    //console.log("EmpCompensation data fetched successfully:", data.d);
                 },
                 error: function (e) {
                     MessageToast.show("Error fetching employee compensation data.");
@@ -2860,6 +3325,7 @@ sap.ui.define([
                     });
                 });
         },
+
 
         _fetchWorkflowDetailsForSubmitApprover: function (wfRequestId, selectedUsername) {
             let that = this;
@@ -3486,6 +3952,7 @@ sap.ui.define([
                 success: function () {
                     MessageToast.show("Workflow Rejected successfully.");
                     this._getPendingListDetails();
+                    window.location.reload();
                 }.bind(this),
                 error: function (jqXHR, textStatus, errorThrown) {
                     let errorMessage = "Error Rejecting workflow request: " + errorThrown;
@@ -3555,6 +4022,7 @@ sap.ui.define([
                 type: "POST",
                 success: function () {
                     MessageToast.show("Workflow request withdrawn successfully.");
+                    window.location.reload();
                     this._getPendingListDetails();
                 }.bind(this),
                 error: function (jqXHR, textStatus, errorThrown) {
@@ -3638,20 +4106,21 @@ sap.ui.define([
         },
 
 
-        onRejectRequest: function () {
-            let oReasonTextArea = Fragment.byId("rejectFragment", "idRejectReason");
+        // onRejectRequest: function () {
+        //     let oReasonTextArea = Fragment.byId("rejectFragment", "idRejectReason");
 
-            if (oReasonTextArea) {
-                let sReason = oReasonTextArea.getValue();
-                if (sReason) {
-                    this._rejectWfRequestWithComment(this._wfRequestIdForRejection, sReason);
-                } else {
-                    MessageToast.show("Please enter a rejection reason.");
-                }
-            } else {
-                MessageToast.show("Error: Rejection reason input not found.");
-            }
-        },
+        //     if (oReasonTextArea) {
+        //         let sReason = oReasonTextArea.getValue();
+        //         if (sReason) {
+        //             this._rejectWfRequestWithComment(this._wfRequestIdForRejection, sReason);
+        //             window.location.reload();
+        //         } else {
+        //             MessageToast.show("Please enter a rejection reason.");
+        //         }
+        //     } else {
+        //         MessageToast.show("Error: Rejection reason input not found.");
+        //     }
+        // },
 
 
         onCloseRejectDialog: function () {
@@ -3671,7 +4140,7 @@ sap.ui.define([
                 return;
             }
 
-            let sServiceUrl = this.getPath("SF_1") + `/EmpJob?$format=JSON&$filter=userId eq '${userId}'&$expand=companyNav,departmentNav,divisionNav,locationNav,workscheduleCodeNav,managerUserNav,costCenterNav,positionNav,businessUnitNav,jobCodeNav,contractTypeNav/picklistLabels&$select=companyNav/externalCode,companyNav/name_en_US,businessUnitNav/externalCode,businessUnitNav/name,departmentNav/externalCode,departmentNav/name_en_US,divisionNav/externalCode,divisionNav/name_en_US,locationNav/externalCode,locationNav/name,workscheduleCodeNav/externalCode,workscheduleCodeNav/externalName_en_US,jobCode,jobTitle,position,contractType,managerUserNav/userId,managerUserNav/displayName,costCenterNav/externalCode,costCenterNav/name,positionNav/externalName_en_US,jobCodeNav/externalCode,jobCodeNav/name,contractType,contractTypeNav/picklistLabels/label`;
+            let sServiceUrl = this.getPath("SF_1") + `/EmpJob?$format=JSON&$filter=userId eq '${userId}'&$expand=companyNav,departmentNav,divisionNav,locationNav,workscheduleCodeNav,managerUserNav,costCenterNav,positionNav,businessUnitNav,jobCodeNav,contractTypeNav/picklistLabels,customString3Nav&$select=companyNav/externalCode,companyNav/name_en_US,businessUnitNav/externalCode,businessUnitNav/name,departmentNav/externalCode,departmentNav/name_en_US,divisionNav/externalCode,divisionNav/name_en_US,locationNav/externalCode,locationNav/name,workscheduleCodeNav/externalCode,workscheduleCodeNav/externalName_en_US,jobCode,jobTitle,position,contractType,managerUserNav/userId,managerUserNav/displayName,costCenterNav/externalCode,costCenterNav/name,positionNav/externalName_en_US,jobCodeNav/externalCode,jobCodeNav/name,contractType,contractTypeNav/picklistLabels/label,customString3,customString3Nav/externalCode,customString3Nav/name`;
             let that = this;
             return new Promise((resolve, reject) => {
                 $.ajax({
@@ -3876,6 +4345,8 @@ sap.ui.define([
             });
         },
 
+
+
         fetchWorkScheduleData: function (countryCode) {
             let that = this;
             // let filterCountryCode = countryCode || 'SAU';
@@ -3925,9 +4396,49 @@ sap.ui.define([
             });
         },
 
-        fetchJobCodeData: function () {
+
+        fetchJobFamilyData: function (companyCode) {
             let that = this;
+            let filterCompanyCode = companyCode || this.getCurrentDropdownValue("1"); // Company is SNo 1
+
+            let url = this.getPath("SF_1") + "/FOJobFunction?$format=JSON";
+            if (filterCompanyCode) {
+                url += "&$filter=status eq 'A' and cust_toLegalEntity/externalCode eq '" + filterCompanyCode + "'&$expand=cust_toLegalEntity&$select=externalCode,name";
+            } else {
+                url += "&$select=externalCode,name";
+            }
+
+            return new Promise((resolve, reject) => {
+                $.ajax({
+                    url: url,
+                    type: "GET",
+                    dataType: "json",
+                    success: function (data) {
+                        let jobFamilyModel = new sap.ui.model.json.JSONModel(data.d.results);
+                        that.getView().setModel(jobFamilyModel, "jobFamilyModel");
+                        resolve();
+                        // console.log("JOB FAMILY DATA : ",jobFamilyModel)
+                    },
+                    error: function (xhr, status, error) {
+                        MessageToast.show("Error fetching jobFamily data");
+                        console.error("Error fetching jobFamily data:", error);
+                        resolve();
+                    }
+                });
+            });
+        },
+
+
+        fetchJobCodeData: function (JobFamCode) {
+            let that = this;
+
+            let filterJobFamCode = JobFamCode || this.getCurrentDropdownValue("10");
             let url = this.getPath("SF_1") + "/FOJobCode?$format=json&$select=externalCode,name";
+            if (filterJobFamCode) {
+                url += "&$filter=cust_toJobFunction/externalCode eq '" + filterJobFamCode + "'&$expand=cust_toJobFunction&$select=externalCode,name";
+            } else {
+                url += "&$select=externalCode,name";
+            }
 
             return new Promise((resolve, reject) => {
                 $.ajax({
@@ -3970,11 +4481,14 @@ sap.ui.define([
 
             this.fetchBusinessUnitData(selectedKey);
             this.fetchLocationData(selectedKey);
+            this.fetchJobFamilyData(selectedKey);
 
-            let aFieldsToHighlight = ["2", "3", "4", "5", "6"];
-            sap.m.MessageToast.show("Company changed! Please fill Business Unit, Department, Division, Cost Center, Location");
+            let aFieldsToHighlight = ["2", "3", "4", "5", "6", "10"];
+            sap.m.MessageToast.show("Company changed! Please fill Business Unit, Department, Division, Cost Center, Location, Job Family");
             this._highlightAndClearFields(aFieldsToHighlight);
         },
+
+
 
         onBusinessUnitChange: function (oEvent) {
             this._handleFieldChange(oEvent);
@@ -4011,6 +4525,8 @@ sap.ui.define([
             this._highlightAndClearFields(aFieldsToHighlight);
         },
 
+
+
         onCostCenterChange: function (oEvent) {
             this._handleFieldChange(oEvent);
             // Cost Center is the last in the hierarchy for the main cascade
@@ -4031,6 +4547,18 @@ sap.ui.define([
             } else {
                 this.fetchWorkScheduleData();
             }
+        },
+
+        onJobFamChange: function (oEvent) {
+            this._handleFieldChange(oEvent);
+            let selectedKey = oEvent.getParameter("selectedItem").getKey();
+
+            // Update dependent dropdowns with filtered data
+            this.fetchJobCodeData(selectedKey);
+
+            let aFieldsToHighlight = ["11"];
+            sap.m.MessageToast.show("Job Family changed! Please fill Job Title");
+            this._highlightAndClearFields(aFieldsToHighlight);
         },
 
 
@@ -4196,21 +4724,16 @@ sap.ui.define([
 
                 let empCompensationModel = new sap.ui.model.json.JSONModel(data.d);
                 that.getView().setModel(empCompensationModel, "EmpCompensationModel");
-                console.log("EmpCompensation data fetched successfully:", data.d);
+
 
                 that.fetchGrossMonthlySalaryData(userId);
 
-                // FIRST check submit button 
-
                 let isSubmitButtonVisible = that.checkSubmitButtonVisibility();
-
-                console.log("Submit button visible:", isSubmitButtonVisible);
-
                 if (isSubmitButtonVisible) {
-                    // Submit button IS visible - show editable table immediately
+
                     await that.fetchPayGradeDataWithInitialize();
                 } else {
-                    // Submit button NOT visible - fetch new values first
+
                     try {
                         await that.fetchEmpCmpNewValue(userId, effectiveDate);
                         await that.fetchPayGradeDataWithNewInitialize();
@@ -4252,7 +4775,7 @@ sap.ui.define([
 
         checkSubmitButtonVisibility: function () {
             let that = this;
-            let status = false;
+            let status = true;
             let listDataModel = that.getView().getModel("ListData");
             let wfDataModel = that.getView().getModel("wfData_0");
 
@@ -4264,26 +4787,42 @@ sap.ui.define([
             return status;
         },
 
+        showSubmitButtonVisibility: function (oSelectedRowData) {
+            let that = this;
+            let status = false;
+            let wtdbtnStatus;
 
+            let rqStatus = oSelectedRowData.recordStatus;
+            console.log(rqStatus);
+            let wfDataModel = that.getView().getModel("wfData_0");
 
-
-        shouldShowSubmitButton: function () {
-            const listDataModel = this.getView().getModel("ListData");
-            const wfDataModel = this.getView().getModel("wfData_0");
-
-            try {
-                const wfRequestStatus = listDataModel.getProperty("/wfRequestNav/results/0/status");
-                const wfDataStatus = wfDataModel.getProperty("/status");
-
-                // Return true ONLY when:
-                // 1. Workflow request status is 'completed'
-                // 2. Workflow data status is empty (null/undefined/'')
-                return wfRequestStatus === 'completed' &&
-                    (!wfDataStatus || wfDataStatus === '');
-            } catch (e) {
-                console.error("Error in shouldShowSubmitButton:", e);
-                return false;
+            if (rqStatus === "COMPLETED" && !wfDataModel) {
+                status = true;
+            } else if (rqStatus === "PENDINGHISTORY" && !wfDataModel) {
+                status = false;
+                that.byId("changeOfCompSection")?.setVisible(false);
+                that.byId("changeOfStatusSection")?.setVisible(false);
+            } else {
+                status = true;
             }
+            if (wfDataModel === "pending") {
+                wtdbtnStatus = true;
+            }
+            else if (rqStatus === "pending" && !wfDataModel) {
+                wtdbtnStatus = true;
+            }
+            else {
+                wtdbtnStatus = false;
+            }
+            return { status, wtdbtnStatus };
+        },
+
+
+        updateSubmitButtonVisibility: function (oSelectedRowData) {
+            let visible = this.showSubmitButtonVisibility(oSelectedRowData);
+            this.byId("submitChangesButton").setVisible(visible.status);
+            this.byId("changeOfStatusSection").setVisible(visible.status);
+            this.byId("withdrawButton").setVisible(visible.wtdbtnStatus);
         },
 
 
@@ -4392,7 +4931,7 @@ sap.ui.define([
                         CurrentValue: payComponent.paycompvalue || "",
                         NewValue: "", // Initialize with current value for editing
                         startDate: payComponent ? payComponent.startDate : "",
-                        currencyCode : payComponent ? payComponent.currencyCode : "",
+                        currencyCode: payComponent ? payComponent.currencyCode : "",
                         hasWfChangeData: hasAnyWfChangeData
                     });
                 });
@@ -4554,8 +5093,41 @@ sap.ui.define([
 
             let dataModel = new sap.ui.model.json.JSONModel({ ChangeOfCompensation: changeOfCompensation });
             this.getView().setModel(dataModel, "ChangeOfNewCompensationModel");
+            this.addMissingRecord();
             this.newBindChangeOfCompensationTable();
             this.getView().byId("changeOfCompSection").setVisible(true);
+        },
+
+        // Add this function to add the missing record
+        addMissingRecord: function () {
+            let changeOfNewCompensationModel = this.getView().getModel("ChangeOfNewCompensationModel");
+            let empCmpNewValueModel = this.getView().getModel("empCmpNewValueModel");
+
+            let changeData = changeOfNewCompensationModel.getData();
+            let empData = empCmpNewValueModel.getData();
+
+            // Get all payComponents from empCmpNewValueModel
+            let allPayComponents = empData.results[0].empPayCompRecurringNav.results;
+
+            // Get existing externalCodes in ChangeOfNewCompensationModel
+            let existingCodes = changeData.ChangeOfCompensation.map(item => item.externalCode);
+
+            // Find missing payComponents
+            allPayComponents.forEach(payComp => {
+                if (!existingCodes.includes(payComp.payComponent)) {
+                    let newSNo = (changeData.ChangeOfCompensation.length + 1).toString();
+
+                    changeData.ChangeOfCompensation.push({
+                        SNo: newSNo,
+                        externalCode: payComp.payComponent,
+                        Item: `Pay Component ${payComp.payComponent}`,
+                        CurrentValue: "0",
+                        NewValue: payComp.paycompvalue.toString()
+                    });
+                }
+            });
+
+            changeOfNewCompensationModel.setData(changeData);
         },
 
         newBindChangeOfCompensationTable: function () {
@@ -4627,15 +5199,29 @@ sap.ui.define([
                                     }
 
                                     let payCompRecurringResults = employeeData.empPayCompRecurringNav.results;
+                                    //console.log("Available payComponents:", payCompRecurringResults.map(r => r.payComponent));
+                                    //console.log("Looking for externalCode:", externalCode);
+
+                                    // let matchingRecord = payCompRecurringResults.find(function (record) {
+                                    //     return record.payComponent === externalCode ||
+                                    //         (record.payComponentNav && record.payComponentNav.externalCode === externalCode);
+                                    // });
+
+                                    // if (matchingRecord && matchingRecord.paycompvalue !== undefined) {
+                                    //     return matchingRecord.paycompvalue.toString();
+                                    // }
+                                    // return "";
+
                                     let matchingRecord = payCompRecurringResults.find(function (record) {
-                                        return record.payComponent === externalCode ||
-                                            (record.payComponentNav && record.payComponentNav.externalCode === externalCode);
+                                        return record.payComponent.toString() === externalCode.toString();
                                     });
 
                                     if (matchingRecord && matchingRecord.paycompvalue !== undefined) {
                                         return matchingRecord.paycompvalue.toString();
                                     }
                                     return "";
+
+
                                 }
                             }
                         });
@@ -4652,32 +5238,32 @@ sap.ui.define([
         },
 
         // Helper function to get employee compensation data for a specific pay component
-        getEmpCompensationValue: function (externalCode) {
-            let empCmpNewValueModel = this.getView().getModel("empCmpNewValueModel");
-            if (!empCmpNewValueModel) {
-                return "";
-            }
+        // getEmpCompensationValue: function (externalCode) {
+        //     let empCmpNewValueModel = this.getView().getModel("empCmpNewValueModel");
+        //     if (!empCmpNewValueModel) {
+        //         return "";
+        //     }
 
-            let data = empCmpNewValueModel.getData();
-            if (!data || !data.results || !Array.isArray(data.results) || data.results.length === 0) {
-                return "";
-            }
+        //     let data = empCmpNewValueModel.getData();
+        //     if (!data || !data.results || !Array.isArray(data.results) || data.results.length === 0) {
+        //         return "";
+        //     }
 
-            // Get the first employee result
-            let employeeData = data.results[0];
-            if (!employeeData || !employeeData.empPayCompRecurringNav || !employeeData.empPayCompRecurringNav.results) {
-                return "";
-            }
+        //     // Get the first employee result
+        //     let employeeData = data.results[0];
+        //     if (!employeeData || !employeeData.empPayCompRecurringNav || !employeeData.empPayCompRecurringNav.results) {
+        //         return "";
+        //     }
 
-            // Find matching record
-            let payCompRecurringResults = employeeData.empPayCompRecurringNav.results;
-            let matchingRecord = payCompRecurringResults.find(function (record) {
-                return record.payComponent === externalCode ||
-                    (record.payComponentNav && record.payComponentNav.externalCode === externalCode);
-            });
+        //     // Find matching record
+        //     let payCompRecurringResults = employeeData.empPayCompRecurringNav.results;
+        //     let matchingRecord = payCompRecurringResults.find(function (record) {
+        //         return record.payComponent === externalCode ||
+        //             (record.payComponentNav && record.payComponentNav.externalCode === externalCode);
+        //     });
 
-            return matchingRecord ? (matchingRecord.paycompvalue || "") : "";
-        },
+        //     return matchingRecord ? (matchingRecord.paycompvalue || "") : "";
+        // },
 
 
         // Helper function to get employee compensation data for a specific pay component
@@ -4971,7 +5557,7 @@ sap.ui.define([
             let sServiceUrl = this.getPath("SF_1") + "/FOPayComponent?$format=JSON&$select=name,payComponentType,externalCode,frequencyCode,currency";
 
             if (filterString) {
-                sServiceUrl += `&$filter=${filterString +" and (recurring eq 'true')"}`;
+                sServiceUrl += `&$filter=${filterString + " and (recurring eq 'true')"}`;
             }
 
             jQuery.ajax({
@@ -5022,7 +5608,7 @@ sap.ui.define([
                 SNo: (oModel.getData().ChangeOfCompensation.length + 1).toString(), // Sequential number
                 externalCode: sSelectedComponentCode,
                 Item: oPayComponentSelect.getSelectedItem().getText(), // Get the text from the selected item
-                CurrentValue : '',
+                CurrentValue: '',
                 NewValue: sValue // Or whatever field you want to populate
             };
 
@@ -5058,47 +5644,47 @@ sap.ui.define([
                     };
 
                     let oBusyDialog = new sap.m.BusyDialog();
-                   // oBusyDialog.open();
+                    // oBusyDialog.open();
 
-                   // let sUrl = that.getPath("SF_1") + "/upsert";
+                    // let sUrl = that.getPath("SF_1") + "/upsert";
 
-                //     $.ajax({
-                //         url: sUrl,
-                //         type: "POST",
-                //         contentType: "application/json",
-                //         data: JSON.stringify(oPayloadData),
-                //         success: function () {
-                //             oBusyDialog.close();
-                //             MessageToast.show("Pay component added successfully");
-                //             oPayComponentSelect.setSelectedKey("");
-                //             oValueInput.setValue("");
-                //             oDialog.close();
+                    //     $.ajax({
+                    //         url: sUrl,
+                    //         type: "POST",
+                    //         contentType: "application/json",
+                    //         data: JSON.stringify(oPayloadData),
+                    //         success: function () {
+                    //             oBusyDialog.close();
+                    //             MessageToast.show("Pay component added successfully");
+                    //             oPayComponentSelect.setSelectedKey("");
+                    //             oValueInput.setValue("");
+                    //             oDialog.close();
 
-                //             //window.location.reload();
+                    //             //window.location.reload();
 
-                //             //    / that._refreshPayComponentsList();
-                //             // that.onRefreshItemPressed(sUserId);
+                    //             //    / that._refreshPayComponentsList();
+                    //             // that.onRefreshItemPressed(sUserId);
 
-                //         },
-                //         error: function (jqXHR, textStatus, errorThrown) {
-                //             oBusyDialog.close();
+                    //         },
+                    //         error: function (jqXHR, textStatus, errorThrown) {
+                    //             oBusyDialog.close();
 
-                //             let sErrorMessage = "Failed to add pay component";
-                //             try {
-                //                 let oErrorResponse = JSON.parse(jqXHR.responseText);
-                //                 if (oErrorResponse && oErrorResponse.message) {
-                //                     sErrorMessage = oErrorResponse.message || sErrorMessage;
-                //                 }
-                //             } catch (e) {
-                //                 if (errorThrown) {
-                //                     sErrorMessage += ": " + errorThrown;
-                //                 }
-                //             }
+                    //             let sErrorMessage = "Failed to add pay component";
+                    //             try {
+                    //                 let oErrorResponse = JSON.parse(jqXHR.responseText);
+                    //                 if (oErrorResponse && oErrorResponse.message) {
+                    //                     sErrorMessage = oErrorResponse.message || sErrorMessage;
+                    //                 }
+                    //             } catch (e) {
+                    //                 if (errorThrown) {
+                    //                     sErrorMessage += ": " + errorThrown;
+                    //                 }
+                    //             }
 
-                //             MessageBox.error(sErrorMessage);
-                //         }
-                //     });
-                 })
+                    //             MessageBox.error(sErrorMessage);
+                    //         }
+                    //     });
+                })
                 .catch(function (error) {
                     MessageBox.error("Could not submit: " + error.message);
                 });
@@ -5183,6 +5769,7 @@ sap.ui.define([
             await this._getManagerUserDetails();
             await this.fetchCostCenterData();
             await this.fetchBusinessUnitData();
+            await this.fetchJobFamilyData();
 
         },
 
@@ -5216,16 +5803,30 @@ sap.ui.define([
             await this._getWorkflowDetails(userId);
 
             await this.initializeView();
-            this.getView().getModel("DataModel").refresh(true);
 
+            this.getView().getModel("DataModel").refresh(true);
+            let selectedRowData = this._selectedItemContext.getObject();
             if (this.empJobData) {
-                await this.initializeView();
+                if (selectedRowData && selectedRowData.recordStatus !== "PENDINGHISTORY") {
+                    await this.initializeView();
+                } else if (selectedRowData && selectedRowData.recordStatus === "PENDINGHISTORY") {
+                    this.byId("submitUpdateButton").setVisible(false);
+                }
             } else {
                 MessageToast.show("Failed to load employee data. Please try again.");
                 this.byId("submitUpdateButton").setVisible(true);
             }
-        },
 
+
+            // this.getView().getModel("DataModel").refresh(true);
+
+            // if (this.empJobData) {
+            // await this.initializeView(); 
+            // } else {
+            //     MessageToast.show("Failed to load employee data. Please try again.");
+            //     this.byId("submitUpdateButton").setVisible(true);
+            // }
+        },
 
 
         highlightSubmitApprovalsSection: function () {
@@ -5244,6 +5845,10 @@ sap.ui.define([
             }
         },
 
+        isCompleted: function (status) {
+            console.log("Formatter called with status:", status);
+            return status === 'COMPLETED';
+        },
 
 
         disableChangeOfStatusSection: function () {
@@ -5432,6 +6037,13 @@ sap.ui.define([
                                     oPositionPayload.jobCode = item.NewStatus.split('-')[0].trim();
                                     oPositionPayload.jobTitle = item.NewStatus.split('-')[2].trim();
                                     break;
+
+                                case "Job Family":
+                                    oPositionPayload.customString3 = item.NewStatus.split('-')[0].trim();
+                                    break;
+
+
+
 
                             }
                         }
@@ -5721,6 +6333,7 @@ sap.ui.define([
             let jobTitleNewVal = "";
             let workScheduleNewVal = "";
             let positionNewVal = "";
+            let jobFamilyNewVal = "";
             let that = this;
             let wfChangeData1 = that.wfchangeData;
 
@@ -5769,6 +6382,9 @@ sap.ui.define([
                     } else if (wfchangedata.fieldName == "position") {
                         console.log("New position value:" + wfchangedata.newValue);
                         positionNewVal = wfchangedata.newValue;
+                    } else if (wfchangedata.fieldName == "customString3") {
+                        console.log("New jobFamily value:" + wfchangedata.newValue);
+                        jobFamilyNewVal = wfchangedata.newValue;
                     }
                 });
             }
@@ -5852,6 +6468,14 @@ sap.ui.define([
                 },
                 {
                     SNo: "10",
+                    Item: "Job Family",
+                    CurrentStatus: (empJobData?.customString3 ?? '') + " - " + (empJobData?.customString3Nav?.name ?? ''),
+                    NewStatus: (positionNewVal != "" ? positionNewVal : ""),
+                    Visible: true,
+                    hasWfChangeData: hasAnyWfChangeData
+                },
+                {
+                    SNo: "11",
                     Item: "Job Title",
                     CurrentStatus: (empJobData?.jobCode ?? '') + " - " + (empJobData?.jobCodeNav?.name ?? ''),
                     NewStatus: (jobTitleNewVal != "" ? jobTitleNewVal : ""),
@@ -6154,7 +6778,36 @@ sap.ui.define([
                                 });
                                 break;
 
-                            case "10": // Job Title
+                            case "10": // job Family
+                                comboBox = new sap.m.ComboBox({
+                                    selectedKey: currentStatusCode,
+                                    selectionChange: that.onJobFamChange.bind(that),
+                                    placeholder: "Job Family",
+                                    showSecondaryValues: true,
+                                    items: {
+                                        path: "jobFamilyModel>/",
+                                        template: new sap.ui.core.Item({
+                                            key: "{jobFamilyModel>externalCode}",
+                                            text: {
+                                                parts: [
+                                                    { path: "jobFamilyModel>externalCode" },
+                                                    { path: "jobFamilyModel>name" }
+                                                ],
+                                                formatter: that.formatExternalCodeWithName
+                                            }
+                                        }),
+                                        length: 1000
+                                    },
+                                    beforeOpen: function (oEvent) {
+                                        let companyCode = that.getCurrentDropdownValue("1");
+                                        if (companyCode) {
+                                            that.fetchJobFamilyData(companyCode);
+                                        }
+                                    }
+                                });
+                                break;
+
+                            case "11": // Job Title
                                 comboBox = new sap.m.ComboBox({
                                     selectedKey: currentStatusCode,
                                     placeholder: "Select Job Title",
@@ -6207,6 +6860,8 @@ sap.ui.define([
                 }
             });
         },
+
+
 
 
 
@@ -6326,12 +6981,14 @@ sap.ui.define([
                         currentPosition = item.CurrentStatus || "";
                         newPosition = item.NewStatus || "";
                         break;
-                    case "10": // Job Title
+                    case "11": // Job Title
                         currentJobTitle = item.CurrentStatus || "";
                         newJobTitle = item.NewStatus || "";
                         break;
                 }
             });
+
+
 
             let oCompensationModel = this.getView().getModel("empCmpNewValueModel");
             //let compensationData = oCompensationModel ? oCompensationModel.getProperty("/ChangeOfCompensation") : [];
@@ -6348,54 +7005,82 @@ sap.ui.define([
 
             // Find matching record
             let payCompRecurringResults = employeeData.empPayCompRecurringNav.results;
-          
 
-            let currentGrade = "";
+            console.log(this.getView().getModel("empCmpNewValueModel"));
+            let currentGrade = this.byId("compensationTable").getBinding("items").getContexts()[0].getObject().externalCode;
+
+
             let currentBasicSalary = "";
             let currentHousingAllowance = "";
             let currentTransportationAllowance = "";
-            let currentGrossSalary = "";
+            let currentGrossSalary = 0;
 
             let currencyCode = "";
 
-           payCompRecurringResults.forEach(item => {
-                if (item.SNo === "1") { // Grade
-                    currentGrade = item.CurrentValue || "";
-                } else {
-                    let itemName = item.payComponentNav.name ? item.payComponentNav.name.toLowerCase() : "";
-                    let currentValue = item.paycompvalue || "";
-                    currencyCode = item.currencyCode
+            let extractedData = payCompRecurringResults.map(item => ({
+                name: item.payComponentNav?.name || "",
+                paycompvalue: item.paycompvalue
+            }));
+            console.log(extractedData);
+            let currencycode = this.byId("idGrossMonthlySalary").getText().split(" ")[1] + ".";
+            let salaryText = extractedData.map(item => {
+                let value = parseFloat(item.paycompvalue) || 0;
+                currentGrossSalary = currentGrossSalary + value;
+                return {
+                    text: [
+                        { text: item.name.padEnd(35, ' '), bold: true },
+                        { text: `:  ${currencycode} ${value}/-` }
+                    ],
+                    margin: [0, 2, 0, 2]
+                };
+            });
 
-                    if (itemName.includes("basic") || itemName.includes("salary")) {
-                        currentBasicSalary = currentValue;
-                    } else if (itemName.includes("housing")) {
-                        currentHousingAllowance = currentValue;
-                    } else if (itemName.includes("transportation") || itemName.includes("transport")) {
-                        currentTransportationAllowance = currentValue;
-                    }
-                }
-            }
-        );
-        // let compNewData = [];
-        // let index = 0;
-        // payCompRecurringResults.forEach(item => {
-          
-        //     compNewData[index].name = item.payComponentNav.name;
-        //     compNewData[index].currency = item.currencyCode;
-        //     compNewData[index].compValue = item.paycompvalue;
-        //     index++;
+            // payCompRecurringResults.forEach(item => {
+            //     if (item.SNo === "1") { // Grade
+            //         currentGrade = item.CurrentValue || "";
+            //     } else {
+            //         let itemName = item.payComponentNav.name ? item.payComponentNav.name.toLowerCase() : "";
+            //         let currentValue = item.paycompvalue || "";
+            //         currencyCode = item.currencyCode
 
-        // })
+            //         if (itemName.includes("basic") || itemName.includes("salary")) {
+            //             currentBasicSalary = currentValue;
+            //         } else if (itemName.includes("housing")) {
+            //             currentHousingAllowance = currentValue;
+            //         } else if (itemName.includes("transportation") || itemName.includes("transport")) {
+            //             currentTransportationAllowance = currentValue;
+            //         }
+            //     }
+            // }
+            // );
+            // let compNewData = [];
+            // let index = 0;
+            // payCompRecurringResults.forEach(item => {
+
+            //     compNewData[index].name = item.payComponentNav.name;
+            //     compNewData[index].currency = item.currencyCode;
+            //     compNewData[index].compValue = item.paycompvalue;
+            //     index++;
+
+            // })
 
 
 
 
-            if (!currentGrossSalary && currentBasicSalary && currentHousingAllowance && currentTransportationAllowance) {
-                let basic = parseFloat(currentBasicSalary) || 0;
-                let housing = parseFloat(currentHousingAllowance) || 0;
-                let transport = parseFloat(currentTransportationAllowance) || 0;
-                currentGrossSalary = (basic + housing + transport).toString();
-            }
+            // if (!currentGrossSalary && currentBasicSalary && currentHousingAllowance && currentTransportationAllowance) {
+            //     let basic = parseFloat(currentBasicSalary) || 0;
+            //     let housing = parseFloat(currentHousingAllowance) || 0;
+            //     let transport = parseFloat(currentTransportationAllowance) || 0;
+            //     currentGrossSalary = (basic + housing + transport).toString();
+            // }
+            //currentGrossSalary = currentGrossSalary.split(" ")[0];
+            salaryText.push({
+                text: [
+                    { text: 'Total Gross Salary'.padEnd(35, ' '), bold: true },
+                    { text: `: ${currencycode} ${currentGrossSalary}/-` }
+                ]
+            });
+
 
             let oGrossCompensationModel = this.getView().getModel("GrossCompensationModel");
             let grossCompensationData = oGrossCompensationModel ? oGrossCompensationModel.getProperty("/") : [];
@@ -6405,7 +7090,7 @@ sap.ui.define([
             let currentMedicalInsurance = "";
             let currentEmployeeTicket = "";
             let currentFamilyTicket = "";
-            
+
             grossCompensationData.forEach(item => {
                 switch (item.SNo) {
                     case "9": // Contract Type
@@ -6462,11 +7147,12 @@ sap.ui.define([
                 grade: currentGrade,
 
                 // Compensation Information - Current Values Only
-                basicSalary: currentBasicSalary,
-                housingAllowance: currentHousingAllowance,
-                transportationAllowance: currentTransportationAllowance,
+                // basicSalary: currentBasicSalary,
+                // housingAllowance: currentHousingAllowance,
+                // transportationAllowance: currentTransportationAllowance,
+                baseSalary: salaryText,
                 grossSalary: currentGrossSalary,
-                currencyCode:currencyCode,
+                currencyCode: currencyCode,
 
                 // Benefits Information - Current Values Only
                 contractType: currentContractType,
@@ -6483,6 +7169,8 @@ sap.ui.define([
 
 
             });
+
+
 
             return {
                 pageSize: 'A4',
@@ -6531,148 +7219,201 @@ sap.ui.define([
             return parseFloat(value || 0).toLocaleString('en-US');
         },
 
+
         onReSubmit: function () {
-            let oView = this.getView();
-            let oSelectedRowModel = oView.getModel("selectedRowModel");
-            console.log("Full Selected Row Model:", oSelectedRowModel.getData());
+            const oView = this.getView();
+            const oSelectedRowModel = oView.getModel("selectedRowModel");
+            const oFileUploader = this.byId("idFileUploaderNewSB");
 
-            let oRequestTypeSelect = this.byId("idRequestTypeNewSB");
-            let oDatePicker = this.byId("idRequestDateNewSB");
-            let oCommentsTextArea = this.byId("idCommentsNewSB");
-            let oFileUploader = this.byId("idFileUploaderNewSB");
+            // Get form values
+            const sCurrentRequestType = this.byId("idRequestTypeNewSB").getSelectedKey();
+            const oCurrentEffectiveDate = this.byId("idRequestDateNewSB").getDateValue();
+            const sCurrentJustification = this.byId("idCommentsNewSB").getValue();
+            const oCurrentFile = oFileUploader.getDomRef()?.querySelector("input[type='file']")?.files[0];
 
-            let bIsMandatory = oFileUploader.data("mandatory");
+            // Get selected user's data
+            const sSelectedUserExternalCode = oSelectedRowModel.getData().selectedRow.externalCode;
+            const sSelectedUserAttachmentId = oSelectedRowModel.getData().selectedRow.cust_AttachmentNav?.attachmentId;
+            const sName = oSelectedRowModel.getData().selectedRow.cust_EMP_Name;
+            const sUserId = this._loggedInUserId;
 
-            if (bIsMandatory && !oFileUploader.getValue()) {
+            // Validate mandatory fields
+            if (oFileUploader.data("mandatory") && !oCurrentFile && !sSelectedUserAttachmentId) {
                 oFileUploader.setValueState("Error");
                 oFileUploader.setValueStateText("Attachment is required.");
                 MessageToast.show("Please upload the required document.");
                 return;
             }
-
             oFileUploader.setValueState("None");
 
-            let sRequestType = oRequestTypeSelect.getSelectedKey();
-            let oEffectiveDate = oDatePicker.getDateValue();
-            let sJustification = oCommentsTextArea.getValue();
-
-            if (!sRequestType) {
+            if (!sCurrentRequestType) {
                 sap.m.MessageBox.error("Please select a Required Action");
                 return;
             }
-
-            if (!oEffectiveDate) {
+            if (!oCurrentEffectiveDate) {
                 sap.m.MessageBox.error("Please select an effective change date");
                 return;
             }
-
-            let sExternalCode = oSelectedRowModel.getData().selectedRow.externalCode;
-            let sName = oSelectedRowModel.getData().selectedRow.cust_EMP_Name;
-
-            console.log("External Code:", sExternalCode);
-
-            let that = this;
-            let oFile = oFileUploader && oFileUploader.oFileUpload && oFileUploader.oFileUpload.files[0];
-
-            let sUserId = this._loggedInUserId;
 
             if (!sUserId) {
                 MessageBox.error("User ID not available yet. Please try again.");
                 return;
             }
 
+            if (oCurrentFile) {
+                // Scenario 1: New file uploaded - process upload
+                this._processNewFileUpload(
+                    oCurrentFile,
+                    sUserId,
+                    sSelectedUserExternalCode,
+                    sName,
+                    oCurrentEffectiveDate,
+                    sCurrentRequestType,
+                    sCurrentJustification
+                );
+            }
 
+            // else if (sSelectedUserAttachmentId) {
+            //     // Scenario 2: Use existing attachment from selected user
+            //     this._submitWithExistingAttachment(
+            //         sSelectedUserExternalCode,
+            //         sName,
+            //         oCurrentEffectiveDate,
+            //         sCurrentRequestType,
+            //         sCurrentJustification,
+            //         sSelectedUserAttachmentId
+            //     );
+            // }
 
-            if (oFile) {
-                let reader = new FileReader();
-                reader.onload = function (event) {
-                    let sFileContent = event.target.result.split(',')[1];
-
-                    let oAttachmentPayload = {
-                        "__metadata": { "uri": "Attachment" },
-                        "fileName": oFile.name,
-                        "module": "GENERIC_OBJECT",
-                        "userId": sUserId,
-                        "viewable": true,
-                        "fileContent": sFileContent
-                    };
-
-                    let sAttachmentUrl = that.getPath("SF_OAUTH") + "/upsert";
-
-                    $.ajax({
-                        url: sAttachmentUrl + "?$format=json",
-                        type: "POST",
-                        contentType: "application/json",
-                        data: JSON.stringify(oAttachmentPayload),
-                        success: function (oAttachmentData) {
-                            console.log("Attachment upload response:", oAttachmentData);
-
-
-                            try {
-                                let sAttachmentId = null;
-
-                                if (oAttachmentData && oAttachmentData.d && Array.isArray(oAttachmentData.d) && oAttachmentData.d[0].status === 'ERROR') {
-                                    console.error("Attachment upload failed on the server:", oAttachmentData.d[0].message);
-                                    sap.m.MessageBox.error("Attachment upload failed: " + oAttachmentData.d[0].message, { title: "Error" });
-                                    return;
-                                }
-
-                                // extract the attachment ID
-                                if (oAttachmentData && oAttachmentData.d) {
-                                    if (Array.isArray(oAttachmentData.d) && oAttachmentData.d.length > 0 && oAttachmentData.d[0].key) {
-                                        let attachmentIdMatch = oAttachmentData.d[0].key.match(/Attachment\/attachmentId=(\d+)/);
-                                        if (attachmentIdMatch && attachmentIdMatch[1]) {
-                                            sAttachmentId = attachmentIdMatch[1];
-                                        } else {
-                                            console.warn("Could not extract attachmentId from key:", oAttachmentData.d[0].key);
-                                        }
-                                    } else if (oAttachmentData.d.key) {
-                                        let attachmentIdMatch = oAttachmentData.d.key.match(/Attachment\/attachmentId=(\d+)/);
-                                        if (attachmentIdMatch && attachmentIdMatch[1]) {
-                                            sAttachmentId = attachmentIdMatch[1];
-                                        } else {
-                                            console.warn("Could not extract attachmentId from key:", oAttachmentData.d.key);
-                                        }
-                                    } else if (Array.isArray(oAttachmentData.d) && oAttachmentData.d.length > 0 && oAttachmentData.d[0].attachmentId) {
-                                        sAttachmentId = oAttachmentData.d[0].attachmentId;
-                                    } else if (oAttachmentData.d.attachmentId) {
-                                        sAttachmentId = oAttachmentData.d.attachmentId;
-                                    }
-                                }
-                                that._rejectWfRequestWithComment(that._wfRequestIdForRejection, "Resubmitted with new workflow");
-                                that._submitPSNForm(sExternalCode, sName, oEffectiveDate, sRequestType, sJustification, sAttachmentId);
-                                that.onClearFields();
-
-                            } catch (error) {
-                                console.error("Error processing JSON response:", error);
-                                that.onClearFields();
-                                sap.m.MessageBox.error("Error processing server response.", { title: "Error" });
-                            }
-                        },
-                        error: function (oAttachmentError) {
-                            that.onClearFields();
-                            console.error("Attachment upload failed", oAttachmentError);
-                            let sAttachmentErrorMessage = "Attachment upload failed.";
-
-                            if (oAttachmentError.responseJSON && oAttachmentError.responseJSON.error && oAttachmentError.responseJSON.error.message) {
-                                sAttachmentErrorMessage = oAttachmentError.responseJSON.error.message;
-                            }
-
-                            sap.m.MessageBox.error(sAttachmentErrorMessage, { title: "Error" });
-                        }
-                    });
-
-                };
-                reader.readAsDataURL(oFile);
-            } else {
-                that.onClearFields();
-                that._rejectWfRequestWithComment(that._wfRequestIdForRejection, "Resubmitted with new workflow");
-                that._submitPSNForm(sExternalCode, sName, oEffectiveDate, sRequestType, sJustification, null);
+            else {
+                // Scenario 3: No attachment
+                this._submitWithoutAttachment(
+                    sSelectedUserExternalCode,
+                    sName,
+                    oCurrentEffectiveDate,
+                    sCurrentRequestType,
+                    sCurrentJustification
+                );
             }
         },
 
-        _submitPSNForm: function (sExternalCode, sName, oEffectiveDate, sRequestType, sJustification, sAttachmentId) {
-            let that = this;
+        _processNewFileUpload: function (oFile, sUserId, sExternalCode, sName, oEffectiveDate, sRequestType, sJustification) {
+            const that = this;
+            const reader = new FileReader();
+
+            reader.onload = function (event) {
+                const sFileContent = event.target.result.split(',')[1];
+
+                const oAttachmentPayload = {
+                    "__metadata": { "uri": "Attachment" },
+                    "fileName": oFile.name,
+                    "module": "GENERIC_OBJECT",
+                    "userId": sUserId,
+                    "viewable": true,
+                    "fileContent": sFileContent
+                };
+
+                const sAttachmentUrl = that.getPath("SF_OAUTH") + "/upsert";
+
+                $.ajax({
+                    url: sAttachmentUrl + "?$format=json",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(oAttachmentPayload),
+                    success: function (oAttachmentData) {
+                        console.log("Attachment upload response:", oAttachmentData);
+
+                        try {
+                            let sAttachmentId = null;
+
+                            // Check for errors first
+                            if (oAttachmentData && oAttachmentData.d && Array.isArray(oAttachmentData.d) && oAttachmentData.d[0].status === 'ERROR') {
+                                console.error("Attachment upload failed on the server:", oAttachmentData.d[0].message);
+                                sap.m.MessageBox.error("Attachment upload failed: " + oAttachmentData.d[0].message, { title: "Error" });
+                                return;
+                            }
+
+                            // Extract attachment ID
+                            if (oAttachmentData && oAttachmentData.d) {
+                                if (Array.isArray(oAttachmentData.d) && oAttachmentData.d.length > 0 && oAttachmentData.d[0].key) {
+                                    let attachmentIdMatch = oAttachmentData.d[0].key.match(/Attachment\/attachmentId=(\d+)/);
+                                    if (attachmentIdMatch && attachmentIdMatch[1]) {
+                                        sAttachmentId = attachmentIdMatch[1];
+                                    }
+                                } else if (oAttachmentData.d.key) {
+                                    let attachmentIdMatch = oAttachmentData.d.key.match(/Attachment\/attachmentId=(\d+)/);
+                                    if (attachmentIdMatch && attachmentIdMatch[1]) {
+                                        sAttachmentId = attachmentIdMatch[1];
+                                    }
+                                } else if (Array.isArray(oAttachmentData.d) && oAttachmentData.d.length > 0 && oAttachmentData.d[0].attachmentId) {
+                                    sAttachmentId = oAttachmentData.d[0].attachmentId;
+                                } else if (oAttachmentData.d.attachmentId) {
+                                    sAttachmentId = oAttachmentData.d.attachmentId;
+                                }
+                            }
+
+                            if (sAttachmentId) {
+                                // Reject old workflow and submit new form
+                                that._rejectWfRequestWithComment(that._wfRequestIdForRejection, "Resubmitted with new workflow");
+                                that._submitFormData(
+                                    sExternalCode,
+                                    sName,
+                                    oEffectiveDate,
+                                    sRequestType,
+                                    sJustification,
+                                    sAttachmentId
+                                );
+                            } else {
+                                sap.m.MessageBox.error("Failed to get attachment ID from response", { title: "Error" });
+                            }
+
+                        } catch (error) {
+                            console.error("Error processing JSON response:", error);
+                            sap.m.MessageBox.error("Error processing server response.", { title: "Error" });
+                        }
+                    },
+                    error: function (oAttachmentError) {
+                        console.error("Attachment upload failed", oAttachmentError);
+                        let sAttachmentErrorMessage = "Attachment upload failed.";
+
+                        if (oAttachmentError.responseJSON && oAttachmentError.responseJSON.error && oAttachmentError.responseJSON.error.message) {
+                            sAttachmentErrorMessage = oAttachmentError.responseJSON.error.message;
+                        }
+
+                        sap.m.MessageBox.error(sAttachmentErrorMessage, { title: "Error" });
+                    }
+                });
+            };
+
+            reader.readAsDataURL(oFile);
+        },
+
+        // _submitWithExistingAttachment: function (sExternalCode, sName, oEffectiveDate, sRequestType, sJustification, sAttachmentId) {
+        //     this._rejectWfRequestWithComment(this._wfRequestIdForRejection, "Resubmitted with new workflow");
+        //     this._submitFormData(
+        //         sExternalCode,
+        //         sName,
+        //         oEffectiveDate,
+        //         sRequestType,
+        //         sJustification,
+        //         sAttachmentId
+        //     );
+        // },
+
+        _submitWithoutAttachment: function (sExternalCode, sName, oEffectiveDate, sRequestType, sJustification) {
+            this._rejectWfRequestWithComment(this._wfRequestIdForRejection, "Resubmitted with new workflow");
+            this._submitFormData(
+                sExternalCode,
+                sName,
+                oEffectiveDate,
+                sRequestType,
+                sJustification,
+                null
+            );
+        },
+
+        _submitFormData: function (sExternalCode, sName, oEffectiveDate, sRequestType, sJustification, sAttachmentId) {
+            const that = this;
 
             sap.m.MessageBox.confirm(
                 "Are you sure you want to submit the Position Status Change request?",
@@ -6681,7 +7422,7 @@ sap.ui.define([
                     actions: [sap.m.MessageBox.Action.OK, sap.m.MessageBox.Action.CANCEL],
                     onClose: function (oAction) {
                         if (oAction === sap.m.MessageBox.Action.OK) {
-                            let oPayload = {
+                            const oPayload = {
                                 "__metadata": { "uri": "cust_PositionStatusChange" },
                                 "externalCode": sExternalCode,
                                 "cust_Emp_ID": sExternalCode,
@@ -6694,45 +7435,237 @@ sap.ui.define([
 
                             if (sAttachmentId) {
                                 oPayload.cust_AttachmentNav = {
-                                    "__metadata": { "uri": "Attachment(" + sAttachmentId + "L)" }
+                                    "__metadata": { "uri": `Attachment(${parseInt(sAttachmentId)}L)` }
                                 };
                             }
 
-                            //let sUrl = that.getPath("SF_2") + "/upsert?workflowConfirmed=true";
-                            let sUrl = that.getPath("SF_OAUTH") + "/upsert?workflowConfirmed=true";
-
-                            that._makePostCall(sUrl, oPayload, "PSN Form Upsert successful!", "Workflow confirmation failed!");
+                            const sUrl = that.getPath("SF_OAUTH") + "/upsert?workflowConfirmed=true";
+                            that._makePostCall(sUrl, oPayload, "Position Status Change request submitted successfully!",
+                                "Failed to submit Position Status Change request.");
                         }
                     }
                 }
             );
         },
 
+        // _makePostCall: function(sUrl, oPayload, sSuccessMessage, sErrorMessage) {
+        //     const that = this;
+
+        //     $.ajax({
+        //         url: sUrl,
+        //         type: "POST",
+        //         contentType: "application/json",
+        //         data: JSON.stringify(oPayload),
+        //         success: function() {
+        //             that.onClearFields();
+        //             sap.m.MessageBox.success(sSuccessMessage, {
+        //                 title: "Success",
+        //                 //onClose: () => window.location.reload()
+        //             });
+        //         },
+        //         error: function(oError) {
+        //             const sErrorMsg = oError.responseJSON?.error?.message || sErrorMessage;
+        //             sap.m.MessageBox.error(sErrorMsg, { title: "Error" });
+        //         }
+        //     });
+        // },
+
+        onNavBackHome: function () {
+            sap.ui.core.BusyIndicator.show(0);
+            var route = this.getOwnerComponent().getRouter();
+            route.navTo("RoutePSNForm");
+
+            setTimeout(function () {
+                window.location.reload();
+            }, 100);
+        },
+
 
         _makePostCall: function (sUrl, oPayload, sSuccessMessage, sErrorMessage) {
+            const that = this;
+
             $.ajax({
                 url: sUrl,
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify(oPayload),
-                success: function (oData) {
-                    console.log(sSuccessMessage, oData);
-                    this.onClearFields();
-                    sap.m.MessageBox.success(sSuccessMessage, { title: "Success" });
-                    if (fnSuccessCallback) {
-                        fnSuccessCallback();
+                success: function (data, textStatus, xhr) {
+                    // Parse the XML response
+                    const responseInfo = that._parseXMLResponse(data);
+
+                    if (responseInfo.status === "OK") {
+                        that.onClearFields();
+                        sap.m.MessageBox.success(responseInfo.message || sSuccessMessage || "Request submitted successfully!", {
+                            title: "Success",
+                            // onClose: () => window.location.reload()
+                            onClose: function () {
+                                that.onNavBackHome(); // Call your function here
+                            }
+                        });
+                    } else if (responseInfo.status === "ERROR") {
+                        sap.m.MessageBox.error(responseInfo.message || "An error occurred while processing your request.", {
+                            title: "Error"
+                        });
                     }
                 },
-                error: function (oError) {
-                    console.error(sErrorMessage, oError);
-                    let sFinalErrorMessage = sErrorMessage;
-                    if (oError.responseJSON?.error?.message) {
-                        sFinalErrorMessage = oError.responseJSON.error.message;
+                error: function (xhr, textStatus, errorThrown) {
+                    let errorMessage = sErrorMessage || "An unexpected error occurred.";
+
+                    // Try to parse XML error response if available
+                    if (xhr.responseText) {
+                        try {
+                            const responseInfo = that._parseXMLResponse(xhr.responseText);
+                            if (responseInfo.message) {
+                                errorMessage = responseInfo.message;
+                            }
+                        } catch (e) {
+                            // If XML parsing fails, try JSON
+                            try {
+                                const jsonError = JSON.parse(xhr.responseText);
+                                errorMessage = jsonError.error?.message || errorMessage;
+                            } catch (jsonError) {
+                                // Use default error message
+                            }
+                        }
                     }
-                    sap.m.MessageBox.error(sFinalErrorMessage, { title: "Error" });
+
+                    sap.m.MessageBox.error(errorMessage, {
+                        title: "Error"
+                    });
                 }
             });
         },
+
+        _parseXMLResponse: function (xmlData) {
+            try {
+                let xmlDoc;
+
+                // Handle string response
+                if (typeof xmlData === 'string') {
+                    const parser = new DOMParser();
+                    xmlDoc = parser.parseFromString(xmlData, "text/xml");
+                } else {
+                    xmlDoc = xmlData;
+                }
+
+                // Extract status and message from XML
+                const statusElement = xmlDoc.querySelector('d\\:status, status');
+                const messageElement = xmlDoc.querySelector('d\\:message, message');
+
+                const status = statusElement ? statusElement.textContent : null;
+                const message = messageElement ? messageElement.textContent : null;
+
+                return {
+                    status: status,
+                    message: message
+                };
+            } catch (error) {
+                console.error("Error parsing XML response:", error);
+                return {
+                    status: null,
+                    message: null
+                };
+            }
+        },
+
+        // _makePostCall: function(sUrl, oPayload) {
+        //     const that = this;
+
+        //     $.ajax({
+        //         url: sUrl,
+        //         type: "POST",
+        //         contentType: "application/json",
+        //         data: JSON.stringify(oPayload),
+        //         success: function(response) {
+        //             that.handleResponse(response);
+        //         },
+        //         error: function(oError) {
+        //             // Handle the error response
+        //             const contentType = oError.getResponseHeader("Content-Type");
+        //             let errorMessage;
+
+        //             if (contentType && contentType.indexOf("application/xml") !== -1) {
+        //                 // Parse the XML error response
+        //                 const parser = new DOMParser();
+        //                 const xmlDoc = parser.parseFromString(oError.responseText, "text/xml");
+        //                 const messageNode = xmlDoc.getElementsByTagName("d:message")[0];
+        //                 errorMessage = messageNode ? messageNode.textContent : "An error occurred.";
+        //             } else {
+        //                 // Fallback for non-XML responses
+        //                 errorMessage = oError.responseJSON?.error?.message || "An error occurred.";
+        //             }
+
+        //             // Call the handleResponse function to display the error message
+        //             that.handleResponse(errorMessage);
+        //         }
+        //     });
+        // },
+
+        // handleResponse: function(message) {
+        //     // Display the response message in a message box
+        //     sap.m.MessageBox.information(message, {
+        //         title: "Response",
+        //         onClose: function() {
+        //             // Optional: Reload the page or clear fields if needed
+        //             // window.location.reload();
+        //             // that.onClearFields(); // Uncomment if you want to clear fields
+        //         }
+        //     });
+        // },
+        // _makePostCall: function(sUrl, oPayload, sSuccessMessage, sErrorMessage) {
+        //     const that = this;
+
+        //     sap.m.MessageBox.confirm(
+        //         "Are you sure you want to submit?",
+        //         {
+        //             title: "Confirm Submission",
+        //             actions: [sap.m.MessageBox.Action.OK, sap.m.MessageBox.Action.CANCEL],
+        //             onClose: function(oAction) {
+        //                 if (oAction === sap.m.MessageBox.Action.OK) {
+        //                     $.ajax({
+        //                         url: sUrl,
+        //                         type: "POST",
+        //                         contentType: "application/json",
+        //                         data: JSON.stringify(oPayload),
+        //                         success: function() {
+        //                             that.onClearFields();
+        //                             sap.m.MessageBox.success(sSuccessMessage, {
+        //                                 title: "Success",
+        //                                 onClose: () => window.location.reload()
+        //                             });
+        //                         },
+        //                         error: function(oError) {
+        //                             const sErrorMsg = oError.responseJSON?.error?.message || sErrorMessage;
+        //                             sap.m.MessageBox.error(sErrorMsg, { title: "Error" });
+        //                         }
+        //                     });
+        //                 }
+        //             }
+        //         }
+        //     );
+        // },
+
+        formatFileUploaderValue: function (sFileName) {
+            return sFileName || "";
+        },
+
+        onFileUploaderChange: function (oEvent) {
+            const oFileUploader = oEvent.getSource();
+            const aFiles = oFileUploader.getDomRef().querySelector("input[type='file']").files;
+
+            if (aFiles.length > 0) {
+                oFileUploader.unbindProperty("value");
+                oFileUploader.setValue(aFiles[0].name);
+            } else {
+                oFileUploader.bindProperty("value", {
+                    path: 'ListData>cust_AttachmentNav/fileName',
+                    formatter: this.formatFileUploaderValue.bind(this)
+                });
+            }
+        },
+
+
+
 
         convertToODataDate: function (date) {
             if (!date) {
@@ -6798,6 +7731,7 @@ sap.ui.define([
                 showApproveButton: false,
                 showRejectButton: false,
                 showReturnButton: false,
+                showWithdrawButton: false,
                 showDelegateButton: false,
                 showGeneratePDFButton: false,
                 showMenuButton: false,
@@ -6819,6 +7753,7 @@ sap.ui.define([
             this.oViewSubModel.setProperty("/showApproveButton", false);
             this.oViewSubModel.setProperty("/showRejectButton", false);
             this.oViewSubModel.setProperty("/showReturnButton", false);
+            this.oViewSubModel.setProperty("/showWithdrawButton", false);
             this.oViewSubModel.setProperty("/showDelegateButton", false);
             this.oViewSubModel.setProperty("/showGeneratePDFButton", false);
             this.oViewSubModel.setProperty("/showMenuButton", false);
@@ -6830,6 +7765,7 @@ sap.ui.define([
             this.oViewSubModel.setProperty("/showApproveButton", true);
             this.oViewSubModel.setProperty("/showRejectButton", true);
             this.oViewSubModel.setProperty("/showReturnButton", true);
+            this.oViewSubModel.setProperty("/showWithdrawButton", true);
             this.oViewSubModel.setProperty("/showDelegateButton", true);
             this.oViewSubModel.setProperty("/showMenuButton", true);
         },
@@ -6844,13 +7780,24 @@ sap.ui.define([
 
             switch (stage) {
                 case "RQApprovalsPending":
-                    this.setWorkflowPending(false, false, false, true, true, true, true, true, false, false, false);
+                    this.setWorkflowPending(false, false, false, true, true, true, true, true, true, false, false, false);
                     break;
 
                 case "RQApprovalsCompleted":
-                    this.setWorkflowPending(true, true, false, false, false, false, false, false, false, true, false);
+                    this.setWorkflowPending(true, true, false, false, false, false, false, false, false, false, true, false);
                     break;
-
+                case "SendBack":
+                    this.setWorkflowPending(false, false, false, false, false, false, false, false, false, false, false, false);
+                    break;
+                case "CANCELLED":
+                    this.setWorkflowPending(false, false, false, false, false, false, false, false, false, false, false, false);
+                    break;
+                case "Rejected":
+                    this.setWorkflowPending(false, false, false, false, false, false, false, false, false, false, false, false);
+                    break;
+                case "Withdraw":
+                    this.setWorkflowPending(false, false, false, false, false, false, false, false, false, false, false, false);
+                    break;
                 case "SubmitPositionCompleted":
                     this.oViewSubModel.setProperty("/showSubmitButton", true);
                     this.oViewSubModel.setProperty("/showChangeOfSts", true);
@@ -6858,18 +7805,18 @@ sap.ui.define([
                     break;
 
                 case "SubmitApprovalsPending":
-                    this.setWorkflowPending(true, true, true, true, true, true, true, true, false, false, false);
+                    this.setWorkflowPending(true, true, true, true, true, true, true, true, true, false, false, false);
                     break;
 
                 case "SubmitApprovalsCompleted":
-                    this.setWorkflowPending(true, true, true, false, false, false, false, false, true, false, false);
+                    this.setWorkflowPending(true, true, true, false, false, false, false, false, false, true, false, false);
                     break;
             }
 
             console.log(`Workflow stage set to: ${stage}, User authorized: ${userAuthorized}`);
         },
 
-        setWorkflowPending: function (isshowChangeOfComp, isshowChangeOfSts, isshowSubmitApprovals, isshowApproveButton, isshowRejectButton, isshowReturnButton, isshowDelegateButton, isshowMenuButton, isshowGeneratePDFButton, isshowSubmitPositionButton, isshowSubmitButton, isshowUpdateButton) {
+        setWorkflowPending: function (isshowChangeOfComp, isshowChangeOfSts, isshowSubmitApprovals, isshowApproveButton, isshowRejectButton, isshowReturnButton, isshowWithdrawButton, isshowDelegateButton, isshowMenuButton, isshowGeneratePDFButton, isshowSubmitPositionButton, isshowSubmitButton, isshowUpdateButton) {
 
             var oViewButtonModel = this.getView().getModel("viewsubModel");
             oViewButtonModel.setProperty("/showChangeOfComp", isshowChangeOfComp);
@@ -6878,10 +7825,10 @@ sap.ui.define([
             oViewButtonModel.setProperty("/showApproveButton", isshowApproveButton);
             oViewButtonModel.setProperty("/showRejectButton", isshowRejectButton);
             oViewButtonModel.setProperty("/showReturnButton", isshowReturnButton);
+            oViewButtonModel.setProperty("/showWithdrawButton", isshowWithdrawButton);
             oViewButtonModel.setProperty("/showDelegateButton", isshowDelegateButton);
             oViewButtonModel.setProperty("/showMenuButton", isshowMenuButton);
             oViewButtonModel.setProperty("/showGeneratePDFButton", isshowGeneratePDFButton);
-
             oViewButtonModel.setProperty("/showSubmitButton", isshowSubmitButton);
             oViewButtonModel.setProperty("/showUpdateButton", isshowUpdateButton);
             oViewButtonModel.refresh();
@@ -6909,6 +7856,7 @@ sap.ui.define([
                                 that.oViewSubModel.setProperty("/showApproveButton", true);
                                 that.oViewSubModel.setProperty("/showRejectButton", true);
                                 that.oViewSubModel.setProperty("/showReturnButton", true);
+                                that.oViewSubModel.setProperty("/showWithdrawButton", true);
                                 that.oViewSubModel.setProperty("/showDelegateButton", true);
                                 that.oViewSubModel.setProperty("/showMenuButton", true);
 
@@ -6919,6 +7867,7 @@ sap.ui.define([
                                 that.oViewSubModel.setProperty("/showApproveButton", false);
                                 that.oViewSubModel.setProperty("/showRejectButton", false);
                                 that.oViewSubModel.setProperty("/showReturnButton", false);
+                                that.oViewSubModel.setProperty("/showWithdrawButton", false);
                                 that.oViewSubModel.setProperty("/showDelegateButton", false);
                                 that.oViewSubModel.setProperty("/showGeneratePDFButton", false);
                                 that.oViewSubModel.setProperty("/showMenuButton", false);
@@ -6926,9 +7875,23 @@ sap.ui.define([
                                 that.oViewSubModel.setProperty("/showUpdateButton", false);
                             };
 
+
+                            if (!oDetailData || !oDetailData.d || !oDetailData.d.wfRequestId) {
+                                console.log("No workflow data found for ID:", wfRequestId);
+                                // Handle case when no workflow data is available
+                                that.oViewSubModel.setProperty("/showChangeOfComp", false);
+                                that.oViewSubModel.setProperty("/showChangeOfSts", false);
+                                that.oViewSubModel.setProperty("/showSubmitApprovals", false);
+                                that.disableWorkflowButtons();
+                                return;
+                            }
+
+
                             wfEntry.totalSteps = oDetailData.d.totalSteps;
                             wfEntry.currentStepNum = oDetailData.d.currentStepNum;
                             wfEntry.status = oDetailData.d.status;
+                            console.log(" REQUEST APPROVAL WORKFLOW STATUS :", wfEntry.status)
+                            listItem.workflowStatus = oDetailData.d.status;
 
                             disableWorkflowButtons();
 
@@ -6940,7 +7903,14 @@ sap.ui.define([
                                         step.displayPositionInfo = "";
                                         step.displayApprover = "";
 
-                                        if (step.ownerId && step.ownerId === that._loggedInUserId) {
+                                        // if (step.ownerId && step.ownerId === that._loggedInUserId) {
+                                        //     isUserAuthorized = true;
+                                        // }
+
+                                        // CORRECTED: Compare step.stepNum with oDetailData.d.currentStepNum (not step.currentStepNum)
+                                        if (parseInt(step.stepNum) === parseInt(oDetailData.d.currentStepNum) &&
+                                            step.ownerId &&
+                                            step.ownerId === that._loggedInUserId) {
                                             isUserAuthorized = true;
                                         }
 
@@ -7005,15 +7975,102 @@ sap.ui.define([
                             }
 
                             // Check workflow status and user authorization
+
+                            if (oDetailData.d.status === "PENDING") {
+                                // wfEntry.status = "COMPLETED";
+                                // listItem.positionStatus = "COMPLETED";
+                                //that.byId("withdrawButton").setVisible(true);
+                                //that._updateWithdrawButtonState();
+
+                                if (that._selectedItemContext) {
+                                    let oSelectedData = that._selectedItemContext.getObject();
+                                    let currentUserId = that.getView().getModel("appModel").getProperty("/currentUserId");
+                                    let createdBy = oSelectedData.createdBy;
+
+                                    if (currentUserId === createdBy) {
+                                        // Show withdraw button - user is creator and status is PENDING
+                                        that.byId("withdrawButton").setVisible(true);
+                                        that.byId("withdrawButton").setEnabled(true);
+                                        that.byId("changeOfCompSection").setVisible(false);
+                                        console.log("Withdraw button shown for user:", currentUserId, "item:", oSelectedData.externalCode);
+                                    } else {
+                                        // Hide withdraw button - user is not creator
+                                        that.byId("withdrawButton").setVisible(false);
+                                        console.log("Withdraw button hidden - user not creator");
+                                    }
+                                } else {
+                                    // No item selected
+                                    that.byId("withdrawButton").setVisible(false);
+                                    console.log("Withdraw button hidden - no item selected");
+                                }
+
+                                console.log("withdraw button Enabled:", oDetailData.d.status);
+
+                                console.log("withdraw button Enabled:", oDetailData.d.status);
+                            }
+
+                            if (oDetailData.d.status === "SENTBACK") {
+                                // wfEntry.status = "COMPLETED";
+                                // listItem.positionStatus = "COMPLETED";
+                                //that.byId("withdrawButton").setVisible(true);
+                                //that._updateWithdrawButtonState();
+
+                                if (that._selectedItemContext) {
+                                    let oSelectedData = that._selectedItemContext.getObject();
+                                    let currentUserId = that.getView().getModel("appModel").getProperty("/currentUserId");
+                                    let createdBy = oSelectedData.createdBy;
+
+                                    if (currentUserId === createdBy) {
+                                        // Show withdraw button - user is creator and status is PENDING
+                                        that.byId("ReSubmitButton").setVisible(true);
+                                        that.byId("ReSubmitButton").setEnabled(true);
+                                        that.byId("changeOfCompSection").setVisible(false);
+                                        console.log("Resubmit button shown for user:", currentUserId, "item:", oSelectedData.externalCode);
+                                    } else {
+                                        // Hide withdraw button - user is not creator
+                                        that.byId("ReSubmitButton").setVisible(false);
+                                        console.log("Resubmit button hidden - user not creator");
+                                    }
+                                } else {
+                                    // No item selected
+                                    that.byId("ReSubmitButton").setVisible(false);
+                                    console.log("Resubmit button hidden - no item selected");
+                                }
+
+                                console.log("Resubmit button Enabled:", oDetailData.d.status);
+
+
+                            }
+
+
+
+
+
                             if (oDetailData.d.status === "COMPLETED") {
                                 wfEntry.status = "COMPLETED";
                                 listItem.positionStatus = "COMPLETED";
 
                                 console.log("Workflow COMPLETED for item:", listItem.externalCode);
-                            } else {
+                            }
+
+                            else {
                                 // Enable buttons only if user is authorized, workflow is not completed, and status is PENDING
                                 if (isUserAuthorized && oDetailData.d.status === "PENDING") {
                                     enableWorkflowButtons();
+
+                                } else if (isUserAuthorized && oDetailData.d.status === "CANCELLED") {
+                                    that.oViewSubModel.setProperty("/showChangeOfComp", false);
+                                    that.oViewSubModel.setProperty("/showChangeOfSts", false);
+                                    that.oViewSubModel.setProperty("/showSubmitApprovals", false);
+                                    disableWorkflowButtons();
+                                    // that.setWorkflowPending(false, false, false, false, false, false, false, false, false, false, false);
+                                } else if (isUserAuthorized && oDetailData.d.status === "REJECTED") {
+                                    that.oViewSubModel.setProperty("/showChangeOfComp", false);
+                                    that.oViewSubModel.setProperty("/showChangeOfSts", false);
+                                    that.oViewSubModel.setProperty("/showSubmitApprovals", false);
+                                    disableWorkflowButtons();
+                                } else {
+                                    disableWorkflowButtons();
                                 }
                             }
                         }
@@ -7031,9 +8088,12 @@ sap.ui.define([
             });
         },
 
+
+
         // Enhanced _getWorkflowDetails function (for approvals workflow)
         _getWorkflowDetails: function (userId) {
             let that = this;
+
 
             let sListUrl = this.getPath("SF_1") +
                 "/EmpWfRequest?$format=json&$filter=subjectId eq '" + userId + "' and requestType eq 'CHANGE_JOB'" +
@@ -7045,13 +8105,36 @@ sap.ui.define([
                 dataType: "json",
                 async: true,
                 success: function (data) {
+
+                    if (!data || !data.d || !data.d.results || !Array.isArray(data.d.results) || data.d.results.length === 0) {
+                        console.log("No workflow data found for user:", userId);
+                        // Handle case when no workflow data is available
+                        that.oViewSubModel.setProperty("/showChangeOfComp", false);
+                        that.oViewSubModel.setProperty("/showChangeOfSts", false);
+                        that.oViewSubModel.setProperty("/showSubmitApprovals", false);
+                        that.disableWorkflowButtons();
+                        return;
+                    }
                     let aResults = data.d && data.d.results;
+
+                    // let WFDetailsModel = new JSONModel(data);
+                    // that.getView().setModel(WFDetailsModel, "WFDetailsModel")
+
+                    // let oListDataModel = that.getView().getModel("ListData");
+                    // console.log("listDataModel Data :",oListDataModel)
+                    // let listData = oListDataModel.getData();
+
+                    // let listWfRequestId = listData?.wfRequestId || listData?.[0]?.wfRequestId;
 
                     if (Array.isArray(aResults)) {
                         aResults.forEach(function (item, index) {
                             let wfRequestId = item.wfRequestId;
 
+
+
+                            // if (wfRequestId && listWfRequestId && parseInt(apiWfRequestId) > parseInt(listWfRequestId)) {
                             if (wfRequestId) {
+
                                 let sDetailUrl = that.getPath("SF_1") +
                                     `/WfRequest(${wfRequestId}L)?$format=json&$expand=wfRequestStepNav,wfRequestStepNav/positionNav,wfRequestStepNav/dynamicRoleNav,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverGroupNav,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverDynamicRoleNav/departmentNav,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverDynamicRoleNav/positionNav,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverPositionNav&$select=wfRequestId,totalSteps,currentStepNum,status,wfRequestStepNav/stepNum,wfRequestStepNav/wfRequestStepId,wfRequestStepNav/status,wfRequestStepNav/positionNav/code,wfRequestStepNav/positionNav/externalName_en_US,wfRequestStepNav/dynamicRoleNav/resolverType,wfRequestStepNav/dynamicRoleNav/name,wfRequestStepNav/dynamicRoleNav/person,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverGroupNav/groupID,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverGroupNav/groupName,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverPositionNav/externalName_en_US,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverPositionNav/code,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverDynamicRoleNav/name,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverDynamicRoleNav/resolverType,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverDynamicRoleNav/department,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverDynamicRoleNav/businessUnit,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverDynamicRoleNav/departmentNav/name,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverDynamicRoleNav/position,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverDynamicRoleNav/positionNav/externalName_en_US,empWfRequestNav/wfConfigNav/wfStepApproverNav/stepNum,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverType,empWfRequestNav/wfConfigNav/wfStepApproverNav/approverRole,empWfRequestNav/wfConfig,wfRequestStepNav/approverType,wfRequestStepNav/role,wfRequestStepNav/ownerId`;
 
@@ -7063,6 +8146,7 @@ sap.ui.define([
                                     success: async function (oDetailData) {
                                         if (oDetailData && oDetailData.d) {
                                             let wfData = oDetailData.d;
+                                            console.log("SUBMIT APPROVAL WFSTATUS :", wfData.status)
                                             let isUserAuthorized = false; // Flag to track if user is authorized
 
                                             // Helper function to enable workflow buttons
@@ -7070,6 +8154,7 @@ sap.ui.define([
                                                 that.oViewSubModel.setProperty("/showApproveButton", true);
                                                 that.oViewSubModel.setProperty("/showRejectButton", true);
                                                 that.oViewSubModel.setProperty("/showReturnButton", true);
+                                                that.oViewSubModel.setProperty("/showWithdrawButton", true);
                                                 that.oViewSubModel.setProperty("/showDelegateButton", true);
                                                 that.oViewSubModel.setProperty("/showMenuButton", true);
 
@@ -7082,14 +8167,76 @@ sap.ui.define([
                                                 that.oViewSubModel.setProperty("/showApproveButton", false);
                                                 that.oViewSubModel.setProperty("/showRejectButton", false);
                                                 that.oViewSubModel.setProperty("/showReturnButton", false);
+                                                that.oViewSubModel.setProperty("/showWithdrawButton", false);
                                                 that.oViewSubModel.setProperty("/showDelegateButton", false);
                                                 that.oViewSubModel.setProperty("/showGeneratePDFButton", false);
                                                 that.oViewSubModel.setProperty("/showMenuButton", false);
                                             };
+                                            if (wfData?.status === "PENDING") {
+
+                                                if (that._selectedItemContext) {
+                                                    let oSelectedData = that._selectedItemContext.getObject();
+                                                    let currentUserId = that.getView().getModel("appModel").getProperty("/currentUserId");
+                                                    let createdBy = oSelectedData.createdBy;
+
+                                                    if (currentUserId === createdBy) {
+                                                        // Show withdraw button - user is creator and status is PENDING
+                                                        that.byId("withdrawButton").setVisible(true);
+                                                        that.byId("withdrawButton").setEnabled(true);
+                                                        that.byId("changeOfCompSection").setVisible(false);
+                                                        console.log("Withdraw button shown for user:", currentUserId, "item:", oSelectedData.externalCode);
+                                                    } else {
+                                                        // Hide withdraw button - user is not creator
+                                                        that.byId("withdrawButton").setVisible(false);
+                                                        console.log("Withdraw button hidden - user not creator");
+                                                    }
+                                                } else {
+                                                    // No item selected
+                                                    that.byId("withdrawButton").setVisible(false);
+                                                    console.log("Withdraw button hidden - no item selected");
+                                                }
+
+                                                console.log("withdraw button Enabled:", oDetailData.d.status);
+
+                                                console.log("withdraw button Enabled:", oDetailData.d.status);
+
+                                            }
+
+                                            if (wfData?.status === "SENTBACK") {
+
+                                                if (that._selectedItemContext) {
+                                                    let oSelectedData = that._selectedItemContext.getObject();
+                                                    let currentUserId = that.getView().getModel("appModel").getProperty("/currentUserId");
+                                                    let createdBy = oSelectedData.createdBy;
+
+                                                    // when currentUserId === CounrtyHR Testing perposee created
+
+                                                    if (currentUserId === createdBy) {
+                                                        // Show withdraw button - user is creator and status is PENDING
+                                                        that.byId("ReSubmitButton").setVisible(true);
+                                                        that.byId("withdrawButton").setVisible(true);
+                                                        that.byId("ReSubmitButton").setEnabled(true);
+                                                        that.byId("changeOfCompSection").setVisible(false);
+                                                        console.log("Resubmit button shown for user:", currentUserId, "item:", oSelectedData.externalCode);
+                                                    } else {
+                                                        // Hide withdraw button - user is not creator
+                                                        that.byId("ReSubmitButton").setVisible(false);
+                                                        console.log("Resubmit button hidden - user not creator");
+                                                    }
+                                                } else {
+                                                    // No item selected
+                                                    that.byId("ReSubmitButton").setVisible(false);
+                                                    console.log("Resubmit button hidden - no item selected");
+                                                }
+
+                                                console.log("Resubmit button Enabled:", oDetailData.d.status);
+
+                                            }
 
                                             if (wfData?.status === "COMPLETED") {
-
                                                 that.oViewSubModel.setProperty("/showGeneratePDFButton", true);
+                                                that.byId("moreActionsButton").setVisible(true)
+                                                that.byId("withdrawButton").setVisible(false);
                                             } else {
 
                                                 disableWorkflowButtons();
@@ -7105,10 +8252,20 @@ sap.ui.define([
 
                                                         let approverType = step.approverType;
 
-                                                        // Check if current user is the owner of this step
-                                                        if (step.ownerId && step.ownerId === that._loggedInUserId) {
+                                                        // // Check if current user is the owner of this step
+                                                        // if (step.ownerId && step.ownerId === that._loggedInUserId) {
+                                                        //     isUserAuthorized = true;
+                                                        // }
+
+
+                                                        // CORRECTED: Compare step.stepNum with wfData.currentStepNum (not step.currentStepNum)
+
+                                                        if (parseInt(step.stepNum) === parseInt(wfData.currentStepNum) &&
+                                                            step.ownerId &&
+                                                            step.ownerId === that._loggedInUserId) {
                                                             isUserAuthorized = true;
                                                         }
+
 
                                                         if (approverType === "ROLE") {
                                                             step.displayPositionInfo = step.role || "-";
@@ -7171,6 +8328,14 @@ sap.ui.define([
                                             }
                                             if (isUserAuthorized && wfData?.status === "PENDING") {
                                                 enableWorkflowButtons();
+                                            } else if (isUserAuthorized && wfData?.status === "SENTBACK") {
+                                                disableWorkflowButtons();
+                                            } else if (isUserAuthorized && wfData?.status === "REJECTED") {
+                                                disableWorkflowButtons();
+                                            } else if (isUserAuthorized && wfData?.status === "CANCELLED") {
+                                                disableWorkflowButtons();
+                                            } else if (isUserAuthorized && wfData?.status === "WITHDRAW") {
+                                                disableWorkflowButtons();
                                             } else {
                                                 if (isUserAuthorized && wfData?.status === "COMPLETED") {
                                                     that.oViewSubModel.setProperty("/showGeneratePDFButton", true);

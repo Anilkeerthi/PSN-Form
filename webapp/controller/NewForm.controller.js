@@ -17,6 +17,9 @@ sap.ui.define([
         onInit() {
             // sap.ui.core.BusyIndicator.show(0);
 
+           
+
+            //this.byId("idRequestTypeNew").setSelectedKey("");
             this.oFlexibleColumnLayout = this.byId("flexibleColumnLayoutNew");
 
             var data = this.getOwnerComponent().getModel("DataModel")
@@ -272,7 +275,7 @@ sap.ui.define([
             var that = this;
             //let sServiceUrl = this.getPath("SF_1") + "/User(" + userId + ")?$select=firstName,lastName,nationality,empId,userId,username,displayName,hireDate,defaultFullName,married,empInfo/jobInfoNav/employeeTypeNav/picklistLabels/optionId,empInfo/jobInfoNav/employeeTypeNav/picklistLabels/label,empInfo/jobInfoNav/employeeTypeNav/picklistLabels/locale&$format=JSON&$expand=empInfo/jobInfoNav/employeeTypeNav/picklistLabels"
 
-            let sServiceUrl = this.getPath("SF_1") + "/PerPerson(" + userId + ")?$format=JSON&$expand=personalInfoNav,employmentNav/jobInfoNav/employmentTypeNav/picklistLabels,personalInfoNav/maritalStatusNav/picklistLabels&$select=placeOfBirth,personalInfoNav/displayName,personIdExternal,personalInfoNav/startDate,personalInfoNav/nationality,employmentNav/jobInfoNav/position,employmentNav/jobInfoNav/company,employmentNav/jobInfoNav/countryOfCompany,employmentNav/jobInfoNav/employmentTypeNav/picklistLabels/optionId,employmentNav/jobInfoNav/employmentTypeNav/picklistLabels/locale,employmentNav/jobInfoNav/employmentTypeNav/picklistLabels/label,personalInfoNav/maritalStatusNav/picklistLabels/optionId,personalInfoNav/maritalStatusNav/picklistLabels/locale,personalInfoNav/maritalStatusNav/picklistLabels/label";
+            let sServiceUrl = this.getPath("SF_1") + "/PerPerson(" + userId + ")?$format=JSON&$expand=personalInfoNav,employmentNav/jobInfoNav/employmentTypeNav/picklistLabels,personalInfoNav/maritalStatusNav/picklistLabels&$select=placeOfBirth,personalInfoNav/displayName,personIdExternal,employmentNav/startDate,personalInfoNav/nationality,employmentNav/jobInfoNav/position,employmentNav/jobInfoNav/company,employmentNav/jobInfoNav/countryOfCompany,employmentNav/jobInfoNav/employmentTypeNav/picklistLabels/optionId,employmentNav/jobInfoNav/employmentTypeNav/picklistLabels/locale,employmentNav/jobInfoNav/employmentTypeNav/picklistLabels/label,personalInfoNav/maritalStatusNav/picklistLabels/optionId,personalInfoNav/maritalStatusNav/picklistLabels/locale,personalInfoNav/maritalStatusNav/picklistLabels/label";
 
 
             $.ajax({
@@ -1360,31 +1363,119 @@ sap.ui.define([
         },
 
 
-        _makePostCall: function (sUrl, oPayload, sSuccessMessage, sErrorMessage, fnSuccessCallback) {
+        // _makePostCall: function (sUrl, oPayload, sSuccessMessage, sErrorMessage, fnSuccessCallback) {
+        //     $.ajax({
+        //         url: sUrl,
+        //         type: "POST",
+        //         contentType: "application/json",
+        //         data: JSON.stringify(oPayload),
+        //         success: function (oData) {
+        //             console.log(sSuccessMessage, oData);
+        //             sap.m.MessageBox.success(sSuccessMessage, { title: "Success" });
+        //             if (fnSuccessCallback) {
+        //                 fnSuccessCallback();
+        //             }
+        //         },
+        //         error: function (oError) {
+        //             console.error(sErrorMessage, oError);
+        //             var sFinalErrorMessage = sErrorMessage;
+        //             if (oError.responseJSON?.error?.message) {
+        //                 sFinalErrorMessage = oError.responseJSON.error.message;
+        //             }
+        //             sap.m.MessageBox.error(sFinalErrorMessage, { title: "Error" });
+        //             if (fnSuccessCallback) {
+        //                 fnSuccessCallback();
+        //             }
+        //         }
+        //     });
+        // },
+
+
+        _makePostCall: function(sUrl, oPayload, sSuccessMessage, sErrorMessage,fnSuccessCallback) {
+            const that = this;
+            
             $.ajax({
                 url: sUrl,
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify(oPayload),
-                success: function (oData) {
-                    console.log(sSuccessMessage, oData);
-                    sap.m.MessageBox.success(sSuccessMessage, { title: "Success" });
-                    if (fnSuccessCallback) {
-                        fnSuccessCallback();
+                success: function(data, textStatus, xhr) {
+                    // Parse the XML response
+                    const responseInfo = that._parseXMLResponse(data);
+                    
+                    if (responseInfo.status === "OK") {
+                        sap.m.MessageBox.success(responseInfo.message || sSuccessMessage || "Request submitted successfully!", {
+                            title: "Success",
+                            // onClose: () => window.location.reload(),
+                            onClose: function() {
+                                that.onNavBackHome(); // Call your function here
+                            }
+                        
+                        });
+                    } else if (responseInfo.status === "ERROR") {
+                        sap.m.MessageBox.error(responseInfo.message || "An error occurred while processing your request.", {
+                            title: "Error"
+                        });
                     }
                 },
-                error: function (oError) {
-                    console.error(sErrorMessage, oError);
-                    var sFinalErrorMessage = sErrorMessage;
-                    if (oError.responseJSON?.error?.message) {
-                        sFinalErrorMessage = oError.responseJSON.error.message;
+                error: function(xhr, textStatus, errorThrown) {
+                    let errorMessage = sErrorMessage || "An unexpected error occurred.";
+                    
+                    // Try to parse XML error response if available
+                    if (xhr.responseText) {
+                        try {
+                            const responseInfo = that._parseXMLResponse(xhr.responseText);
+                            if (responseInfo.message) {
+                                errorMessage = responseInfo.message;
+                            }
+                        } catch (e) {
+                            // If XML parsing fails, try JSON
+                            try {
+                                const jsonError = JSON.parse(xhr.responseText);
+                                errorMessage = jsonError.error?.message || errorMessage;
+                            } catch (jsonError) {
+                                // Use default error message
+                            }
+                        }
                     }
-                    sap.m.MessageBox.error(sFinalErrorMessage, { title: "Error" });
-                    if (fnSuccessCallback) {
-                        fnSuccessCallback();
-                    }
+                    
+                    sap.m.MessageBox.error(errorMessage, { 
+                        title: "Error" 
+                    });
                 }
             });
+        },
+        
+        _parseXMLResponse: function(xmlData) {
+            try {
+                let xmlDoc;
+                
+                // Handle string response
+                if (typeof xmlData === 'string') {
+                    const parser = new DOMParser();
+                    xmlDoc = parser.parseFromString(xmlData, "text/xml");
+                } else {
+                    xmlDoc = xmlData;
+                }
+                
+                // Extract status and message from XML
+                const statusElement = xmlDoc.querySelector('d\\:status, status');
+                const messageElement = xmlDoc.querySelector('d\\:message, message');
+                
+                const status = statusElement ? statusElement.textContent : null;
+                const message = messageElement ? messageElement.textContent : null;
+                
+                return {
+                    status: status,
+                    message: message
+                };
+            } catch (error) {
+                console.error("Error parsing XML response:", error);
+                return {
+                    status: null,
+                    message: null
+                };
+            }
         },
 
         convertToODataDate: function (date) {
