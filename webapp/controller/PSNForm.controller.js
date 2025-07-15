@@ -598,10 +598,10 @@ sap.ui.define([
 
 
                     let status = oSelectedRowData?.wfRequestNav?.results?.[0]?.status;
+                    let recordSts = oSelectedRowData?.recordStatus;
 
 
-
-                    if (!status) {
+                    if (!status && recordSts === "COMPLETED") {
                         console.log("Status onlist Press",status)
                         this._setWorkflowStage("SubmitApprovalsPending", true);
                         this._getWorkflowDetails(userId);
@@ -653,7 +653,7 @@ sap.ui.define([
                         this.oViewSubModel.setProperty("/showReturnButton", false);
                         this.oViewSubModel.setProperty("/showWithdrawButton", false);
                         this.oViewSubModel.setProperty("/showDelegateButton", false);
-                        this.oViewSubModel.setProperty("/showGeneratePDFButton", true);
+                        this.oViewSubModel.setProperty("/showGeneratePDFButton", false);
                         this.oViewSubModel.setProperty("/showMenuButton", false);
                     } 
 
