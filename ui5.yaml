@@ -40,6 +40,12 @@ server:
              url: https://api2preview.sapsf.eu
              destination: SF_OAUTH
              scp: true
+           - path: /EMAIL_TEST
+             url: https://send.api.mailtrap.io
+             destination: EMAIL_TEST
+             headers:
+              Authorization: "Bearer 8632a2fa919820e960204a85789fc234"
+              Content-Type: "application/json"
     - name: fiori-tools-appreload
       afterMiddleware: compression
       configuration:

@@ -32,8 +32,6 @@ sap.ui.define([
         onInit() {
             BusyIndicator.show(0);
 
-
-
             this.oFlexibleColumnLayout = this.byId("flexibleColumnLayout");
 
             let data = this.getOwnerComponent().getModel("DataModel")
@@ -53,8 +51,6 @@ sap.ui.define([
                 showRaiseRequest: true
             });
             this.getView().setModel(this.oViewModel, "buttonModel");
-
-
 
             this.oEmployeeSearchModel = new JSONModel({
                 employees: []
@@ -143,6 +139,8 @@ sap.ui.define([
 
             this._loadPDFMakeLibrary();
             // this.onCallExternal();
+
+
         },
 
 
@@ -490,6 +488,15 @@ sap.ui.define([
 
             }
         },
+
+        disableReSubPositionBtn: function () {
+            let ReSubPositionBtn = this.getView().byId("ReSubPositionBtn");
+
+            if (ReSubPositionBtn) {
+                ReSubPositionBtn.setVisible(false);
+
+            }
+        },
         // _updateWithdrawButtonState: function() {
         //     let oWithdrawButton = this.byId("withdrawButton");
         //     let oAppModel = this.getView().getModel("appModel");
@@ -518,6 +525,7 @@ sap.ui.define([
             this.disableWithdrawBtn();
             this.disableReSubBtn();
             this.disableMoreActBtn();
+            this.disableReSubPositionBtn()
 
 
 
@@ -602,7 +610,7 @@ sap.ui.define([
 
 
                     if (!status && recordSts === "COMPLETED") {
-                        console.log("Status onlist Press",status)
+                        console.log("Status onlist Press", status)
                         this._setWorkflowStage("SubmitApprovalsPending", true);
                         this._getWorkflowDetails(userId);
 
@@ -619,8 +627,9 @@ sap.ui.define([
                         this._resetWorkflowButtons();
                         this._setWorkflowStage("SendBack", true);
 
+                        //this.byId("requestApprovalsSection")?.setVisible(false);
 
-                        this.byId("requestApprovalsSection")?.setVisible(false);
+                        this.byId("requestApprovalsSection").setVisible(true);
 
                     } else if (status === "REJECTED") {
                         this._resetWorkflowButtons();
@@ -639,10 +648,10 @@ sap.ui.define([
                     } else if (status === "PENDING") {
                         this._setWorkflowStage("RQApprovalsPending", true);
 
-                    } else  {
+                    } else {
                         this._getWorkflowDetails(userId);
 
-                        console.log("Status onlist Press completed",status)
+                        console.log("Status onlist Press completed", status)
                         this.oViewSubModel.setProperty("/showSubmitApprovals", false);
                         this.oViewSubModel.setProperty("/showChangeOfComp", false);
                         this.oViewSubModel.setProperty("/showChangeOfSts", false);
@@ -655,7 +664,7 @@ sap.ui.define([
                         this.oViewSubModel.setProperty("/showDelegateButton", false);
                         this.oViewSubModel.setProperty("/showGeneratePDFButton", false);
                         this.oViewSubModel.setProperty("/showMenuButton", false);
-                    } 
+                    }
 
 
                     this._currentUserId = userId;
@@ -1137,7 +1146,7 @@ sap.ui.define([
             };
 
             // Get pending records
-            let sServiceUrl1 = this.getPath("SF_1") + "/cust_PositionStatusChange?recordStatus=pending&$format=JSON&$select=externalCode,cust_EMP_Name,effectiveStartDate,cust_EffectiveDate,cust_PSNTypeChange,cust_Justification,createdBy,wfRequestNav/wfRequestId,wfRequestNav/totalSteps,wfRequestNav/currentStepNum,wfRequestNav/status,wfRequestNav/wfRequestStepNav/stepNum,wfRequestNav/wfRequestStepNav/wfRequestStepId,wfRequestNav/wfRequestStepNav/status,wfRequestNav/wfRequestStepNav/positionNav/code,wfRequestNav/wfRequestStepNav/positionNav/externalName_en_US,cust_AttachmentNav/attachmentId,cust_AttachmentNav/fileName&$expand=wfRequestNav/wfRequestStepNav/positionNav,cust_AttachmentNav";
+            let sServiceUrl1 = this.getPath("SF_1") + "/cust_PositionStatusChange?recordStatus=pending&$format=JSON&$select=externalCode,createdDateTime,cust_EMP_Name,effectiveStartDate,cust_EffectiveDate,cust_PSNTypeChange,cust_Justification,createdBy,wfRequestNav/wfRequestId,wfRequestNav/totalSteps,wfRequestNav/currentStepNum,wfRequestNav/status,wfRequestNav/wfRequestStepNav/stepNum,wfRequestNav/wfRequestStepNav/wfRequestStepId,wfRequestNav/wfRequestStepNav/status,wfRequestNav/wfRequestStepNav/positionNav/code,wfRequestNav/wfRequestStepNav/positionNav/externalName_en_US,cust_AttachmentNav/attachmentId,cust_AttachmentNav/fileName&$expand=wfRequestNav/wfRequestStepNav/positionNav,cust_AttachmentNav";
 
             $.ajax({
                 url: sServiceUrl1,
@@ -1161,7 +1170,7 @@ sap.ui.define([
             });
 
             // Get completed records
-            let sServiceUrl2 = this.getPath("SF_1") + "/cust_PositionStatusChange?recordStatus=completed&$format=JSON&$expand=cust_AttachmentNav,&$select=externalCode,cust_EMP_Name,effectiveStartDate,cust_EffectiveDate,cust_PSNTypeChange,cust_Justification,createdBy,cust_Emp_ID,cust_EventReason,cust_AttachmentNav/attachmentId,cust_AttachmentNav/fileName";
+            let sServiceUrl2 = this.getPath("SF_1") + "/cust_PositionStatusChange?recordStatus=completed&$format=JSON&$expand=cust_AttachmentNav,&$select=externalCode,createdDateTime,cust_EMP_Name,effectiveStartDate,cust_EffectiveDate,cust_PSNTypeChange,cust_Justification,createdBy,cust_Emp_ID,cust_EventReason,cust_AttachmentNav/attachmentId,cust_AttachmentNav/fileName";
 
             $.ajax({
                 url: sServiceUrl2,
@@ -1187,7 +1196,7 @@ sap.ui.define([
             });
 
             // Get pending History records
-            let sServiceUrl3 = this.getPath("SF_1") + "/cust_PositionStatusChange?recordStatus=pendinghistory&$format=JSON&$expand=cust_AttachmentNav,&$select=externalCode,cust_EMP_Name,effectiveStartDate,cust_EffectiveDate,cust_PSNTypeChange,cust_Justification,createdBy,cust_Emp_ID,cust_EventReason,cust_AttachmentNav/attachmentId,cust_AttachmentNav/fileName";
+            let sServiceUrl3 = this.getPath("SF_1") + "/cust_PositionStatusChange?recordStatus=pendinghistory&$format=JSON&$expand=cust_AttachmentNav,&$select=externalCode,createdDateTime,cust_EMP_Name,effectiveStartDate,cust_EffectiveDate,cust_PSNTypeChange,cust_Justification,createdBy,cust_Emp_ID,cust_EventReason,cust_AttachmentNav/attachmentId,cust_AttachmentNav/fileName";
 
             $.ajax({
                 url: sServiceUrl3,
@@ -1217,7 +1226,9 @@ sap.ui.define([
 
         fetchRequestApprovalData: function (userId) {
             let that = this;
-            let sServiceUrl = this.getPath("SF_1") + "/EmpWfRequest?$format=json&$filter=subjectId eq '" + userId + "' and requestType eq 'CHANGE_GENERIC_OBJECT'&$select=wfRequestId&$orderby=wfRequestId desc&$top=1";
+            // let sServiceUrl = this.getPath("SF_1") + "/EmpWfRequest?$format=json&$filter=subjectId eq '" + userId + "' and requestType eq 'CHANGE_GENERIC_OBJECT'&$select=wfRequestId&$orderby=wfRequestId desc&$top=1";
+
+            let sServiceUrl = this.getPath("SF_1") + "/WfRequest?$format=JSON&$expand=empWfRequestNav&$filter=empWfRequestNav/subjectId eq '" + userId + "' and (empWfRequestNav/requestType eq 'CHANGE_GENERIC_OBJECT') and (empWfRequestNav/wfConfigNav/externalCode  like '%PSN%')&$select=wfRequestId,lastModifiedDateTime,createdDateTime&$orderby=wfRequestId desc";
 
             jQuery.ajax({
                 url: sServiceUrl,
@@ -1238,6 +1249,11 @@ sap.ui.define([
                         return;
                     }
 
+                    let oSelectedData = that._selectedItemContext.getObject();
+                    let selectedListItemDateTime = oSelectedData.createdDateTime;
+                    let recordSts = oSelectedData?.recordStatus;
+                    console.log(selectedListItemDateTime);
+
                     let userItem = combinedData.find(item => String(item.externalCode) === userId);
 
                     if (!userItem) {
@@ -1245,8 +1261,36 @@ sap.ui.define([
                         return;
                     }
 
+                    // data.d.results.forEach(function (result) {
+
+                    //     console.log("Data types and values:");
+                    //     console.log("selectedListItemDateTime:", typeof selectedListItemDateTime, selectedListItemDateTime);
+                    //     console.log("result.createdDateTime:", typeof result.createdDateTime, result.createdDateTime);
+                    //     console.log("result.lastModifiedDateTime:", typeof result.lastModifiedDateTime, result.lastModifiedDateTime);
+
+                    //     // Test subtraction
+                    //     console.log("Subtraction result:", result.createdDateTime - selectedListItemDateTime);
+                    //     if (result.wfRequestId && (
+                    //         Math.abs(result.createdDateTime - selectedListItemDateTime) < 5000 ||
+                    //         Math.abs(result.lastModifiedDateTime - selectedListItemDateTime) < 5000)
+                    //     )
+
+
                     data.d.results.forEach(function (result) {
-                        if (result.wfRequestId) {
+                        const extractTs = (dt) => dt ? parseInt(dt.match(/\/Date\((\d+)[\+\-]\d+\)\//)?.[1]) : null;
+
+                        const selectedTs = extractTs(selectedListItemDateTime);
+                        const createdTs = extractTs(result.createdDateTime);
+                        const modifiedTs = extractTs(result.lastModifiedDateTime);
+
+                        if (result.wfRequestId && selectedTs && createdTs && modifiedTs && (
+                            Math.abs(createdTs - selectedTs) < 10000 ||
+                            Math.abs(modifiedTs - selectedTs) < 10000
+                        ))
+
+                        //(result.wfRequestId && (result.createdDateTime === selectedListItemDateTime || result.lastModifiedDateTime === selectedListItemDateTime)) 
+
+                        {
 
                             if (!userItem.wfRequestNav) {
                                 userItem.wfRequestNav = { results: [] };
@@ -3305,6 +3349,9 @@ sap.ui.define([
                         "/EmpWfRequest?$format=json&$filter=subjectId eq '" + userId + "' and requestType eq 'CHANGE_JOB'" +
                         "&$select=wfRequestId&$orderby=wfRequestId desc&$top=1";
 
+                    // let sListUrl = that.getPath("SF_1") + "/WfRequest?$format=JSON&$expand=empWfRequestNav&$filter=empWfRequestNav/subjectId eq '" + userId + "' and (empWfRequestNav/requestType eq 'CHANGE_JOB') and (empWfRequestNav/wfConfigNav/externalCode  like '%PSN%')&$select=wfRequestId,createdDateTime&$orderby=wfRequestId desc"
+
+
                     $.ajax({
                         url: sListUrl,
                         type: "GET",
@@ -4639,7 +4686,7 @@ sap.ui.define([
                         data.d.results[0].empPayCompRecurringNav &&
                         data.d.results[0].empPayCompRecurringNav.results) {
                         data.d.results[0].empPayCompRecurringNav.results.forEach(function (payComponent) {
-                            if (payComponent.frequency === "MON" && payComponent.paycompvalue) {
+                            if ((payComponent.frequency === "MON" || payComponent.frequency === "DLY") && payComponent.paycompvalue) {
                                 totalMonthlySalary += parseFloat(payComponent.paycompvalue);
                                 currencyCode = payComponent.currencyCode;
                             } else if (payComponent.frequency !== "MON" && payComponent.paycompvalue) {
@@ -4647,7 +4694,6 @@ sap.ui.define([
                             }
                         });
                     }
-
                     let grossSalaryData = {
                         GrossMonthlySalary: totalMonthlySalary,
                         Currency: currencyCode
@@ -4736,6 +4782,7 @@ sap.ui.define([
 
                     try {
                         await that.fetchEmpCmpNewValue(userId, effectiveDate);
+
                         await that.fetchPayGradeDataWithNewInitialize();
                     } catch (empCmpNewValueError) {
                         console.warn("No empCmpNewValue data found, proceeding with standard flow");
@@ -4764,6 +4811,8 @@ sap.ui.define([
                         let empCmpNewValueModel = new sap.ui.model.json.JSONModel(data.d);
                         that.getView().setModel(empCmpNewValueModel, "empCmpNewValueModel");
                         resolve(data);
+                        // that.fetchGrossMonthlySalaryData(userId);
+                        that._getNewValuesGrossSalary();
                     },
                     error: function (e) {
                         console.error("Error fetching employee compensation new value data:", e);
@@ -5128,6 +5177,16 @@ sap.ui.define([
             });
 
             changeOfNewCompensationModel.setData(changeData);
+
+            // let currentValueGross=0;
+            // changeOfNewCompensationModel.forEach(item=>{
+            //     if(item.SNo != "1"){
+            //         currentValueGross=currentValueGross+parseFloat(item.CurrentValue);
+            //     }
+
+            // })
+            // this.byId("idGrossMonthlySalary").setText(currentValueGross.toString());
+
         },
 
         newBindChangeOfCompensationTable: function () {
@@ -5434,12 +5493,17 @@ sap.ui.define([
                     ]
                 })
             });
+
         },
 
-
-
-
-
+        _getNewValuesGrossSalary: function () {
+            let Value = 0;
+            let oNewValue = this.getView().getModel("empCmpNewValueModel").getData().results[0].empPayCompRecurringNav.results;
+            oNewValue.forEach(item => Value = Value + parseFloat(item.paycompvalue));
+            this.NewMonthlyGrossSalary = Value;
+            let currencycode = this.byId("idGrossMonthlySalary").getText().split(" ")[1];
+            this.byId("idGrossNewMonthlySalary").setText("  " + Value.toString() + currencycode);
+        },
 
         _getUserIdAndOpenAddComponentDialog: function () {
             let userId = null;
@@ -5817,15 +5881,6 @@ sap.ui.define([
                 this.byId("submitUpdateButton").setVisible(true);
             }
 
-
-            // this.getView().getModel("DataModel").refresh(true);
-
-            // if (this.empJobData) {
-            // await this.initializeView(); 
-            // } else {
-            //     MessageToast.show("Failed to load employee data. Please try again.");
-            //     this.byId("submitUpdateButton").setVisible(true);
-            // }
         },
 
 
@@ -6177,6 +6232,8 @@ sap.ui.define([
                                         let sWorkflowUrl = that.getPath("SF_1") +
                                             "/EmpWfRequest?$format=json&$filter=subjectId eq '" + sUserId + "' and requestType eq 'CHANGE_JOB'&$select=wfRequestId&$orderby=wfRequestId desc&$top=1";
 
+                                        //   let sWorkflowUrl = that.getPath("SF_1") + "/WfRequest?$format=JSON&$expand=empWfRequestNav&$filter=empWfRequestNav/subjectId eq '" + userId + "' and (empWfRequestNav/requestType eq 'CHANGE_JOB') and (empWfRequestNav/wfConfigNav/externalCode  like '%PSN%')&$select=wfRequestId,createdDateTime&$orderby=wfRequestId desc"
+
                                         jQuery.ajax({
                                             url: sWorkflowUrl,
                                             method: "GET",
@@ -6239,6 +6296,9 @@ sap.ui.define([
 
 
 
+        // onReSubmitPosition: function () {
+        //     this.onSubmitPosition();
+        // },
 
         getApproverNameFromOwnerId: async function (userId) {
             try {
@@ -6282,7 +6342,7 @@ sap.ui.define([
             });
         },
 
-        _getSubmittedNewData: function (wfrequestId) {
+        _getSubmittedNewData: function (wfrequestId, isSentBack = false) {
             return new Promise((resolve, reject) => {
                 if (!wfrequestId) {
                     resolve([]);
@@ -6306,6 +6366,11 @@ sap.ui.define([
                             resolve(that.wfchangeData);
                             console.log("======Change Data:======", that.wfchangeData);
                             MessageToast.show("Changed data retrieved successfully");
+                        }
+
+                        if (isSentBack) {
+                            that.isSentBackMode = true;
+                            that.sentBackChangeData = that.wfchangeData; // Store the fetched change data
                         }
                     },
                     error: function (xhr, status, error) {
@@ -6335,9 +6400,13 @@ sap.ui.define([
             let positionNewVal = "";
             let jobFamilyNewVal = "";
             let that = this;
-            let wfChangeData1 = that.wfchangeData;
+            // let wfChangeData1 = that.wfchangeData;
 
+            let wfChangeData1 = this.isSentBackMode ? this.sentBackChangeData : this.wfchangeData;
             let hasAnyWfChangeData = false;
+            let isEditableMode = this.isSentBackMode || false; // SENTBACK should be editable
+
+            // let hasAnyWfChangeData = false;
 
             if (wfChangeData1 != null) {
                 console.log("Intialize wf change data1:" + wfChangeData1.results);
@@ -6507,9 +6576,387 @@ sap.ui.define([
             return sap.ui.core.ValueState.Warning;
         },
 
+        // bindTableItems: function () {
+        //     let that = this;
+        //     let table = this.getView().byId("changeStatusTable");
+        //     // let wfStatus = that.wfData.status ;
+
+        //     // let wfStatus = this.getView().getModel("wfData_0");
+        //     // console.log(wfStatus);
+
+
+
+        //     table.bindItems({
+        //         path: "DataModel>/ChangeOfStatus",
+        //         factory: function (sId, oContext) {
+        //             let item = oContext.getObject();
+
+        //             let cells = [
+        //                 new sap.m.Text({ text: "{DataModel>SNo}" }),
+        //                 new sap.m.Text({ text: "{DataModel>Item}" }),
+        //                 new sap.m.Text({ text: "{DataModel>CurrentStatus}" })
+        //             ];
+
+
+
+        //             if (item.hasWfChangeData) {
+        //                 let displayValue = item.NewStatus && item.NewStatus.trim() !== "" ? item.NewStatus : item.CurrentStatus;
+        //                 let textBox = new sap.m.Text({ text: displayValue });
+
+        //                 if (item.NewStatus && item.NewStatus.trim() !== "") {
+        //                     textBox.addStyleClass("warningText");
+        //                 }
+
+        //                 cells.push(textBox);
+
+        //             } else {
+        //                 let currentStatusParts = item.CurrentStatus.split(" - ");
+        //                 let currentStatusCode = currentStatusParts[0].trim();
+        //                 let comboBox;
+
+        //                 // } else if (sWfStatus === "SENTBACK" && (item.NewStatus || item.CurrentStatus))  {
+
+        //                 //     let currentStatusParts = (item.NewStatus && item.NewStatus.trim() !== "") ? item.NewStatus : item.CurrentStatus;
+        //                 //     let currentStatusCode = currentStatusParts[0].trim();
+        //                 //     let comboBox;
+
+
+
+        //                 switch (item.SNo) {
+        //                     case "1": // Company
+        //                         comboBox = new sap.m.ComboBox({
+        //                             selectedKey: currentStatusCode,
+        //                             selectionChange: that.onCompanyChange.bind(that),
+        //                             placeholder: "Select Company",
+        //                             items: {
+        //                                 path: "CompanyModel>/",
+        //                                 template: new sap.ui.core.Item({
+        //                                     key: "{CompanyModel>externalCode}",
+        //                                     text: {
+        //                                         parts: [
+        //                                             { path: "CompanyModel>externalCode" },
+        //                                             { path: "CompanyModel>name" }
+        //                                         ],
+        //                                         formatter: that.formatExternalCodeWithName
+        //                                     }
+        //                                 }),
+        //                                 length: 1000
+        //                             }
+        //                         });
+        //                         break;
+
+        //                     case "2": // Business Unit
+        //                         comboBox = new sap.m.ComboBox({
+        //                             selectedKey: currentStatusCode,
+        //                             selectionChange: that.onBusinessUnitChange.bind(that),
+        //                             placeholder: "Select Business Unit",
+        //                             showSecondaryValues: true,
+        //                             items: {
+        //                                 path: "BusinessUnitModel>/",
+        //                                 template: new sap.ui.core.Item({
+        //                                     key: "{BusinessUnitModel>externalCode}",
+        //                                     text: {
+        //                                         parts: [
+        //                                             { path: "BusinessUnitModel>externalCode" },
+        //                                             { path: "BusinessUnitModel>name" }
+        //                                         ],
+        //                                         formatter: that.formatExternalCodeWithName
+        //                                     }
+        //                                 }),
+        //                                 length: 1000
+        //                             },
+        //                             beforeOpen: function (oEvent) {
+        //                                 let companyCode = that.getCurrentDropdownValue("1");
+        //                                 if (companyCode) {
+        //                                     that.fetchBusinessUnitData(companyCode);
+        //                                 }
+        //                             }
+        //                         });
+        //                         break;
+
+        //                     case "3": // Department
+        //                         comboBox = new sap.m.ComboBox({
+        //                             selectedKey: currentStatusCode,
+        //                             selectionChange: that.onDepartmentChange.bind(that),
+        //                             placeholder: "Select Department",
+        //                             showSecondaryValues: true,
+        //                             items: {
+        //                                 path: "DepartmentModel>/",
+        //                                 template: new sap.ui.core.Item({
+        //                                     key: "{DepartmentModel>externalCode}",
+        //                                     text: {
+        //                                         parts: [
+        //                                             { path: "DepartmentModel>externalCode" },
+        //                                             { path: "DepartmentModel>name" }
+        //                                         ],
+        //                                         formatter: that.formatExternalCodeWithName
+        //                                     }
+        //                                 }),
+        //                                 length: 1000
+        //                             },
+        //                             beforeOpen: function (oEvent) {
+        //                                 let businessUnitCode = that.getCurrentDropdownValue("2");
+        //                                 if (businessUnitCode) {
+        //                                     that.fetchDepartmentData(businessUnitCode);
+        //                                 }
+        //                             }
+        //                         });
+        //                         break;
+
+        //                     case "4": // Division
+        //                         comboBox = new sap.m.ComboBox({
+        //                             selectedKey: currentStatusCode,
+        //                             selectionChange: that.onDivisionChange.bind(that),
+        //                             placeholder: "Select Division",
+        //                             showSecondaryValues: true,
+        //                             items: {
+        //                                 path: "DivisionModel>/",
+        //                                 template: new sap.ui.core.Item({
+        //                                     key: "{DivisionModel>externalCode}",
+        //                                     text: {
+        //                                         parts: [
+        //                                             { path: "DivisionModel>externalCode" },
+        //                                             { path: "DivisionModel>name" }
+        //                                         ],
+        //                                         formatter: that.formatExternalCodeWithName
+        //                                     }
+        //                                 }),
+        //                                 length: 1000
+        //                             },
+        //                             beforeOpen: function (oEvent) {
+        //                                 let departmentCode = that.getCurrentDropdownValue("3");
+        //                                 if (departmentCode) {
+        //                                     that.fetchDivisionData(departmentCode);
+        //                                 }
+        //                             }
+        //                         });
+        //                         break;
+
+        //                     case "5": // Cost Center
+        //                         comboBox = new sap.m.ComboBox({
+        //                             selectedKey: currentStatusCode,
+        //                             selectionChange: that.onCostCenterChange.bind(that),
+        //                             placeholder: "Select Cost Center",
+        //                             showSecondaryValues: true,
+        //                             items: {
+        //                                 path: "CostCenterModel>/",
+        //                                 template: new sap.ui.core.Item({
+        //                                     key: "{CostCenterModel>externalCode}",
+        //                                     text: {
+        //                                         parts: [
+        //                                             { path: "CostCenterModel>externalCode" },
+        //                                             { path: "CostCenterModel>name" }
+        //                                         ],
+        //                                         formatter: that.formatExternalCodeWithName
+        //                                     }
+        //                                 }),
+        //                                 length: 1000
+        //                             },
+        //                             beforeOpen: function (oEvent) {
+        //                                 let divisionCode = that.getCurrentDropdownValue("4");
+        //                                 if (divisionCode) {
+        //                                     that.fetchCostCenterData(divisionCode);
+        //                                 }
+        //                             }
+        //                         });
+        //                         break;
+
+        //                     case "6": // Location
+        //                         comboBox = new sap.m.ComboBox({
+        //                             selectedKey: currentStatusCode,
+        //                             selectionChange: that.onLocationChange.bind(that),
+        //                             placeholder: "Select Location",
+        //                             showSecondaryValues: true,
+        //                             items: {
+        //                                 path: "LocationModel>/",
+        //                                 template: new sap.ui.core.Item({
+        //                                     key: "{LocationModel>externalCode}",
+        //                                     text: {
+        //                                         parts: [
+        //                                             { path: "LocationModel>externalCode" },
+        //                                             { path: "LocationModel>name" }
+        //                                         ],
+        //                                         formatter: that.formatExternalCodeWithName
+        //                                     }
+        //                                 }),
+        //                                 length: 1000
+        //                             },
+        //                             beforeOpen: function (oEvent) {
+        //                                 let companyCode = that.getCurrentDropdownValue("1");
+        //                                 if (companyCode) {
+        //                                     that.fetchLocationData(companyCode);
+        //                                 }
+        //                             }
+        //                         });
+        //                         break;
+
+        //                     case "7": // Work Schedule
+        //                         comboBox = new sap.m.ComboBox({
+        //                             selectedKey: currentStatusCode,
+        //                             placeholder: "Select Work Schedule",
+        //                             items: {
+        //                                 path: "WorkScheduleModel>/",
+        //                                 template: new sap.ui.core.Item({
+        //                                     key: "{WorkScheduleModel>externalCode}",
+        //                                     text: {
+        //                                         parts: [
+        //                                             { path: "WorkScheduleModel>externalCode" },
+        //                                             { path: "WorkScheduleModel>externalName_en_US" }
+        //                                         ],
+        //                                         formatter: that.formatExternalCodeWithExternalName
+        //                                     }
+        //                                 }),
+        //                                 length: 1000
+        //                             },
+        //                             beforeOpen: function (oEvent) {
+        //                                 let locationCode = that.getCurrentDropdownValue("6");
+        //                                 if (locationCode) {
+        //                                     that.fetchWorkScheduleDataByLocation(locationCode);
+        //                                 } else {
+        //                                     that.fetchWorkScheduleData();
+        //                                 }
+        //                             }
+        //                         });
+        //                         break;
+
+        //                     case "8": // Manager
+        //                         comboBox = new sap.m.ComboBox({
+        //                             selectedKey: currentStatusCode,
+        //                             placeholder: "Select Manager",
+        //                             items: {
+        //                                 path: "ManagerUserDetailsData>/",
+        //                                 template: new sap.ui.core.Item({
+        //                                     key: "{ManagerUserDetailsData>empId}",
+        //                                     text: {
+        //                                         parts: [
+        //                                             { path: "ManagerUserDetailsData>empId" },
+        //                                             { path: "ManagerUserDetailsData>displayName" }
+        //                                         ],
+        //                                         formatter: that.formatempIdWithdisplayName
+        //                                     }
+        //                                 }),
+        //                                 length: 2000
+        //                             }
+        //                         });
+        //                         break;
+
+        //                     case "9": // Position
+        //                         comboBox = new sap.m.ComboBox({
+        //                             selectedKey: currentStatusCode,
+        //                             placeholder: "Select Position",
+        //                             items: {
+        //                                 path: "PositionModel>/",
+        //                                 template: new sap.ui.core.Item({
+        //                                     key: "{PositionModel>code}",
+        //                                     text: {
+        //                                         parts: [
+        //                                             { path: "PositionModel>code" },
+        //                                             { path: "PositionModel>externalName_en_US" }
+        //                                         ],
+        //                                         formatter: that.formatExternalCodeWithExternalName
+        //                                     }
+        //                                 }),
+        //                                 length: 3000
+        //                             },
+        //                             beforeOpen: function (oEvent) {
+        //                                 that.fetchPositionData();
+        //                             }
+        //                         });
+        //                         break;
+
+        //                     case "10": // job Family
+        //                         comboBox = new sap.m.ComboBox({
+        //                             selectedKey: currentStatusCode,
+        //                             selectionChange: that.onJobFamChange.bind(that),
+        //                             placeholder: "Job Family",
+        //                             showSecondaryValues: true,
+        //                             items: {
+        //                                 path: "jobFamilyModel>/",
+        //                                 template: new sap.ui.core.Item({
+        //                                     key: "{jobFamilyModel>externalCode}",
+        //                                     text: {
+        //                                         parts: [
+        //                                             { path: "jobFamilyModel>externalCode" },
+        //                                             { path: "jobFamilyModel>name" }
+        //                                         ],
+        //                                         formatter: that.formatExternalCodeWithName
+        //                                     }
+        //                                 }),
+        //                                 length: 1000
+        //                             },
+        //                             beforeOpen: function (oEvent) {
+        //                                 let companyCode = that.getCurrentDropdownValue("1");
+        //                                 if (companyCode) {
+        //                                     that.fetchJobFamilyData(companyCode);
+        //                                 }
+        //                             }
+        //                         });
+        //                         break;
+
+        //                     case "11": // Job Title
+        //                         comboBox = new sap.m.ComboBox({
+        //                             selectedKey: currentStatusCode,
+        //                             placeholder: "Select Job Title",
+        //                             items: {
+        //                                 path: "JobCodeModel>/",
+        //                                 template: new sap.ui.core.Item({
+        //                                     key: "{JobCodeModel>externalCode}",
+        //                                     text: {
+        //                                         parts: [
+        //                                             { path: "JobCodeModel>externalCode" },
+        //                                             { path: "JobCodeModel>name" }
+        //                                         ],
+        //                                         formatter: that.formatjobCodeWithJobTitle
+        //                                     }
+        //                                 }),
+        //                                 length: 3000
+        //                             },
+        //                             beforeOpen: function (oEvent) {
+        //                                 that.fetchJobCodeData();
+        //                             }
+        //                         });
+        //                         break;
+
+        //                     default:
+        //                         comboBox = new sap.m.Input({
+        //                             value: item.CurrentStatus
+        //                         });
+        //                 }
+
+        //                 // Attach change event to track selection changes
+        //                 if (comboBox.attachSelectionChange) {
+        //                     comboBox.attachSelectionChange(function (oEvent) {
+        //                         let selectedItem = oEvent.getParameter("selectedItem");
+        //                         if (selectedItem) {
+        //                             let bindingContext = oEvent.getSource().getBindingContext("DataModel");
+        //                             let path = bindingContext.getPath();
+        //                             let model = that.getView().getModel("DataModel");
+        //                             let selectedText = selectedItem.getText();
+        //                             model.setProperty(path + "/NewStatus", selectedItem.getKey() + " - " + selectedText);
+        //                         }
+        //                     });
+        //                 }
+
+        //                 cells.push(comboBox);
+        //             }
+
+        //             return new sap.m.ColumnListItem({
+        //                 cells: cells
+        //             });
+        //         }
+        //     });
+        // },
+
+
         bindTableItems: function () {
             let that = this;
             let table = this.getView().byId("changeStatusTable");
+
+            // Get workflow status
+            let wfDataModel = this.getView().getModel("wfData_0");
+            let wfStatus = wfDataModel ? wfDataModel.getProperty("/status") : null;
+
+            console.log("Current WF Status:", wfStatus);
 
             table.bindItems({
                 path: "DataModel>/ChangeOfStatus",
@@ -6522,7 +6969,14 @@ sap.ui.define([
                         new sap.m.Text({ text: "{DataModel>CurrentStatus}" })
                     ];
 
-                    if (item.hasWfChangeData) {
+                    if (!item.hasWfChangeData) {
+                        let currentStatusParts = item.CurrentStatus.split(" - ");
+                        let currentStatusCode = currentStatusParts[0].trim();
+                        let comboBox = that.createComboBox(item, currentStatusCode);
+                        cells.push(comboBox);
+                    }
+
+                    else if (item.hasWfChangeData && wfStatus !== "SENTBACK") {
                         let displayValue = item.NewStatus && item.NewStatus.trim() !== "" ? item.NewStatus : item.CurrentStatus;
                         let textBox = new sap.m.Text({ text: displayValue });
 
@@ -6531,326 +6985,13 @@ sap.ui.define([
                         }
 
                         cells.push(textBox);
-                    } else {
-                        let currentStatusParts = item.CurrentStatus.split(" - ");
-                        let currentStatusCode = currentStatusParts[0].trim();
-                        let comboBox;
+                    }
 
-                        switch (item.SNo) {
-                            case "1": // Company
-                                comboBox = new sap.m.ComboBox({
-                                    selectedKey: currentStatusCode,
-                                    selectionChange: that.onCompanyChange.bind(that),
-                                    placeholder: "Select Company",
-                                    items: {
-                                        path: "CompanyModel>/",
-                                        template: new sap.ui.core.Item({
-                                            key: "{CompanyModel>externalCode}",
-                                            text: {
-                                                parts: [
-                                                    { path: "CompanyModel>externalCode" },
-                                                    { path: "CompanyModel>name" }
-                                                ],
-                                                formatter: that.formatExternalCodeWithName
-                                            }
-                                        }),
-                                        length: 1000
-                                    }
-                                });
-                                break;
-
-                            case "2": // Business Unit
-                                comboBox = new sap.m.ComboBox({
-                                    selectedKey: currentStatusCode,
-                                    selectionChange: that.onBusinessUnitChange.bind(that),
-                                    placeholder: "Select Business Unit",
-                                    showSecondaryValues: true,
-                                    items: {
-                                        path: "BusinessUnitModel>/",
-                                        template: new sap.ui.core.Item({
-                                            key: "{BusinessUnitModel>externalCode}",
-                                            text: {
-                                                parts: [
-                                                    { path: "BusinessUnitModel>externalCode" },
-                                                    { path: "BusinessUnitModel>name" }
-                                                ],
-                                                formatter: that.formatExternalCodeWithName
-                                            }
-                                        }),
-                                        length: 1000
-                                    },
-                                    beforeOpen: function (oEvent) {
-                                        let companyCode = that.getCurrentDropdownValue("1");
-                                        if (companyCode) {
-                                            that.fetchBusinessUnitData(companyCode);
-                                        }
-                                    }
-                                });
-                                break;
-
-                            case "3": // Department
-                                comboBox = new sap.m.ComboBox({
-                                    selectedKey: currentStatusCode,
-                                    selectionChange: that.onDepartmentChange.bind(that),
-                                    placeholder: "Select Department",
-                                    showSecondaryValues: true,
-                                    items: {
-                                        path: "DepartmentModel>/",
-                                        template: new sap.ui.core.Item({
-                                            key: "{DepartmentModel>externalCode}",
-                                            text: {
-                                                parts: [
-                                                    { path: "DepartmentModel>externalCode" },
-                                                    { path: "DepartmentModel>name" }
-                                                ],
-                                                formatter: that.formatExternalCodeWithName
-                                            }
-                                        }),
-                                        length: 1000
-                                    },
-                                    beforeOpen: function (oEvent) {
-                                        let businessUnitCode = that.getCurrentDropdownValue("2");
-                                        if (businessUnitCode) {
-                                            that.fetchDepartmentData(businessUnitCode);
-                                        }
-                                    }
-                                });
-                                break;
-
-                            case "4": // Division
-                                comboBox = new sap.m.ComboBox({
-                                    selectedKey: currentStatusCode,
-                                    selectionChange: that.onDivisionChange.bind(that),
-                                    placeholder: "Select Division",
-                                    showSecondaryValues: true,
-                                    items: {
-                                        path: "DivisionModel>/",
-                                        template: new sap.ui.core.Item({
-                                            key: "{DivisionModel>externalCode}",
-                                            text: {
-                                                parts: [
-                                                    { path: "DivisionModel>externalCode" },
-                                                    { path: "DivisionModel>name" }
-                                                ],
-                                                formatter: that.formatExternalCodeWithName
-                                            }
-                                        }),
-                                        length: 1000
-                                    },
-                                    beforeOpen: function (oEvent) {
-                                        let departmentCode = that.getCurrentDropdownValue("3");
-                                        if (departmentCode) {
-                                            that.fetchDivisionData(departmentCode);
-                                        }
-                                    }
-                                });
-                                break;
-
-                            case "5": // Cost Center
-                                comboBox = new sap.m.ComboBox({
-                                    selectedKey: currentStatusCode,
-                                    selectionChange: that.onCostCenterChange.bind(that),
-                                    placeholder: "Select Cost Center",
-                                    showSecondaryValues: true,
-                                    items: {
-                                        path: "CostCenterModel>/",
-                                        template: new sap.ui.core.Item({
-                                            key: "{CostCenterModel>externalCode}",
-                                            text: {
-                                                parts: [
-                                                    { path: "CostCenterModel>externalCode" },
-                                                    { path: "CostCenterModel>name" }
-                                                ],
-                                                formatter: that.formatExternalCodeWithName
-                                            }
-                                        }),
-                                        length: 1000
-                                    },
-                                    beforeOpen: function (oEvent) {
-                                        let divisionCode = that.getCurrentDropdownValue("4");
-                                        if (divisionCode) {
-                                            that.fetchCostCenterData(divisionCode);
-                                        }
-                                    }
-                                });
-                                break;
-
-                            case "6": // Location
-                                comboBox = new sap.m.ComboBox({
-                                    selectedKey: currentStatusCode,
-                                    selectionChange: that.onLocationChange.bind(that),
-                                    placeholder: "Select Location",
-                                    showSecondaryValues: true,
-                                    items: {
-                                        path: "LocationModel>/",
-                                        template: new sap.ui.core.Item({
-                                            key: "{LocationModel>externalCode}",
-                                            text: {
-                                                parts: [
-                                                    { path: "LocationModel>externalCode" },
-                                                    { path: "LocationModel>name" }
-                                                ],
-                                                formatter: that.formatExternalCodeWithName
-                                            }
-                                        }),
-                                        length: 1000
-                                    },
-                                    beforeOpen: function (oEvent) {
-                                        let companyCode = that.getCurrentDropdownValue("1");
-                                        if (companyCode) {
-                                            that.fetchLocationData(companyCode);
-                                        }
-                                    }
-                                });
-                                break;
-
-                            case "7": // Work Schedule
-                                comboBox = new sap.m.ComboBox({
-                                    selectedKey: currentStatusCode,
-                                    placeholder: "Select Work Schedule",
-                                    items: {
-                                        path: "WorkScheduleModel>/",
-                                        template: new sap.ui.core.Item({
-                                            key: "{WorkScheduleModel>externalCode}",
-                                            text: {
-                                                parts: [
-                                                    { path: "WorkScheduleModel>externalCode" },
-                                                    { path: "WorkScheduleModel>externalName_en_US" }
-                                                ],
-                                                formatter: that.formatExternalCodeWithExternalName
-                                            }
-                                        }),
-                                        length: 1000
-                                    },
-                                    beforeOpen: function (oEvent) {
-                                        let locationCode = that.getCurrentDropdownValue("6");
-                                        if (locationCode) {
-                                            that.fetchWorkScheduleDataByLocation(locationCode);
-                                        } else {
-                                            that.fetchWorkScheduleData();
-                                        }
-                                    }
-                                });
-                                break;
-
-                            case "8": // Manager
-                                comboBox = new sap.m.ComboBox({
-                                    selectedKey: currentStatusCode,
-                                    placeholder: "Select Manager",
-                                    items: {
-                                        path: "ManagerUserDetailsData>/",
-                                        template: new sap.ui.core.Item({
-                                            key: "{ManagerUserDetailsData>empId}",
-                                            text: {
-                                                parts: [
-                                                    { path: "ManagerUserDetailsData>empId" },
-                                                    { path: "ManagerUserDetailsData>displayName" }
-                                                ],
-                                                formatter: that.formatempIdWithdisplayName
-                                            }
-                                        }),
-                                        length: 2000
-                                    }
-                                });
-                                break;
-
-                            case "9": // Position
-                                comboBox = new sap.m.ComboBox({
-                                    selectedKey: currentStatusCode,
-                                    placeholder: "Select Position",
-                                    items: {
-                                        path: "PositionModel>/",
-                                        template: new sap.ui.core.Item({
-                                            key: "{PositionModel>code}",
-                                            text: {
-                                                parts: [
-                                                    { path: "PositionModel>code" },
-                                                    { path: "PositionModel>externalName_en_US" }
-                                                ],
-                                                formatter: that.formatExternalCodeWithExternalName
-                                            }
-                                        }),
-                                        length: 3000
-                                    },
-                                    beforeOpen: function (oEvent) {
-                                        that.fetchPositionData();
-                                    }
-                                });
-                                break;
-
-                            case "10": // job Family
-                                comboBox = new sap.m.ComboBox({
-                                    selectedKey: currentStatusCode,
-                                    selectionChange: that.onJobFamChange.bind(that),
-                                    placeholder: "Job Family",
-                                    showSecondaryValues: true,
-                                    items: {
-                                        path: "jobFamilyModel>/",
-                                        template: new sap.ui.core.Item({
-                                            key: "{jobFamilyModel>externalCode}",
-                                            text: {
-                                                parts: [
-                                                    { path: "jobFamilyModel>externalCode" },
-                                                    { path: "jobFamilyModel>name" }
-                                                ],
-                                                formatter: that.formatExternalCodeWithName
-                                            }
-                                        }),
-                                        length: 1000
-                                    },
-                                    beforeOpen: function (oEvent) {
-                                        let companyCode = that.getCurrentDropdownValue("1");
-                                        if (companyCode) {
-                                            that.fetchJobFamilyData(companyCode);
-                                        }
-                                    }
-                                });
-                                break;
-
-                            case "11": // Job Title
-                                comboBox = new sap.m.ComboBox({
-                                    selectedKey: currentStatusCode,
-                                    placeholder: "Select Job Title",
-                                    items: {
-                                        path: "JobCodeModel>/",
-                                        template: new sap.ui.core.Item({
-                                            key: "{JobCodeModel>externalCode}",
-                                            text: {
-                                                parts: [
-                                                    { path: "JobCodeModel>externalCode" },
-                                                    { path: "JobCodeModel>name" }
-                                                ],
-                                                formatter: that.formatjobCodeWithJobTitle
-                                            }
-                                        }),
-                                        length: 3000
-                                    },
-                                    beforeOpen: function (oEvent) {
-                                        that.fetchJobCodeData();
-                                    }
-                                });
-                                break;
-
-                            default:
-                                comboBox = new sap.m.Input({
-                                    value: item.CurrentStatus
-                                });
-                        }
-
-                        // Attach change event to track selection changes
-                        if (comboBox.attachSelectionChange) {
-                            comboBox.attachSelectionChange(function (oEvent) {
-                                let selectedItem = oEvent.getParameter("selectedItem");
-                                if (selectedItem) {
-                                    let bindingContext = oEvent.getSource().getBindingContext("DataModel");
-                                    let path = bindingContext.getPath();
-                                    let model = that.getView().getModel("DataModel");
-                                    let selectedText = selectedItem.getText();
-                                    model.setProperty(path + "/NewStatus", selectedItem.getKey() + " - " + selectedText);
-                                }
-                            });
-                        }
-
+                    else if (item.hasWfChangeData && wfStatus === "SENTBACK") {
+                        let newStatusParts = item.NewStatus && item.NewStatus.trim() !== "" ?
+                            item.NewStatus.split(" - ") : item.CurrentStatus.split(" - ");
+                        let selectedKey = newStatusParts[0].trim();
+                        let comboBox = that.createComboBox(item, selectedKey);
                         cells.push(comboBox);
                     }
 
@@ -6861,9 +7002,326 @@ sap.ui.define([
             });
         },
 
+        createComboBox: function (item, selectedKey) {
+            let that = this;
+            let comboBox;
 
+            switch (item.SNo) {
+                case "1": // Company
+                    comboBox = new sap.m.ComboBox({
+                        selectedKey: selectedKey,
+                        selectionChange: that.onCompanyChange.bind(that),
+                        placeholder: "Select Company",
+                        items: {
+                            path: "CompanyModel>/",
+                            template: new sap.ui.core.Item({
+                                key: "{CompanyModel>externalCode}",
+                                text: {
+                                    parts: [
+                                        { path: "CompanyModel>externalCode" },
+                                        { path: "CompanyModel>name" }
+                                    ],
+                                    formatter: that.formatExternalCodeWithName
+                                }
+                            }),
+                            length: 1000
+                        }
+                    });
+                    break;
 
+                case "2": // Business Unit
+                    comboBox = new sap.m.ComboBox({
+                        selectedKey: selectedKey,
+                        selectionChange: that.onBusinessUnitChange.bind(that),
+                        placeholder: "Select Business Unit",
+                        showSecondaryValues: true,
+                        items: {
+                            path: "BusinessUnitModel>/",
+                            template: new sap.ui.core.Item({
+                                key: "{BusinessUnitModel>externalCode}",
+                                text: {
+                                    parts: [
+                                        { path: "BusinessUnitModel>externalCode" },
+                                        { path: "BusinessUnitModel>name" }
+                                    ],
+                                    formatter: that.formatExternalCodeWithName
+                                }
+                            }),
+                            length: 1000
+                        },
+                        beforeOpen: function (oEvent) {
+                            let companyCode = that.getCurrentDropdownValue("1");
+                            if (companyCode) {
+                                that.fetchBusinessUnitData(companyCode);
+                            }
+                        }
+                    });
+                    break;
 
+                case "3": // Department
+                    comboBox = new sap.m.ComboBox({
+                        selectedKey: selectedKey,
+                        selectionChange: that.onDepartmentChange.bind(that),
+                        placeholder: "Select Department",
+                        showSecondaryValues: true,
+                        items: {
+                            path: "DepartmentModel>/",
+                            template: new sap.ui.core.Item({
+                                key: "{DepartmentModel>externalCode}",
+                                text: {
+                                    parts: [
+                                        { path: "DepartmentModel>externalCode" },
+                                        { path: "DepartmentModel>name" }
+                                    ],
+                                    formatter: that.formatExternalCodeWithName
+                                }
+                            }),
+                            length: 1000
+                        },
+                        beforeOpen: function (oEvent) {
+                            let businessUnitCode = that.getCurrentDropdownValue("2");
+                            if (businessUnitCode) {
+                                that.fetchDepartmentData(businessUnitCode);
+                            }
+                        }
+                    });
+                    break;
+
+                case "4": // Division
+                    comboBox = new sap.m.ComboBox({
+                        selectedKey: selectedKey,
+                        selectionChange: that.onDivisionChange.bind(that),
+                        placeholder: "Select Division",
+                        showSecondaryValues: true,
+                        items: {
+                            path: "DivisionModel>/",
+                            template: new sap.ui.core.Item({
+                                key: "{DivisionModel>externalCode}",
+                                text: {
+                                    parts: [
+                                        { path: "DivisionModel>externalCode" },
+                                        { path: "DivisionModel>name" }
+                                    ],
+                                    formatter: that.formatExternalCodeWithName
+                                }
+                            }),
+                            length: 1000
+                        },
+                        beforeOpen: function (oEvent) {
+                            let departmentCode = that.getCurrentDropdownValue("3");
+                            if (departmentCode) {
+                                that.fetchDivisionData(departmentCode);
+                            }
+                        }
+                    });
+                    break;
+
+                case "5": // Cost Center
+                    comboBox = new sap.m.ComboBox({
+                        selectedKey: selectedKey,
+                        selectionChange: that.onCostCenterChange.bind(that),
+                        placeholder: "Select Cost Center",
+                        showSecondaryValues: true,
+                        items: {
+                            path: "CostCenterModel>/",
+                            template: new sap.ui.core.Item({
+                                key: "{CostCenterModel>externalCode}",
+                                text: {
+                                    parts: [
+                                        { path: "CostCenterModel>externalCode" },
+                                        { path: "CostCenterModel>name" }
+                                    ],
+                                    formatter: that.formatExternalCodeWithName
+                                }
+                            }),
+                            length: 1000
+                        },
+                        beforeOpen: function (oEvent) {
+                            let divisionCode = that.getCurrentDropdownValue("4");
+                            if (divisionCode) {
+                                that.fetchCostCenterData(divisionCode);
+                            }
+                        }
+                    });
+                    break;
+
+                case "6": // Location
+                    comboBox = new sap.m.ComboBox({
+                        selectedKey: selectedKey,
+                        selectionChange: that.onLocationChange.bind(that),
+                        placeholder: "Select Location",
+                        showSecondaryValues: true,
+                        items: {
+                            path: "LocationModel>/",
+                            template: new sap.ui.core.Item({
+                                key: "{LocationModel>externalCode}",
+                                text: {
+                                    parts: [
+                                        { path: "LocationModel>externalCode" },
+                                        { path: "LocationModel>name" }
+                                    ],
+                                    formatter: that.formatExternalCodeWithName
+                                }
+                            }),
+                            length: 1000
+                        },
+                        beforeOpen: function (oEvent) {
+                            let companyCode = that.getCurrentDropdownValue("1");
+                            if (companyCode) {
+                                that.fetchLocationData(companyCode);
+                            }
+                        }
+                    });
+                    break;
+
+                case "7": // Work Schedule
+                    comboBox = new sap.m.ComboBox({
+                        selectedKey: selectedKey,
+                        placeholder: "Select Work Schedule",
+                        items: {
+                            path: "WorkScheduleModel>/",
+                            template: new sap.ui.core.Item({
+                                key: "{WorkScheduleModel>externalCode}",
+                                text: {
+                                    parts: [
+                                        { path: "WorkScheduleModel>externalCode" },
+                                        { path: "WorkScheduleModel>externalName_en_US" }
+                                    ],
+                                    formatter: that.formatExternalCodeWithExternalName
+                                }
+                            }),
+                            length: 1000
+                        },
+                        beforeOpen: function (oEvent) {
+                            let locationCode = that.getCurrentDropdownValue("6");
+                            if (locationCode) {
+                                that.fetchWorkScheduleDataByLocation(locationCode);
+                            } else {
+                                that.fetchWorkScheduleData();
+                            }
+                        }
+                    });
+                    break;
+
+                case "8": // Manager
+                    comboBox = new sap.m.ComboBox({
+                        selectedKey: selectedKey,
+                        placeholder: "Select Manager",
+                        items: {
+                            path: "ManagerUserDetailsData>/",
+                            template: new sap.ui.core.Item({
+                                key: "{ManagerUserDetailsData>empId}",
+                                text: {
+                                    parts: [
+                                        { path: "ManagerUserDetailsData>empId" },
+                                        { path: "ManagerUserDetailsData>displayName" }
+                                    ],
+                                    formatter: that.formatempIdWithdisplayName
+                                }
+                            }),
+                            length: 2000
+                        }
+                    });
+                    break;
+
+                case "9": // Position
+                    comboBox = new sap.m.ComboBox({
+                        selectedKey: selectedKey,
+                        placeholder: "Select Position",
+                        items: {
+                            path: "PositionModel>/",
+                            template: new sap.ui.core.Item({
+                                key: "{PositionModel>code}",
+                                text: {
+                                    parts: [
+                                        { path: "PositionModel>code" },
+                                        { path: "PositionModel>externalName_en_US" }
+                                    ],
+                                    formatter: that.formatExternalCodeWithExternalName
+                                }
+                            }),
+                            length: 3000
+                        },
+                        beforeOpen: function (oEvent) {
+                            that.fetchPositionData();
+                        }
+                    });
+                    break;
+
+                case "10": // Job Family
+                    comboBox = new sap.m.ComboBox({
+                        selectedKey: selectedKey,
+                        selectionChange: that.onJobFamChange.bind(that),
+                        placeholder: "Job Family",
+                        showSecondaryValues: true,
+                        items: {
+                            path: "jobFamilyModel>/",
+                            template: new sap.ui.core.Item({
+                                key: "{jobFamilyModel>externalCode}",
+                                text: {
+                                    parts: [
+                                        { path: "jobFamilyModel>externalCode" },
+                                        { path: "jobFamilyModel>name" }
+                                    ],
+                                    formatter: that.formatExternalCodeWithName
+                                }
+                            }),
+                            length: 1000
+                        },
+                        beforeOpen: function (oEvent) {
+                            let companyCode = that.getCurrentDropdownValue("1");
+                            if (companyCode) {
+                                that.fetchJobFamilyData(companyCode);
+                            }
+                        }
+                    });
+                    break;
+
+                case "11": // Job Title
+                    comboBox = new sap.m.ComboBox({
+                        selectedKey: selectedKey,
+                        placeholder: "Select Job Title",
+                        items: {
+                            path: "JobCodeModel>/",
+                            template: new sap.ui.core.Item({
+                                key: "{JobCodeModel>externalCode}",
+                                text: {
+                                    parts: [
+                                        { path: "JobCodeModel>externalCode" },
+                                        { path: "JobCodeModel>name" }
+                                    ],
+                                    formatter: that.formatjobCodeWithJobTitle
+                                }
+                            }),
+                            length: 3000
+                        },
+                        beforeOpen: function (oEvent) {
+                            that.fetchJobCodeData();
+                        }
+                    });
+                    break;
+
+                default:
+                    comboBox = new sap.m.Input({
+                        value: selectedKey
+                    });
+            }
+
+            if (comboBox.attachSelectionChange) {
+                comboBox.attachSelectionChange(function (oEvent) {
+                    let selectedItem = oEvent.getParameter("selectedItem");
+                    if (selectedItem) {
+                        let bindingContext = oEvent.getSource().getBindingContext("DataModel");
+                        let path = bindingContext.getPath();
+                        let model = that.getView().getModel("DataModel");
+                        let selectedText = selectedItem.getText();
+                        model.setProperty(path + "/NewStatus", selectedItem.getKey() + " - " + selectedText);
+                    }
+                });
+            }
+
+            return comboBox;
+        },
 
         _loadPDFMakeLibrary: function () {
             jQuery.sap.includeScript("https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js", "pdfmake", function () {
@@ -8099,6 +8557,10 @@ sap.ui.define([
                 "/EmpWfRequest?$format=json&$filter=subjectId eq '" + userId + "' and requestType eq 'CHANGE_JOB'" +
                 "&$select=wfRequestId&$orderby=wfRequestId desc&$top=1";
 
+            // let sListUrl = that.getPath("SF_1") + "/WfRequest?$format=JSON&$expand=empWfRequestNav&$filter=empWfRequestNav/subjectId eq '" + userId + "' and (empWfRequestNav/requestType eq 'CHANGE_JOB') and (empWfRequestNav/wfConfigNav/externalCode  like '%PSN%')&$select=wfRequestId,createdDateTime&$orderby=wfRequestId desc"
+
+
+
             $.ajax({
                 url: sListUrl,
                 type: "GET",
@@ -8130,7 +8592,7 @@ sap.ui.define([
                         aResults.forEach(function (item, index) {
                             let wfRequestId = item.wfRequestId;
 
-
+                            that.onGetSendBackWfRequest(wfRequestId);
 
                             // if (wfRequestId && listWfRequestId && parseInt(apiWfRequestId) > parseInt(listWfRequestId)) {
                             if (wfRequestId) {
@@ -8213,10 +8675,11 @@ sap.ui.define([
 
                                                     if (currentUserId === createdBy) {
                                                         // Show withdraw button - user is creator and status is PENDING
-                                                        that.byId("ReSubmitButton").setVisible(true);
+                                                        //that.byId("ReSubmitButton").setVisible(true);
                                                         that.byId("withdrawButton").setVisible(true);
-                                                        that.byId("ReSubmitButton").setEnabled(true);
+                                                        that.byId("ReSubPositionBtn").setVisible(true);
                                                         that.byId("changeOfCompSection").setVisible(false);
+                                                        that.fetchPayGradeDataWithInitialize();
                                                         console.log("Resubmit button shown for user:", currentUserId, "item:", oSelectedData.externalCode);
                                                     } else {
                                                         // Hide withdraw button - user is not creator
@@ -8330,6 +8793,7 @@ sap.ui.define([
                                                 enableWorkflowButtons();
                                             } else if (isUserAuthorized && wfData?.status === "SENTBACK") {
                                                 disableWorkflowButtons();
+                                                that.fetchPayGradeDataWithInitialize();
                                             } else if (isUserAuthorized && wfData?.status === "REJECTED") {
                                                 disableWorkflowButtons();
                                             } else if (isUserAuthorized && wfData?.status === "CANCELLED") {
@@ -8342,7 +8806,17 @@ sap.ui.define([
                                                 }
                                             }
 
+                                            // if (wfData?.status !== "SENTBACK") {
                                             that._getSubmittedNewData(wfRequestId);
+
+                                            // }
+
+                                            // if (wfData?.status === "SENTBACK") {
+                                            //     that.isSentBackMode = true;
+                                            //     that._getSubmittedNewData(wfRequestId, true);
+                                            // } else {
+                                            //     that._getSubmittedNewData(wfRequestId);
+                                            // }
 
                                             let wfDataModel = new sap.ui.model.json.JSONModel(wfData);
                                             // let sModelName = "wfData_" + index;
@@ -8351,19 +8825,25 @@ sap.ui.define([
                                             that.getView().setModel(wfDataModel, sModelName);
                                             that.checkSubmitButtonVisibility();
 
-                                            that._getUserIdAndOpenAddComponentDialog()
-                                                .then(function () {
-                                                    let sUserId = that._currentUserId;
-                                                    let sEffectiveDate = that._currentPSNEffectiveDate;
-                                                    let formattedEffectiveDate = that.formatDate(sEffectiveDate);
-                                                    that.fetchEmpCmpNewValue(sUserId, formattedEffectiveDate);
-                                                })
-                                                .catch(function (error) {
-                                                    console.error("Error in getUserId:", error);
-                                                    MessageToast.show("Error retrieving user data for compensation.");
-                                                });
+                                            if (wfData?.status !== "SENTBACK") {
+                                                that._getUserIdAndOpenAddComponentDialog()
+                                                    .then(function () {
+                                                        let sUserId = that._currentUserId;
+                                                        let sEffectiveDate = that._currentPSNEffectiveDate;
+                                                        let formattedEffectiveDate = that.formatDate(sEffectiveDate);
+                                                        that.fetchEmpCmpNewValue(sUserId, formattedEffectiveDate);
+                                                    })
+                                                    .catch(function (error) {
+                                                        console.error("Error in getUserId:", error);
+                                                        MessageToast.show("Error retrieving user data for compensation.");
+                                                    });
+                                            }
 
-                                            that.fetchPayGradeDataWithNewInitialize();
+                                            if (wfData?.status !== "SENTBACK") {
+                                                that.fetchPayGradeDataWithNewInitialize();
+
+                                            }
+
                                             console.log("Workflow model enriched and set for:", wfRequestId);
                                         }
                                     },
@@ -8384,6 +8864,561 @@ sap.ui.define([
                 }
             });
         },
+
+        onSendEmailBtn: function () {
+            var that = this;
+
+            // Show loading with custom message
+            sap.m.MessageToast.show("Sending test email...");
+            sap.ui.core.BusyIndicator.show(0);
+
+            var emailData = {
+                "from": {
+                    "email": "hello@demomailtrap.co",
+                    "name": "Mailtrap Test"
+                },
+                "to": [
+                    {
+                        "email": "narasimharaju009@gmail.com"
+                    }
+                ],
+                "subject": "You are awesome! - " + new Date().toLocaleString(),
+                "text": "Congrats for sending test email with Mailtrap!",
+                "html": "<h2>You are awesome!</h2><p>Congrats for sending test email with Mailtrap!</p><p><strong>Sent at:</strong> " + new Date().toLocaleString() + "</p>",
+                "category": "Integration Test",
+                "attachments": [{
+                    "content": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+                    "type": "image/png",
+                    "filename": "testingpdf",
+                    "disposition": "inline",
+                    "content_id": "123"
+                }]
+            };
+
+            $.ajax({
+                url: "/EMAIL_TEST/api/send",
+                type: "POST",
+                //contentType: "application/json",
+                
+                // headers: {
+                //     "Authorization": "Bearer 8632a2fa919820e960204a85789fc234"
+                // },
+                data: JSON.stringify(emailData),
+                timeout: 30000,
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+                    xhr.setRequestHeader('Accept', 'application/json');
+                    xhr.setRequestHeader('Authorization', 'Bearer 8632a2fa919820e960204a85789fc234');
+                    console.log("Sending email request...");
+                },
+                success: function (response, textStatus, xhr) {
+                    sap.ui.core.BusyIndicator.hide();
+                    console.log("Email sent successfully:", response);
+                    console.log("Response status:", xhr.status);
+
+                    sap.m.MessageBox.success(
+                        "🎉 Test email sent successfully!\n\nRecipient: narasimharaju009@gmail.com\nSubject: You are awesome!\nAttachment: testingpdf (PNG image)",
+                        {
+                            title: "Email Sent Successfully",
+                            styleClass: "sapUiSizeCompact"
+                        }
+                    );
+                },
+                error: function (xhr, status, error) {
+                    sap.ui.core.BusyIndicator.hide();
+                    console.error("Email sending failed:", {
+                        status: xhr.status,
+                        statusText: xhr.statusText,
+                        responseText: xhr.responseText,
+                        error: error
+                    });
+
+                    that._showDetailedError(xhr, status, error);
+                }
+            });
+        },
+
+        _showDetailedError: function (xhr, status, error) {
+            var errorTitle = "Email Sending Failed";
+            var errorMessage = "Unable to send test email";
+            var errorDetails = "";
+
+            if (xhr.status === 0) {
+                errorMessage = "Network connection error. Please check your internet connection.";
+            } else if (xhr.status === 401) {
+                errorMessage = "Authentication failed. API token may be invalid or expired.";
+                errorDetails = "Please check your Mailtrap API token configuration.";
+            } else if (xhr.status === 403) {
+                errorMessage = "Access forbidden. Insufficient permissions.";
+                errorDetails = "Please verify your Mailtrap account permissions.";
+            } else if (xhr.status === 422) {
+                errorMessage = "Invalid email data format.";
+                errorDetails = "Please check email addresses and attachment format.";
+            } else if (xhr.status >= 500) {
+                errorMessage = "Server error occurred.";
+                errorDetails = "Mailtrap service may be temporarily unavailable.";
+            } else if (xhr.responseText) {
+                try {
+                    var errorResponse = JSON.parse(xhr.responseText);
+                    errorMessage = errorResponse.message || errorResponse.error || errorMessage;
+                    errorDetails = errorResponse.details || "";
+                } catch (e) {
+                    errorDetails = xhr.responseText;
+                }
+            }
+
+            sap.m.MessageBox.error(errorMessage, {
+                title: errorTitle,
+                details: errorDetails + "\n\nStatus Code: " + xhr.status + "\nError: " + error,
+                styleClass: "sapUiSizeCompact"
+            });
+        },
+
+        onReSubmitPosition: function () {
+            let that = this;
+
+            let oDataModel = this.getView().getModel("DataModel");
+            let oCompensationModel = this.getView().getModel("ChangeOfCompensationModel");
+
+            if (!oDataModel) {
+                MessageBox.error("Data model not found. Please refresh the page and try again.");
+                return;
+            }
+
+            let aChangeOfStatus = oDataModel.getProperty("/ChangeOfStatus");
+
+            if (!aChangeOfStatus || !Array.isArray(aChangeOfStatus)) {
+                MessageBox.error("Position data not loaded correctly. Please refresh the page and try again.");
+                return;
+            }
+
+            let bHasPositionChanges = aChangeOfStatus.some(function (item) {
+                return item.NewStatus && item.NewStatus !== item.CurrentStatus;
+            });
+
+            let bHasCompensationChanges = false;
+            let aCompensationChanges = [];
+
+            if (oCompensationModel) {
+                let aChangeOfCompensation = oCompensationModel.getProperty("/ChangeOfCompensation");
+                if (aChangeOfCompensation && Array.isArray(aChangeOfCompensation)) {
+                    aCompensationChanges = aChangeOfCompensation.filter(function (item) {
+                        return item.NewValue && item.NewValue !== "";
+                    });
+                    bHasCompensationChanges = aCompensationChanges.length > 0;
+                }
+            }
+
+            if (!bHasPositionChanges && !bHasCompensationChanges) {
+                MessageToast.show("No changes detected. Please make changes before submitting.");
+                return;
+            }
+
+            this._getUserIdAndOpenAddComponentDialog()
+                .then(function () {
+                    let sUserId = that._currentUserId;
+                    let sEffectiveDate = that._currentEffectiveDate;
+                    let sFormattedDate = "/Date(" + new Date(sEffectiveDate).getTime() + ")/";
+                    let sEventReason = that._currentPsnTypeChange || "";
+                    let formattedEffectiveDate = that.formatDate(sEffectiveDate);
+
+                    let oBusyDialog = new sap.m.BusyDialog({
+                        text: "Processing workflow resubmission and changes..."
+                    });
+                    oBusyDialog.open();
+
+                    // First, check for existing workflow requests and decline them
+                    that._checkAndDeclineExistingWorkflowForResubmit(sUserId)
+                        .then(function() {
+                            // Prepare all payloads for batch processing
+                            let aBatchPayloads = [];
+
+                            // Position payload
+                            let oPositionPayload = {
+                                "__metadata": {
+                                    "uri": "EmpJob"
+                                },
+                                "userId": sUserId,
+                                "eventReason": sEventReason,
+                                "regularTemp": "Regular",
+                                "startDate": sFormattedDate
+                            };
+
+                            // Handle compensation pay grade in position payload
+                            if (oCompensationModel) {
+                                let aChangeOfComp = oCompensationModel.getProperty("/ChangeOfCompensation");
+                                if (Array.isArray(aChangeOfComp)) {
+                                    let payGradeEntry = aChangeOfComp.find(function (item) {
+                                        return item.SNo === "1" && item.NewValue && item.NewValue !== item.CurrentValue.split(" - ")[0];
+                                    });
+                                    if (payGradeEntry) {
+                                        oPositionPayload.payGrade = payGradeEntry.NewValue.trim();
+                                        console.log("Pay Grade submitted via EmpJob:", oPositionPayload.payGrade);
+                                    }
+                                }
+                            }
+
+                            // Map position changes to payload
+                            aChangeOfStatus.forEach(function (item) {
+                                if (item.NewStatus && item.NewStatus !== item.CurrentStatus) {
+                                    switch (item.Item) {
+                                        case "Company":
+                                            oPositionPayload.company = item.NewStatus.split('-')[0].trim();
+                                            break;
+                                        case "Business Unit":
+                                            oPositionPayload.businessUnit = item.NewStatus.split('-')[0].trim();
+                                            break;
+                                        case "Cost Center":
+                                            oPositionPayload.costCenter = item.NewStatus.split('-')[0].trim();
+                                            break;
+                                        case "Position":
+                                            oPositionPayload.position = item.NewStatus.split('-')[0].trim();
+                                            break;
+                                        case "Department":
+                                            oPositionPayload.department = item.NewStatus.split('-')[0].trim();
+                                            break;
+                                        case "Division":
+                                            oPositionPayload.division = item.NewStatus.split('-')[0].trim();
+                                            break;
+                                        case "Location":
+                                            oPositionPayload.location = item.NewStatus.split('-')[0].trim();
+                                            break;
+                                        case "Work Schedule":
+                                            oPositionPayload.workscheduleCode = item.NewStatus.split('-')[0].trim();
+                                            break;
+                                        case "Manager":
+                                            oPositionPayload.managerId = item.NewStatus.split('-')[0].trim();
+                                            break;
+                                        case "Job Title":
+                                            oPositionPayload.jobCode = item.NewStatus.split('-')[0].trim();
+                                            oPositionPayload.jobTitle = item.NewStatus.split('-')[2].trim();
+                                            break;
+                                        case "Job Family":
+                                            oPositionPayload.customString3 = item.NewStatus.split('-')[0].trim();
+                                            break;
+                                    }
+                                }
+                            });
+
+                            // Add position payload to batch if there are changes
+                            if (bHasPositionChanges || oPositionPayload.payGrade) {
+                                aBatchPayloads.push({
+                                    type: "position",
+                                    payload: oPositionPayload
+                                });
+                            }
+
+                            // Add EmpCompensation payload if needed
+                            let bNeedsEmpCompensation = aCompensationChanges.some(function(item) {
+                                return item.SNo !== "1" && item.NewValue !== "";
+                            });
+
+                            if (bNeedsEmpCompensation) {
+                                let oEmpCompPayload = {
+                                    "__metadata": {
+                                        "uri": "EmpCompensation"
+                                    },
+                                    "userId": sUserId,
+                                    "startDate": sFormattedDate,
+                                    "eventReason": sEventReason
+                                };
+                                aBatchPayloads.push({
+                                    type: "empCompensation",
+                                    payload: oEmpCompPayload
+                                });
+                            }
+
+                            // Add compensation payloads
+                            aCompensationChanges.forEach(function(item) {
+                                if (item.SNo !== "1" && item.NewValue !== "") {
+                                    let oCompPayload = {
+                                        "__metadata": {
+                                            "uri": "EmpPayCompRecurring"
+                                        },
+                                        "userId": sUserId,
+                                        "startDate": sFormattedDate,
+                                        "payComponent": item.externalCode,
+                                        "paycompvalue": item.NewValue
+                                    };
+                                    aBatchPayloads.push({
+                                        type: "compensation",
+                                        payload: oCompPayload,
+                                        item: item
+                                    });
+                                }
+                            });
+
+                            // Execute batch processing
+                            return that._processBatchRequestsForResubmit(aBatchPayloads);
+                        })
+                        .then(function(results) {
+                            oBusyDialog.close();
+
+                            if (results.length === 0) {
+                                MessageBox.information("No changes were processed.");
+                                return;
+                            }
+
+                            // Process the first result for response data
+                            let firstResult = results[0];
+                            let data = firstResult.data;
+                            let oXmlDoc;
+
+                            if (typeof data === "string") {
+                                let oParser = new DOMParser();
+                                oXmlDoc = oParser.parseFromString(data, "text/xml");
+                            } else {
+                                oXmlDoc = data;
+                            }
+
+                            function getValueFromXML(doc, tagName) {
+                                let nodes = doc.getElementsByTagName(tagName);
+                                return nodes.length > 0 ? nodes[0].textContent : "";
+                            }
+
+                            let sKey = getValueFromXML(oXmlDoc, "d:key");
+                            let sStatus = getValueFromXML(oXmlDoc, "d:status");
+                            let sEditStatus = getValueFromXML(oXmlDoc, "d:editStatus");
+                            let sMessage = getValueFromXML(oXmlDoc, "d:message");
+
+                            let oResponseModel = new sap.ui.model.json.JSONModel({
+                                key: sKey,
+                                status: sStatus,
+                                editStatus: sEditStatus,
+                                message: sMessage
+                            });
+
+                            that.getView().setModel(oResponseModel, "responseModel");
+
+                            MessageBox.show(results.length + " changes submitted successfully. " + sMessage, {
+                                title: "Response Info",
+                                actions: [MessageBox.Action.OK],
+                                onClose: function (oAction) {
+                                    if (oAction === MessageBox.Action.OK) {
+                                        that.byId("submitUpdateButton").setVisible(false);
+                                        window.location.reload();
+                                        that.oViewSubModel.setProperty("/showSubmitButton", false);
+
+                                        let sWorkflowUrl = that.getPath("SF_1") +
+                                            "/EmpWfRequest?$format=json&$filter=subjectId eq '" + sUserId + "' and requestType eq 'CHANGE_JOB'&$select=wfRequestId&$orderby=wfRequestId desc&$top=1";
+
+                                        jQuery.ajax({
+                                            url: sWorkflowUrl,
+                                            method: "GET",
+                                            dataType: "json",
+                                            async: true,
+                                            headers: {
+                                                "Accept": "application/json"
+                                            },
+                                            success: function (data) {
+                                                if (data && data.d && data.d.results) {
+                                                    that._setWorkflowStage("APPROVALS_WORKFLOW", false);
+                                                    that._getWorkflowDetails(sUserId);
+                                                    that.fetchEmpCmpNewValue(sUserId, formattedEffectiveDate);
+                                                }
+                                            },
+                                            error: function (e) {
+                                                MessageToast.show("Error fetching workflow data");
+                                                console.error("Error fetching workflow data:", e);
+                                            }
+                                        });
+                                    }
+                                }
+                            });
+                        })
+                        .catch(function(error) {
+                            oBusyDialog.close();
+
+                            let sErrorMessage = "Failed to Submit Change";
+
+                            if (error.error) {
+                                try {
+                                    let oErrorResponse = JSON.parse(error.error.responseText);
+                                    if (oErrorResponse && oErrorResponse.message) {
+                                        sErrorMessage = oErrorResponse.message || sErrorMessage;
+                                    }
+                                } catch (e) {
+                                    if (error.errorThrown) {
+                                        sErrorMessage += ": " + error.errorThrown;
+                                    }
+                                }
+                            }
+
+                            if (error.payload) {
+                                if (error.payload.__metadata && error.payload.__metadata.uri === "EmpPayCompRecurring") {
+                                    sErrorMessage = "Failed to update compensation: " + sErrorMessage;
+                                } else if (error.payload.payGrade) {
+                                    sErrorMessage = "Failed to update grade: " + sErrorMessage;
+                                }
+                            }
+
+                            MessageBox.error(sErrorMessage);
+                        });
+                })
+                .catch(function (error) {
+                    MessageBox.error("Could not resubmit: " + error.message);
+                });
+        },
+
+        // Helper function to check and decline existing workflow requests
+        _checkAndDeclineExistingWorkflowForResubmit: function(sUserId) {
+            let that = this;
+
+            return new Promise(function(resolve, reject) {
+                let sWorkflowCheckUrl = that.getPath("SF_1") + 
+                    "/EmpWfRequest?$format=json&$filter=subjectId eq '" + sUserId + 
+                    "' and requestType eq 'CHANGE_JOB' and status ne 'COMPLETED' and status ne 'DECLINED'&$select=wfRequestId,status";
+
+                jQuery.ajax({
+                    url: sWorkflowCheckUrl,
+                    method: "GET",
+                    dataType: "json",
+                    async: true,
+                    headers: {
+                        "Accept": "application/json"
+                    },
+                    success: function(data) {
+                        if (data && data.d && data.d.results && data.d.results.length > 0) {
+                            // Found existing workflow requests, decline them
+                            let aDeclinePromises = data.d.results.map(function(wfRequest) {
+                                return that._declineWorkflowRequestForResubmit(wfRequest.wfRequestId);
+                            });
+
+                            Promise.all(aDeclinePromises)
+                                .then(function() {
+                                    console.log("Successfully declined existing workflow requests");
+                                    resolve();
+                                })
+                                .catch(function(error) {
+                                    console.error("Error declining existing workflow requests:", error);
+                                    reject(error);
+                                });
+                        } else {
+                            // No existing workflow requests found
+                            resolve();
+                        }
+                    },
+                    error: function(error) {
+                        console.error("Error checking existing workflow requests:", error);
+                        reject(error);
+                    }
+                });
+            });
+        },
+
+        // Helper function to decline a specific workflow request for resubmission
+        _declineWorkflowRequestForResubmit: function(wfRequestId) {
+            let that = this;
+
+            return new Promise(function(resolve, reject) {
+                let sDeclineUrl = that.getPath("SF_1") + "/EmpWfRequest('" + wfRequestId + "')";
+
+                let oDeclinePayload = {
+                    status: "DECLINED",
+                    comment: "Automatically declined due to new resubmission request"
+                };
+
+                jQuery.ajax({
+                    url: sDeclineUrl,
+                    method: "PATCH",
+                    contentType: "application/json",
+                    data: JSON.stringify(oDeclinePayload),
+                    headers: {
+                        "Accept": "application/json"
+                    },
+                    success: function(data) {
+                        console.log("Successfully declined workflow request:", wfRequestId);
+                        resolve(data);
+                    },
+                    error: function(error) {
+                        console.error("Error declining workflow request:", wfRequestId, error);
+                        reject(error);
+                    }
+                });
+            });
+        },
+
+        // Helper function to process batch requests with all-or-nothing approach for resubmission
+        _processBatchRequestsForResubmit: function(aBatchPayloads) {
+            let that = this;
+            let sUrl = that.getPath("SF_2") + "/upsert";
+
+            return new Promise(function(resolve, reject) {
+                if (aBatchPayloads.length === 0) {
+                    resolve([]);
+                    return;
+                }
+
+                // Execute all requests in parallel
+                let aPromises = aBatchPayloads.map(function(batchItem) {
+                    return that._makeAjaxRequestForResubmit(sUrl, batchItem.payload)
+                        .then(function(data) {
+                            return {
+                                type: batchItem.type,
+                                data: data,
+                                item: batchItem.item,
+                                success: true
+                            };
+                        })
+                        .catch(function(error) {
+                            return {
+                                type: batchItem.type,
+                                error: error,
+                                payload: batchItem.payload,
+                                item: batchItem.item,
+                                success: false
+                            };
+                        });
+                });
+
+                Promise.all(aPromises)
+                    .then(function(results) {
+                        // Check if any request failed
+                        let aFailedRequests = results.filter(function(result) {
+                            return !result.success;
+                        });
+
+                        if (aFailedRequests.length > 0) {
+                            // If any request failed, reject with the first error
+                            let firstError = aFailedRequests[0];
+                            reject(firstError);
+                        } else {
+                            // All requests succeeded
+                            let aSuccessfulResults = results.filter(function(result) {
+                                return result.success;
+                            });
+                            resolve(aSuccessfulResults);
+                        }
+                    })
+                    .catch(function(error) {
+                        reject(error);
+                    });
+            });
+        },
+
+        // Helper function to make individual AJAX requests for resubmission
+        _makeAjaxRequestForResubmit: function(url, payload) {
+            return new Promise(function(resolve, reject) {
+                $.ajax({
+                    url: url,
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(payload),
+                    timeout: 120000,
+                    success: function(data) {
+                        resolve(data);
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        reject({
+                            error: jqXHR,
+                            textStatus: textStatus,
+                            errorThrown: errorThrown,
+                            payload: payload
+                        });
+                    }
+                });
+            });
+        }
 
     });
 

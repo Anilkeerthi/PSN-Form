@@ -99,7 +99,9 @@
                                     <!-- <m:Button id="ReSubmitButton" text="Re-Submit" type="Default" visible="{= ${ListData>wfRequestNav/results/0/status} === 'SENTBACK' }" press="onReSubmit" /> -->
                                     <m:Button id="ReSubmitButton" text="Re-Submit" type="Default" press="onReSubmit" />
 
-                                    <!-- <m:Button text="Send Test Email" press="onSendEmail" type="Emphasized" icon="sap-icon://email" /> -->
+                                    <m:Button id="ReSubPositionBtn" text="Re-Submit" type="Reject" press="onReSubmitPosition" />
+
+                                     <m:Button text="Send Test Email" press="onSendEmailBtn" type="Emphasized" icon="sap-icon://email" /> 
 
                                     <!--  <m:Button id="deligateButton" text="Delegate" type="Emphasized" visible="{viewsubModel>/showDelegateButton}" press="onToggleFooter" />-->
 
@@ -430,6 +432,7 @@
                                                 <HBox alignItems="Center" class="sapUiSmallMarginTop sapUiSmallMarginBottom">
                                                     <Label text="Gross Monthly Salary:" design="Bold" class="sapUiTinyMarginEnd" />
                                                     <Text id="idGrossMonthlySalary" text="{GrossSalaryModel>/GrossMonthlySalary} {GrossSalaryModel>/Currency} " />
+                                                    <Text class="sapUiMediumMarginBegin warningText" id="idGrossNewMonthlySalary" text=""/>
                                                 </HBox>
                                                 <Table id="grosscompensationTable" items="{EmpCompensationModel>/empPayCompRecurringNav/results}">
                                                     <columns>

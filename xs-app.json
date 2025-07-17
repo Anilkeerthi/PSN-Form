@@ -9,6 +9,12 @@
       "authenticationType": "xsuaa"
     },
     {
+      "source": "^/EMAIL_TEST/(.*)$",
+      "target": "$1",
+      "destination": "EMAIL_TEST",
+      "authenticationType": "xsuaa"
+    },
+    {
       "source": "^/odata/v2/basic/(.*)$",
       "target": "/$1",
       "destination": "SF_1",
