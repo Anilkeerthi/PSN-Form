@@ -829,11 +829,7 @@ sap.ui.define([], function() {
                           { text: 'Department\n', bold: true },
                           { text: 'Division\n', bold: true },
                           { text: 'Reporting Line\n', bold: true },
-                          { text: 'Grade\n\n', bold: true },
-                          { text: 'Basic Salary\n', bold: true },
-                          { text: 'Housing Allowance\n', bold: true },
-                          { text: 'Transportation Allowance\n', bold: true },
-                          { text: 'Gross Salary\n', bold: true }
+                          { text: 'Grade\n\n', bold: true }
                         ]
                       },
                       {
@@ -843,16 +839,17 @@ sap.ui.define([], function() {
                           ':  ' + (data.department || '') + '\n',
                           ':  ' + (data.division || '') + '\n',
                           ':  ' + (data.managerName || '') + '\n',
-                          ':  ' + (data.grade || '') + '\n\n',
-                          ':  '+ data.currencyCode+'. ' + (data.basicSalary || '') + '/-\n',
-                          ':  '+ data.currencyCode+'. ' + (data.housingAllowance || '') + '/-\n',
-                          ':  '+ data.currencyCode+'. ' + (data.transportationAllowance || '') + '/-\n',
-                          ':  '+ data.currencyCode+'. ' + (data.grossSalary || '') + '/-'
-                        ]
+                          ':  ' + (data.grade || '') + '\n\n'
+                          ]
                       }
                     ],
                     fontSize: 12,
                     margin: [0, 0, 0, 20]
+                  },
+                  {
+                    stack: data.baseSalary,
+                    margin: [0, -15, 0, 20],
+                    fontSize: 12
                   },
                   {
                     text:

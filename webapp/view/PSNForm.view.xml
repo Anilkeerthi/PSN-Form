@@ -66,7 +66,7 @@
                         <List id="idList" mode="SingleSelectMaster" items="{ListData>/results}" select="onListItemPress">
                             <ObjectListItem title="{ListData>externalCode} - {ListData>cust_EMP_Name}" type="Active" number="{path: 'ListData>cust_EffectiveDate', formatter: '.formatDate'}">
                                 <firstStatus>
-                                    <ObjectStatus text="{path: 'ListData>wfRequestNav/results/0/status', formatter: '.formatRecordStatus'}" state="{path: 'ListData>wfRequestNav/results/0/status',formatter: '.formatRecordStatusState'}" />
+                                    <ObjectStatus id="rqOverallStatus" text="{path: 'ListData>wfRequestNav/results/0/status', formatter: '.formatRecordStatus'}" state="{path: 'ListData>wfRequestNav/results/0/status',formatter: '.formatRecordStatusState'}" />
                                 </firstStatus>
                                 <ObjectAttribute text="{ListData>cust_PSNTypeChange}" />
                             </ObjectListItem>
@@ -84,40 +84,32 @@
                                     <Title text="" wrapping="true" />
                                 </uxap:expandedHeading>
                                 <uxap:navigationActions>
-
-                                    <!-- <m:Button id="submitUpdateButton" text="Update Position" type="Emphasized" visible="true" press="onUpdatePosition"/>
-                                    <m:Button id="submitChangesButton" text=" Submit Position" type="Emphasized" visible="true" press="onSubmitPosition"/>
-                                    <m:Button id="approveButton" text="Approve" type="Accept" visible="true" press="onAccept" />
-                                    <m:Button id="rejectButton" text="Reject" type="Reject" visible="true" press="_showRejectDialog" />
-                                    <m:Button id="returnButton" text="Return" type="Default" visible="true" press="onReturn" ariaDescribedBy="defaultButtonDescription genericButtonDescription">
-                                        <layoutData>
-                                            <FlexItemData growFactor="1" />
-                                        </layoutData>
-                                    </m:Button>
-                                    <m:Button id="deligateButton" text="Deligate" type="Emphasized" visible="true" press="onToggleFooter" />
-                                    <m:Button id="moreActionsButton" text="More Actions" type="Emphasized" icon="sap-icon://menu2" press="onOpenMoreActionsMenu" /> -->
-
-
                                     <m:Button id="submitUpdateButton" text="Update Position" type="Emphasized" visible="{viewsubModel>/showUpdateButton}" press="onUpdatePosition" />
 
                                     <m:Button id="submitChangesButton" text="Submit Position" type="Emphasized" visible="{= ${ListData>wfRequestNav/results/0/status} === '' &amp;&amp; ${wfData_0>status} === ''}" press="onSubmitPosition" />
-                                    <!-- <m:Button id="submitChangesButton" text="Submit Position" type="Emphasized" visible="{viewModel>/submitButtonVisible}" press="onSubmitPosition" /> -->
-                                    
+
                                     <m:Button id="approveButton" text="Approve" type="Accept" visible="{viewsubModel>/showApproveButton}" press="onAccept" />
 
                                     <m:Button id="rejectButton" text="Reject" type="Reject" visible="{viewsubModel>/showRejectButton}" press="_showRejectDialog" />
 
                                     <m:Button id="returnButton" text="Return" type="Default" visible="{viewsubModel>/showReturnButton}" press="onReturn" />
 
-                                    <m:Button id="ReSubmitButton" text="Re-Submit" type="Default" visible="{= ${ListData>wfRequestNav/results/0/status} === 'SENTBACK' }" press="onReSubmit" />
+                                    <!-- <m:Button id="withdrawButton" text="Withdraw" type="Default" visible="{= ${appModel>/userId} === ${ListData>wfRequestNav/results/0/createdBy} }" press="onWithdraw" /> -->
+                                    <m:Button id="withdrawButton" text="Withdraw" type="Default" press="onWithdraw" />
+                                    <!-- <m:Button id="ReSubmitButton" text="Re-Submit" type="Default" visible="{= ${ListData>wfRequestNav/results/0/status} === 'SENTBACK' }" press="onReSubmit" /> -->
+                                    <m:Button id="ReSubmitButton" text="Re-Submit" type="Default" press="onReSubmit" />
+
+                                    <m:Button id="ReSubPositionBtn" text="Re-Submit" type="Reject" press="onReSubmitPosition" />
+
+                                     <m:Button text="Send Test Email" press="onSendEmailBtn" type="Emphasized" icon="sap-icon://email" /> 
 
                                     <!--  <m:Button id="deligateButton" text="Delegate" type="Emphasized" visible="{viewsubModel>/showDelegateButton}" press="onToggleFooter" />-->
 
+                                    <!-- <m:Button id="moreActionsButton" text="More Actions" icon="sap-icon://menu2" type="Emphasized" press="onOpenMoreActionsMenu" visible="{viewsubModel>/showMenuButton}" /> -->
 
-                                    <m:Button id="moreActionsButton" text="More Actions" icon="sap-icon://menu2" type="Emphasized" press="onOpenMoreActionsMenu" visible="{viewsubModel>/showMenuButton}" />
+                                    <m:Button id="moreActionsButton" text="More Actions" icon="sap-icon://menu2" type="Emphasized" press="onOpenMoreActionsMenu" />
+
                                     <m:Button text="Generate PDF" press=".onGeneratePDF" icon="sap-icon://download" visible="{viewsubModel>/showGeneratePDFButton}" />
-
-
 
                                     <OverflowToolbarButton type="Transparent" icon="sap-icon://full-screen" press="handleFullScreen" visible="{= ${buttonVisibleModel>/showFullScreen} ? true : false }" />
 
@@ -150,7 +142,7 @@
 
                                     <HBox alignItems="Start">
                                         <m:Label text="DOJ/Tenure :" width="120px" />
-                                        <m:Text text="{path: 'empData>/personalInfoNav/results/0/startDate', formatter: '.formatTenureDate'}" />
+                                        <m:Text text="{path: 'empData>/employmentNav/results/0/startDate', formatter: '.formatTenureDate'}" />
                                     </HBox>
                                 </VBox>
 
@@ -208,36 +200,6 @@
                                 </uxap:subSections>
                             </uxap:ObjectPageSection>
 
-                            <!-- <uxap:ObjectPageSection title="Type of Change" visible="{= ${ListData>wfRequestNav/results/0/status} === 'SENTBACK' }">
-                                <uxap:subSections>
-                                    <uxap:ObjectPageSubSection>
-                                        <uxap:blocks>
-                                            <form:SimpleForm id="idChangeFormSB" editable="true" layout="ResponsiveGridLayout" labelSpanL="3" labelSpanM="3" labelSpanS="12" adjustLabelSpan="false" emptySpanL="0" emptySpanM="0" emptySpanS="0" columnsL="2" columnsM="2">
-                                                <form:content>
-                                                    <Label text="Required Action" />
-                                                    <Select id="idRequestTypeNewSB" width="60%" change=".onEventReasonChange" items="{
-                                                            path: 'eventReasonsModel>/',
-                                                            sorter: { path: 'name' }
-                                                     }">
-                                                        <core:Item key="{eventReasonsModel>externalCode}" text="{parts: [{path: 'eventReasonsModel>externalCode'},{path: 'eventReasonsModel>name'}], formatter: '.formatExternalCodeWithName'}" />
-                                                    </Select>
-
-                                                    <Label text="Change Effective" />
-                                                    <DatePicker id="idRequestDateNewSB" width="60%" />
-
-                                                    <Label text="Upload Document" />
-                                                    <u:FileUploader id="idFileUploaderNewSB" width="60%" tooltip="Upload supporting document" value="" placeholder="Choose File" />
-
-                                                    <Label text="Justification" />
-                                                    <TextArea id="idCommentsNewSB" width="60%" rows="3" placeholder="Add your comments here..." />
-                                                </form:content>
-                                            </form:SimpleForm>
-                                        </uxap:blocks>
-                                    </uxap:ObjectPageSubSection>
-                                </uxap:subSections>
-                            </uxap:ObjectPageSection> -->
-
-
                             <uxap:ObjectPageSection title="Type of Change" visible="{= ${ListData>wfRequestNav/results/0/status} === 'SENTBACK' }">
                                 <uxap:subSections>
                                     <uxap:ObjectPageSubSection>
@@ -245,7 +207,7 @@
                                             <form:SimpleForm id="idChangeFormSB" editable="true" layout="ResponsiveGridLayout" labelSpanL="3" labelSpanM="3" labelSpanS="12" adjustLabelSpan="false" emptySpanL="0" emptySpanM="0" emptySpanS="0" columnsL="2" columnsM="2">
                                                 <form:content>
                                                     <Label text="Required Action" />
-                                                    <Select id="idRequestTypeNewSB" width="60%" selectedKey="{ListData>cust_PSNTypeChange}" change=".onEventReasonChange" items="{
+                                                    <Select id="idRequestTypeNewSB" width="60%" selectedKey="{ListData>cust_PSNTypeChange}" forceSelection="false" change=".onEventReasonChange" items="{
                                     path: 'eventReasonsModel>/',
                                     sorter: { path: 'name' }
                                 }">
@@ -257,14 +219,26 @@
 
                                                     <Label text="Upload Document" />
                                                     <VBox>
-
-                                                        <HBox visible="{= !!${ListData>cust_AttachmentNav/attachmentId} }">
-                                                            <Text text="Current: " />
-                                                            <Link text="{ListData>cust_AttachmentNav/fileName}" press=".onAttachmentLinkPress" />
+                                                        <HBox>
+                                                            <Link text="{path: 'ListData>cust_AttachmentNav/fileName'}" press=".onAttachmentLinkPress" visible="{= !!${ListData>cust_AttachmentNav/attachmentId} }" />
+                                                            <Text text="No Documents" visible="{= !${ListData>cust_AttachmentNav/attachmentId} }" />
                                                         </HBox>
 
                                                         <u:FileUploader id="idFileUploaderNewSB" width="60%" tooltip="Upload supporting document" value="" placeholder="Choose File to Replace/Add" />
+
+                                                        <!-- <u:FileUploader id="idFileUploaderNewSB" width="60%" tooltip="Upload supporting document" value="{path: 'ListData>cust_AttachmentNav/fileName', formatter: '.formatFileUploaderValue'}" placeholder="Choose file to upload or keep existing" change="onFileUploaderChange" />
+                                                    </VBox> -->
                                                     </VBox>
+                                                    <!-- <Label text="Upload Document" />
+
+        <HBox>
+            <Link id="idFileLink" text="{path: 'ListData>cust_AttachmentNav/fileName'}" press=".onAttachmentLinkPress" visible="{= !!${ListData>cust_AttachmentNav/attachmentId} }" target="_blank" tooltip="Click to view the uploaded file" />
+                
+            <Text text="No Documents" visible="{= !${ListData>cust_AttachmentNav/attachmentId} }" />
+        </HBox>
+
+        <u:FileUploader id="idFileUploaderNewSB" width="100%" tooltip="Upload supporting document" value="{path: 'ListData>cust_AttachmentNav/fileName', formatter: '.formatFileUploaderValue'}" placeholder="Choose file to upload or keep existing" change="onFileUploaderChange" />
+    </VBox> -->
 
                                                     <Label text="Justification" />
                                                     <TextArea id="idCommentsNewSB" width="60%" rows="3" value="{ListData>cust_Justification}" placeholder="Add your comments here..." />
@@ -278,7 +252,6 @@
                             <uxap:ObjectPageSection title="PROMOTION / SALARY ADJUSTMENT JUSTIFICATION">
                                 <uxap:subSections>
                                     <uxap:ObjectPageSubSection>
-
                                         <uxap:blocks>
                                             <VBox>
                                                 <m:Title text="Performance Ratings" level="H3" class="sapUiSmallMarginBottom" />
@@ -340,8 +313,17 @@
                                                 <Label text="JobTitle" />
                                                 <Text text="{lastExpData>/results/0/startTitle}" />
 
+                                                <!-- <Label text="Tenure (Years)" />
+                                                <Text text="{path: 'lastExpData>/results/0/startDate', formatter: '.formatProfessinalTenureDate'}" /> -->
+
                                                 <Label text="Tenure (Years)" />
-                                                <Text text="{path: 'lastExpData>/results/0/startDate', formatter: '.formatTenureDate'}" />
+                                                <Text text="{
+    parts: [
+        'lastExpData>/results/0/startDate',
+        'lastExpData>/results/0/endDate'
+    ],
+    formatter: '.calculateTenure'
+}" />
 
                                                 <Label text="Company" />
                                                 <Text text="{lastExpData>/results/0/employer}" />
@@ -356,6 +338,7 @@
 
                             <!-- Promotion / Salary Adjustment Justification -->
 
+                            <!-- <uxap:ObjectPageSection id="changeOfStatusSection" title="CHANGE OF STATUS" visible="{= ${viewsubModel>/showChangeOfSts} &amp;&amp; ${ListData>wfRequestNav/results/0/status} !== 'REJECTED'}"> -->
                             <uxap:ObjectPageSection id="changeOfStatusSection" title="CHANGE OF STATUS" visible="{viewsubModel>/showChangeOfSts}">
                                 <uxap:subSections>
                                     <uxap:ObjectPageSubSection>
@@ -405,11 +388,13 @@
                             </uxap:ObjectPageSection>
 
                             <!-- CHANGE OD COMPENSATION -->
-                            <uxap:ObjectPageSection id="changeOfCompSection" title="Change of Compensation" visible="{viewsubModel>/showChangeOfComp}">
+                            <!-- <uxap:ObjectPageSection id="changeOfCompSection" title="Change of Compensation" visible="{= ${viewsubModel>/showChangeOfComp} &amp;&amp; ${ListData>wfRequestNav/results/0/status} !== 'REJECTED'}"> -->
+                            <!-- <uxap:ObjectPageSection id="changeOfCompSection" title="Change of Compensation" visible="{viewsubModel>/showChangeOfComp}"> -->
+                             <uxap:ObjectPageSection id="changeOfCompSection" title="Change of Compensation">
                                 <uxap:subSections>
                                     <uxap:ObjectPageSubSection>
                                         <uxap:actions>
-                                            <m:Button id="addComponentButton" text="Add Component" type="Emphasized" visible="true" class="sapUiSmallMarginBottom sapUiSmallMarginEnd" press=".onAddComponent" enabled="{= ${ListData>wfRequestNav/results/0/status} === '' &amp;&amp; ${wfData_0>status} === ''}"/>
+                                            <m:Button id="addComponentButton" text="Add Component" type="Emphasized" visible="true" class="sapUiSmallMarginBottom sapUiSmallMarginEnd" press=".onAddComponent" enabled="{= ${ListData>wfRequestNav/results/0/status} === '' &amp;&amp; ${wfData_0>status} === ''}" />
                                         </uxap:actions>
 
                                         <uxap:blocks>
@@ -446,7 +431,8 @@
                                                 </Table>
                                                 <HBox alignItems="Center" class="sapUiSmallMarginTop sapUiSmallMarginBottom">
                                                     <Label text="Gross Monthly Salary:" design="Bold" class="sapUiTinyMarginEnd" />
-                                                    <Text text="{GrossSalaryModel>/GrossMonthlySalary} {GrossSalaryModel>/Currency} " />
+                                                    <Text id="idGrossMonthlySalary" text="{GrossSalaryModel>/GrossMonthlySalary} {GrossSalaryModel>/Currency} " />
+                                                    <Text class="sapUiMediumMarginBegin warningText" id="idGrossNewMonthlySalary" text=""/>
                                                 </HBox>
                                                 <Table id="grosscompensationTable" items="{EmpCompensationModel>/empPayCompRecurringNav/results}">
                                                     <columns>
@@ -496,8 +482,7 @@
 
                             <!-- APPROVALS SECTION -->
 
-
-                            <uxap:ObjectPageSection title="REQUEST APPROVALS" id="requestApprovalsSection" visible="{= ${ListData>wfRequestNav/results/0/status} === 'PENDING' }">
+                            <uxap:ObjectPageSection title="REQUEST APPROVALS" id="requestApprovalsSection" visible="{= ${ListData>wfRequestNav/results/0/status} === '' &amp;&amp; ${ListData>wfRequestNav/results/0/status} !== 'SENTBACK' }">
                                 <uxap:subSections>
                                     <uxap:ObjectPageSubSection>
                                         <uxap:blocks>
@@ -508,7 +493,56 @@
                                         </uxap:blocks>
                                         <uxap:blocks>
                                             <Table id="wfStepsTable" items="{path : 'ListData>wfRequestNav/results/0/wfRequestStepNav/results' , sorter : {path:'ListData>stepNum'} }">
+                                                <columns>
+                                                    <Column>
+                                                        <Text text="Approver Level" />
+                                                    </Column>
+                                                    <Column>
+                                                        <Text text="Approver Status" />
+                                                    </Column>
+                                                    <Column>
+                                                        <Text text="Approver Position/Role/Group" />
+                                                    </Column>
+                                                    <Column>
+                                                        <Text text="Approver Name/Group Members" />
+                                                    </Column>
+                                                    <Column>
+                                                        <Text text="Change Approval" />
+                                                    </Column>
+                                                </columns>
 
+                                                <items>
+                                                    <ColumnListItem>
+                                                        <cells>
+                                                            <Text text="{ListData>stepNum}" />
+                                                            <!-- <Text text="{ListData>status}" /> -->
+                                                            <HBox alignItems="Center" justifyContent="Start">
+                                                                <Text text="{ListData>status}" class="sapUiSmallMarginEnd" />
+                                                                <core:Icon src="sap-icon://show" color="Primary" size="1rem" press=".onShowAllCommentsDetails" visible="{= ${ListData>status} === 'SENTBACK' || ${ListData>status} === 'REJECTED' }" tooltip="View Details" class="sapUiTinyMarginBegin sapPointer" />
+                                                            </HBox>
+                                                            <Text text="{ListData>displayPositionInfo}" />
+                                                            <Text text="{ListData>displayApprover}" />
+                                                            <Button text="Change Approver" press=".onOpenChangeRequestApprovalDialog" enabled="{= ${ListData>wfRequestNav/results/0/status} === 'PENDING' }" />
+                                                        </cells>
+                                                    </ColumnListItem>
+                                                </items>
+                                            </Table>
+                                        </uxap:blocks>
+                                    </uxap:ObjectPageSubSection>
+                                </uxap:subSections>
+                            </uxap:ObjectPageSection>
+
+                            <uxap:ObjectPageSection title="REQUEST APPROVALS" id="requestApprovalsSection2" visible="{= ${ListData>wfRequestNav/results/0/status} === 'PENDING' &amp;&amp; ${ListData>wfRequestNav/results/0/status} !== 'SENTBACK' }">
+                                <uxap:subSections>
+                                    <uxap:ObjectPageSubSection>
+                                        <uxap:blocks>
+                                            <ObjectAttribute title="WF Request ID" text="{ListData>wfRequestNav/results/0/wfRequestId}" />
+                                            <ObjectAttribute title="Total Approval Levels" text="{ListData>wfRequestNav/results/0/totalSteps}" />
+                                            <ObjectAttribute title="Overall Workflow status" text="{ListData>wfRequestNav/results/0/status}" />
+                                            <ObjectAttribute title="WorkFlow Current Step" text="{ListData>wfRequestNav/results/0/currentStepNum}" />
+                                        </uxap:blocks>
+                                        <uxap:blocks>
+                                            <Table id="wfStepsTable2" items="{path : 'ListData>wfRequestNav/results/0/wfRequestStepNav/results' , sorter : {path:'ListData>stepNum'} }">
                                                 <columns>
                                                     <Column>
                                                         <Text text="Approver Level" />
@@ -543,14 +577,61 @@
                                                     </ColumnListItem>
                                                 </items>
                                             </Table>
+                                        </uxap:blocks>
+                                    </uxap:ObjectPageSubSection>
+                                </uxap:subSections>
+                            </uxap:ObjectPageSection>
+                            <uxap:ObjectPageSection title="REQUEST APPROVALS" id="requestApprovalsSection4" visible="{= ${ListData>wfRequestNav/results/0/status} === 'REJECTED'}">
+                                <uxap:subSections>
+                                    <uxap:ObjectPageSubSection>
+                                        <uxap:blocks>
+                                            <ObjectAttribute title="WF Request ID" text="{ListData>wfRequestNav/results/0/wfRequestId}" />
+                                            <ObjectAttribute title="Total Approval Levels" text="{ListData>wfRequestNav/results/0/totalSteps}" />
+                                            <ObjectAttribute title="Overall Workflow status" text="{ListData>wfRequestNav/results/0/status}" />
+                                            <ObjectAttribute title="WorkFlow Current Step" text="{ListData>wfRequestNav/results/0/currentStepNum}" />
+                                        </uxap:blocks>
+                                        <uxap:blocks>
+                                            <Table id="wfStepsTable4" items="{path : 'ListData>wfRequestNav/results/0/wfRequestStepNav/results' , sorter : {path:'ListData>stepNum'} }">
+                                                <columns>
+                                                    <Column>
+                                                        <Text text="Approver Level" />
+                                                    </Column>
+                                                    <Column>
+                                                        <Text text="Approver Status" />
+                                                    </Column>
+                                                    <Column>
+                                                        <Text text="Approver Position/Role/Group" />
+                                                    </Column>
+                                                    <Column>
+                                                        <Text text="Approver Name/Group Members" />
+                                                    </Column>
+                                                    <Column>
+                                                        <Text text="Change Approval" />
+                                                    </Column>
+                                                </columns>
 
+                                                <items>
+                                                    <ColumnListItem>
+                                                        <cells>
+                                                            <Text text="{ListData>stepNum}" />
+                                                            <!-- <Text text="{ListData>status}" /> -->
+                                                            <HBox alignItems="Center" justifyContent="Start">
+                                                                <Text text="{ListData>status}" class="sapUiSmallMarginEnd" />
+                                                                <core:Icon src="sap-icon://show" color="Primary" size="1rem" press=".onShowAllCommentsDetails" visible="{= ${ListData>status} === 'SENTBACK' || ${ListData>status} === 'REJECTED' }" tooltip="View Details" class="sapUiTinyMarginBegin sapPointer" />
+                                                            </HBox>
+                                                            <Text text="{ListData>displayPositionInfo}" />
+                                                            <Text text="{ListData>displayApprover}" />
+                                                            <Button text="Change Approver" press=".onOpenChangeRequestApprovalDialog" enabled="{= ${ListData>wfRequestNav/results/0/status} === 'PENDING' }" />
+                                                        </cells>
+                                                    </ColumnListItem>
+                                                </items>
+                                            </Table>
                                         </uxap:blocks>
                                     </uxap:ObjectPageSubSection>
                                 </uxap:subSections>
                             </uxap:ObjectPageSection>
 
-
-                            <uxap:ObjectPageSection title="REQUEST APPROVALS" id="requestApprovalsSection3" visible="{= ${ListData>wfRequestNav/results/0/status} !== 'PENDING' &amp;&amp; ${ListData>wfRequestNav/results/0/status} !== 'REJECTED' }">
+                            <uxap:ObjectPageSection title="REQUEST APPROVALS" id="requestApprovalsSection3" visible="{= ${ListData>wfRequestNav/results/0/status} !== 'PENDING' &amp;&amp; ${ListData>wfRequestNav/results/0/status} !== 'REJECTED'&amp;&amp; ${ListData>wfRequestNav/results/0/status} !== 'SENTBACK' }">
                                 <uxap:subSections>
                                     <uxap:ObjectPageSubSection>
                                         <uxap:blocks>
@@ -561,7 +642,6 @@
                                         </uxap:blocks>
                                         <uxap:blocks>
                                             <Table id="wfStepsTable3" items="{path : 'ListData>wfRequestNav/results/0/wfRequestStepNav/results' , sorter : {path:'ListData>stepNum'} }">
-
                                                 <columns>
                                                     <Column>
                                                         <Text text="Approver Level" />
@@ -591,70 +671,18 @@
                                                             </HBox>
                                                             <Text text="{ListData>displayPositionInfo}" />
                                                             <Text text="{ListData>displayApprover}" />
-                                                            <Button text="Change Approver" press=".onOpenChangeRequestApprovalDialog" enabled="{= ${ListData>status} === 'PENDING' }" />
+                                                            <Button text="Change Approver" press=".onOpenChangeRequestApprovalDialog" enabled="{= ${ListData>wfRequestNav/results/0/status} === 'PENDING' }" />
                                                         </cells>
                                                     </ColumnListItem>
                                                 </items>
                                             </Table>
-
                                         </uxap:blocks>
                                     </uxap:ObjectPageSubSection>
                                 </uxap:subSections>
                             </uxap:ObjectPageSection>
 
-                            <uxap:ObjectPageSection title="REQUEST APPROVALS" id="requestApprovalsSection4" visible="{= ${ListData>wfRequestNav/results/0/status} === 'REJECTED' }">
-                                <uxap:subSections>
-                                    <uxap:ObjectPageSubSection>
-                                        <uxap:blocks>
-                                            <ObjectAttribute title="WF Request ID" text="{ListData>wfRequestNav/results/1/wfRequestId}" />
-                                            <ObjectAttribute title="Total Approval Levels" text="{ListData>wfRequestNav/results/1/totalSteps}" />
-                                            <ObjectAttribute title="Overall Workflow status" text="{ListData>wfRequestNav/results/1/status}" />
-                                            <ObjectAttribute title="WorkFlow Current Step" text="{ListData>wfRequestNav/results/1/currentStepNum}" />
-                                        </uxap:blocks>
-                                        <uxap:blocks>
-                                            <Table id="wfStepsTable4" items="{path : 'ListData>wfRequestNav/results/0/wfRequestStepNav/results' , sorter : {path:'ListData>stepNum'} }">
-
-                                                <columns>
-                                                    <Column>
-                                                        <Text text="Approver Level" />
-                                                    </Column>
-                                                    <Column>
-                                                        <Text text="Approver Status" />
-                                                    </Column>
-                                                    <Column>
-                                                        <Text text="Approver Position/Role/Group" />
-                                                    </Column>
-                                                    <Column>
-                                                        <Text text="Approver Name/Group Members" />
-                                                    </Column>
-                                                    <Column>
-                                                        <Text text="Change Approval" />
-                                                    </Column>
-                                                </columns>
-
-                                                <items>
-                                                    <ColumnListItem>
-                                                        <cells>
-                                                            <Text text="{ListData>stepNum}" />
-                                                            <!-- <Text text="{ListData>status}" /> -->
-                                                            <HBox alignItems="Center" justifyContent="Start">
-                                                                <Text text="{ListData>status}" class="sapUiSmallMarginEnd" />
-                                                                <core:Icon src="sap-icon://show" color="Primary" size="1rem" press=".onShowAllCommentsDetails" visible="{= ${ListData>status} === 'SENTBACK' || ${ListData>status} === 'REJECTED' }" tooltip="View Details" class="sapUiTinyMarginBegin sapPointer" />
-                                                            </HBox>
-                                                            <Text text="{ListData>displayPositionInfo}" />
-                                                            <Text text="{ListData>displayApprover}" />
-                                                            <Button text="Change Approver" press=".onOpenChangeRequestApprovalDialog" enabled="{= ${ListData>status} === 'PENDING' }" />
-                                                        </cells>
-                                                    </ColumnListItem>
-                                                </items>
-                                            </Table>
-
-                                        </uxap:blocks>
-                                    </uxap:ObjectPageSubSection>
-                                </uxap:subSections>
-                            </uxap:ObjectPageSection>
-
-                            <uxap:ObjectPageSection title="SUBMIT APPROVALS" id="submitApprovalsSection" visible="{viewsubModel>/showSubmitApprovals}">
+                            <!-- <uxap:ObjectPageSection title="SUBMIT APPROVALS" id="submitApprovalsSection" visible="{= ${viewsubModel>/showSubmitApprovals} &amp;&amp; ${ListData>wfRequestNav/results/0/status} !== 'REJECTED'}">   -->
+                            <uxap:ObjectPageSection title="SUBMIT APPROVALS" id="submitApprovalsSection" visible="{= ${ListData>wfRequestNav/results/0/status} === 'COMPLETED'}">
                                 <uxap:subSections>
                                     <uxap:ObjectPageSubSection>
                                         <uxap:blocks>
@@ -698,7 +726,6 @@
                                                     </ColumnListItem>
                                                 </items>
                                             </Table>
-
                                         </uxap:blocks>
                                     </uxap:ObjectPageSubSection>
                                 </uxap:subSections>
@@ -727,8 +754,6 @@
                                     </uxap:ObjectPageSubSection>
                                 </uxap:subSections>
                             </uxap:ObjectPageSection> -->
-
-
                         </uxap:sections>
                     </uxap:ObjectPageLayout>
                 </Page>

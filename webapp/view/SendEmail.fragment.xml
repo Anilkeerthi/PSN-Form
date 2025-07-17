@@ -1,0 +1,78 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+    
+    <Dialog
+        id="emailDialog"
+        title="Send Email"
+        contentWidth="500px"
+        resizable="true"
+        draggable="true">
+        
+        <content>
+            <VBox class="sapUiMediumMargin">
+                
+                <!-- Email Preview Section -->
+                <Panel headerText="Email Details" class="sapUiResponsiveMargin">
+                    <VBox class="sapUiMediumMargin">
+                        
+                        <!-- To Field -->
+                        <HBox alignItems="Center" class="sapUiSmallMarginBottom">
+                            <Label text="To:" width="80px" />
+                            <Text text="sisiraanagani1925@gmail.com" class="sapUiSmallMarginBegin" />
+                        </HBox>
+                        
+                        <!-- From Field -->
+                        <HBox alignItems="Center" class="sapUiSmallMarginBottom">
+                            <Label text="From:" width="80px" />
+                            <Text text="from@example.com" class="sapUiSmallMarginBegin" />
+                        </HBox>
+                        
+                        <!-- Subject Field -->
+                        <HBox alignItems="Center" class="sapUiSmallMarginBottom">
+                            <Label text="Subject:" width="80px" />
+                            <Text text="Test Email from SAP UI5 BTP Application" class="sapUiSmallMarginBegin" />
+                        </HBox>
+                        
+                        <!-- Body Field -->
+                        <VBox class="sapUiSmallMarginTop">
+                            <Label text="Message Body:" class="sapUiSmallMarginBottom" />
+                            <Panel class="sapUiSmallMarginTop" backgroundDesign="Solid">
+                                <VBox class="sapUiMediumMargin">
+                                    <FormattedText 
+                                        htmlText="&lt;b&gt;Hello,&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;This is a test email sent from SAP UI5 application running on BTP.&lt;br/&gt;&lt;br/&gt;&lt;b&gt;Email Details:&lt;/b&gt;&lt;br/&gt;• Application: SAP UI5 BTP App&lt;br/&gt;• Sent via: Destination psn_mail&lt;br/&gt;• Date: {emailModel>/currentDate}&lt;br/&gt;• Time: {emailModel>/currentTime}&lt;br/&gt;&lt;br/&gt;Best regards,&lt;br/&gt;SAP UI5 Application Team" />
+                                </VBox>
+                            </Panel>
+                        </VBox>
+                        
+                        <!-- Status Message -->
+                        <MessageStrip 
+                            id="emailStatusMessage"
+                            text="Ready to send email"
+                            type="Information"
+                            visible="true"
+                            class="sapUiMediumMarginTop" />
+                        
+                    </VBox>
+                </Panel>
+                
+            </VBox>
+        </content>
+        
+        <!-- Dialog Buttons -->
+        <buttons>
+            <Button 
+                id="sendEmailBtn"
+                text="Send Email" 
+                type="Emphasized"
+                press="onSendEmailFromDialog"
+                icon="sap-icon://email" />
+            
+            <Button 
+                text="Cancel" 
+                press="onCloseEmailDialog" />
+        </buttons>
+        
+    </Dialog>
+    
+</core:FragmentDefinition>
