@@ -1217,6 +1217,8 @@ sap.ui.define([
                 }
             });
 
+
+            // Commented URL
             // Get pending History records
             // let sServiceUrl3 = this.getPath("SF_1") + "/cust_PositionStatusChange?recordStatus=pendinghistory&$format=JSON&$expand=cust_AttachmentNav,&$select=externalCode,createdDateTime,cust_EMP_Name,effectiveStartDate,cust_EffectiveDate,cust_PSNTypeChange,cust_Justification,createdBy,cust_Emp_ID,cust_EventReason,cust_AttachmentNav/attachmentId,cust_AttachmentNav/fileName";
 
