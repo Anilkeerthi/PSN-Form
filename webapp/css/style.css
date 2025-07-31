@@ -30,7 +30,18 @@
     background-color: lightblue !important; /* Or any color you prefer */
 }
 
-.addComponentButton {
-  
+
+.sapMListItem.selected-row {
+  background-color: lightblue !important; /* Or any color you prefer */
+}
+
+.userName{
+font-weight: bold !important;
+}
+
+
+.avatar{
+margin-top: 5px !important;
+margin-left: 5px !important;
 }
   

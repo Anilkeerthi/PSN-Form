@@ -506,22 +506,88 @@ sap.ui.define([
         },
 
 
+        // formatTenureDate: function (value) {
+        //     if (value) {
+        //         var timestamp = parseInt(value.replace("/Date(", "").replace(")/", ""), 10);
+        //         var hireDate = new Date(timestamp);
+        //         var oDateFormat = sap.ui.core.format.DateFormat.getDateTimeInstance({ pattern: "yyyy-MM-dd" });
+        //         var formattedHireDate = oDateFormat.format(hireDate);
+
+        //         var currentDate = new Date();
+
+        //         var timeDiff = currentDate - hireDate;
+
+        //         var diffInYears = Math.floor(timeDiff / (1000 * 60 * 60 * 24 * 365.25));
+        //         return diffInYears + " years";
+        //     }
+        //     return value;
+        // },
+
         formatTenureDate: function (value) {
             if (value) {
-                var timestamp = parseInt(value.replace("/Date(", "").replace(")/", ""), 10);
-                var hireDate = new Date(timestamp);
-                var oDateFormat = sap.ui.core.format.DateFormat.getDateTimeInstance({ pattern: "yyyy-MM-dd" });
-                var formattedHireDate = oDateFormat.format(hireDate);
+                let timestamp = parseInt(value.replace("/Date(", "").replace(")/", ""), 10);
+                let hireDate = new Date(timestamp);
+                let currentDate = new Date();
 
-                var currentDate = new Date();
+                let timeDiff = currentDate - hireDate;
 
-                var timeDiff = currentDate - hireDate;
+                // Calculate years and remaining months
+                let diffInYears = Math.floor(timeDiff / (1000 * 60 * 60 * 24 * 365.25));
+                let remainingMs = timeDiff % (1000 * 60 * 60 * 24 * 365.25);
+                let diffInMonths = Math.floor(remainingMs / (1000 * 60 * 60 * 24 * 30.44)); // Average days per month
 
-                var diffInYears = Math.floor(timeDiff / (1000 * 60 * 60 * 24 * 365.25));
-                return diffInYears + " years";
+                // Format the result
+                let result = [];
+                if (diffInYears > 0) {
+                    result.push(`${diffInYears} year${diffInYears !== 1 ? 's' : ''}`);
+                }
+                if (diffInMonths > 0) {
+                    result.push(`${diffInMonths} month${diffInMonths !== 1 ? 's' : ''}`);
+                }
+
+                if (result.length === 0) {
+                    return "Less than 1 month";
+                } else if (result.length === 1) {
+                    return result[0];
+                } else {
+                    return result.join(' and ');
+                }
             }
             return value;
         },
+
+        calculateTenure: function (startDate, endDate) {
+            if (!startDate || !endDate) return " ";
+
+            // Parse dates
+            let startMs = parseInt(startDate.replace("/Date(", "").replace(")/", ""), 10);
+            let endMs = parseInt(endDate.replace("/Date(", "").replace(")/", ""), 10);
+
+            let diffMs = endMs - startMs;
+
+            // Constants
+            const msPerDay = 1000 * 60 * 60 * 24;
+            const msPerMonth = msPerDay * 30.44;
+            const msPerYear = msPerDay * 365.25;
+
+            // Calculate
+            let years = Math.floor(diffMs / msPerYear);
+            let remainingMs = diffMs % msPerYear;
+
+            let months = Math.floor(remainingMs / msPerMonth);
+            remainingMs = remainingMs % msPerMonth;
+
+            let days = Math.floor(remainingMs / msPerDay);
+
+            // Format based on what's available
+            let parts = [];
+            if (years > 0) parts.push(`${years} year${years !== 1 ? 's' : ''}`);
+            if (months > 0) parts.push(`${months} month${months !== 1 ? 's' : ''}`);
+            //if (days > 0) parts.push(`${days} day${days !== 1 ? 's' : ''}`);
+
+            return parts.length > 0 ? parts.join(' and ') : "Less than 1 day";
+        },
+
 
         getSelectedRowData: function () {
             return this.oSelectedRowModel.getProperty("/selectedRow");
@@ -1221,6 +1287,7 @@ sap.ui.define([
 
             var sRequestType = oRequestTypeSelect.getSelectedKey();
             var oEffectiveDate = oDatePicker.getDateValue();
+            var localDate = new Date(oEffectiveDate.getTime() - (oEffectiveDate.getTimezoneOffset() * 60000));
             var sJustification = oCommentsTextArea.getValue();
 
             if (!sRequestType) {
@@ -1228,7 +1295,7 @@ sap.ui.define([
                 return;
             }
 
-            if (!oEffectiveDate) {
+            if (!localDate) {
                 sap.m.MessageBox.error("Please select an effective change date");
                 return;
             }
@@ -1299,7 +1366,7 @@ sap.ui.define([
                                     }
                                 }
 
-                                that._submitPSNForm(sExternalCode, sName, oEffectiveDate, sRequestType, sJustification, sAttachmentId);
+                                that._submitPSNForm(sExternalCode, sName, localDate, sRequestType, sJustification, sAttachmentId);
 
                             } catch (error) {
                                 console.error("Error processing JSON response:", error);
@@ -1321,11 +1388,11 @@ sap.ui.define([
                 };
                 reader.readAsDataURL(oFile);
             } else {
-                that._submitPSNForm(sExternalCode, sName, oEffectiveDate, sRequestType, sJustification, null);
+                that._submitPSNForm(sExternalCode, sName, localDate, sRequestType, sJustification, null);
             }
         },
 
-        _submitPSNForm: function (sExternalCode, sName, oEffectiveDate, sRequestType, sJustification, sAttachmentId) {
+        _submitPSNForm: function (sExternalCode, sName, localDate, sRequestType, sJustification, sAttachmentId) {
             var that = this;
 
             sap.m.MessageBox.confirm(
@@ -1341,7 +1408,7 @@ sap.ui.define([
                                 "cust_Emp_ID": sExternalCode,
                                 "cust_EMP_Name": sName,
                                 "effectiveStartDate": that.convertToODataDate(new Date()),
-                                "cust_EffectiveDate": that.convertToODataDate(oEffectiveDate),
+                                "cust_EffectiveDate": that.convertToODataDate(localDate),
                                 "cust_PSNTypeChange": sRequestType,
                                 "cust_Justification": sJustification || "No justification provided",
                             };
