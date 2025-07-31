@@ -520,6 +520,20 @@ sap.ui.define([
         // },
 
         onListItemPress: function (oEvent) {
+
+               // Clear relevant sub-models
+               this.oViewSubModel.setData({});
+               this.oSelectedRowModel.setData({});
+   
+               // Optional: Clear individual models if defined separately
+               this.getView().getModel("EducationDetailsModel")?.setData({});
+               this.getView().getModel("ApprovalDetailsModel")?.setData({});
+               this.getView().getModel("GroupDetailsModel")?.setData({});
+               this.getView().getModel("SalaryAdjustModel")?.setData({});
+               this.getView().getModel("DataModel")?.setData({});
+               this.getView().getModel("EmpCompensationModel")?.setData({});
+              
+   
             this.disableSubmitApprovalsSection();
             this.disableSubmitPositionBtn();
             this.disableChangeOfCompSection();
@@ -532,6 +546,7 @@ sap.ui.define([
 
             let oItem = oEvent.getParameter("listItem");
             let oModel = this.getView().getModel("ListData");
+            console.log(oModel);
             let oWFDataModel = this.getView().getModel("wfData_0");
             let oWorkFDataModel = this.getView().getModel("WFDetailsModel");
 
@@ -550,18 +565,7 @@ sap.ui.define([
 
             BusyIndicator.show(0);
 
-            // Clear relevant sub-models
-            this.oViewSubModel.setData({});
-            this.oSelectedRowModel.setData({});
-
-            // Optional: Clear individual models if defined separately
-            this.getView().getModel("EducationDetailsModel")?.setData({});
-            this.getView().getModel("ApprovalDetailsModel")?.setData({});
-            this.getView().getModel("GroupDetailsModel")?.setData({});
-            this.getView().getModel("SalaryAdjustModel")?.setData({});
-            this.getView().getModel("DataModel")?.setData({});
-            this.getView().getModel("EmpCompensationModel")?.setData({});
-
+         
             try {
                 let busyPromise = new Promise(function (resolve) {
                     setTimeout(function () {
@@ -616,9 +620,21 @@ sap.ui.define([
                     } else if (status === "PENDING") {
                         this._setWorkflowStage("RQApprovalsPending", true);
 
-                    } else {
+                    } else if (status === "COMPLETED") {
+                        this._setWorkflowStage("SubmitApprovalsPending", true);
                         this._getWorkflowDetails(userId);
 
+                        this.updateSubmitButtonVisibility(oSelectedRowData);
+
+                        this.oViewSubModel.setProperty("/showSubmitApprovals", true);
+                        this.oViewSubModel.setProperty("/showSubmitButton", true);
+                        this.oViewSubModel.setProperty("/showUpdateButton", false);
+
+                        this.onUpdatePosition();
+
+                    } else {
+                        this._getWorkflowDetails(userId);
+                        this.onUpdatePosition();
                         console.log("Status onlist Press completed", status)
                         this.oViewSubModel.setProperty("/showSubmitApprovals", false);
                         this.oViewSubModel.setProperty("/showChangeOfComp", false);
@@ -669,6 +685,8 @@ sap.ui.define([
 
             this._selectedItemContext = oItem.getBindingContext("ListData");
             this._bSortAscending = true;
+
+            oModel.refresh(true);
         },
 
 
@@ -4902,6 +4920,7 @@ sap.ui.define([
             let visible = this.showSubmitButtonVisibility(oSelectedRowData);
             this.byId("submitChangesButton").setVisible(visible.status);
             this.byId("changeOfStatusSection").setVisible(visible.status);
+            this.byId("changeOfCompSection").setVisible(visible.status);
             this.byId("withdrawButton").setVisible(visible.wtdbtnStatus);
         },
 
@@ -6126,10 +6145,10 @@ sap.ui.define([
         },
 
         disableChangeOfCompSection: function () {
-            let changeOfStatusSection = this.getView().byId("changeOfCompSection");
+            let changeOfCompSection = this.getView().byId("changeOfCompSection");
 
-            if (changeOfStatusSection) {
-                changeOfStatusSection.setVisible(false);
+            if (changeOfCompSection) {
+                changeOfCompSection.setVisible(false);
             }
         },
 
@@ -8711,7 +8730,7 @@ sap.ui.define([
                                         // Show withdraw button - user is creator and status is PENDING
                                         that.byId("withdrawButton").setVisible(true);
                                         that.byId("withdrawButton").setEnabled(true);
-                                        that.byId("changeOfCompSection").setVisible(false);
+                                       // that.byId("changeOfCompSection").setVisible(false);
                                         console.log("Withdraw button shown for user:", currentUserId, "item:", oSelectedData.externalCode);
                                     } else {
                                         // Hide withdraw button - user is not creator
@@ -8776,7 +8795,7 @@ sap.ui.define([
                                         //that.byId("requestApprovalsSection").setEnabled(true);
 
 
-                                        that.byId("changeOfCompSection").setVisible(false);
+                                        //that.byId("changeOfCompSection").setVisible(false);
                                         console.log("Resubmit button shown for user:", currentUserId, "item:", oSelectedData.externalCode);
                                     } else {
                                         // Hide withdraw button - user is not creator
@@ -8982,7 +9001,7 @@ sap.ui.define([
                                                         // Show withdraw button - user is creator and status is PENDING
                                                         that.byId("withdrawButton").setVisible(true);
                                                         that.byId("withdrawButton").setEnabled(true);
-                                                        that.byId("changeOfCompSection").setVisible(false);
+                                                        //that.byId("changeOfCompSection").setVisible(false);
                                                         console.log("Withdraw button shown for user:", currentUserId, "item:", oSelectedData.externalCode);
                                                     } else {
                                                         // Hide withdraw button - user is not creator
@@ -9015,7 +9034,7 @@ sap.ui.define([
                                                         //that.byId("ReSubmitButton").setVisible(true);
                                                         that.byId("withdrawButton").setVisible(true);
                                                         that.byId("ReSubPositionBtn").setVisible(true);
-                                                        that.byId("changeOfCompSection").setVisible(false);
+                                                        //that.byId("changeOfCompSection").setVisible(false);
                                                         that.fetchPayGradeDataWithInitialize();
                                                         console.log("Resubmit button shown for user:", currentUserId, "item:", oSelectedData.externalCode);
                                                     } else {
